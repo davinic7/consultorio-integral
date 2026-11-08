@@ -1,0 +1,20 @@
+<main class="shell">
+  <h1>Centro Integral</h1>
+  <p class="estado" [attr.data-estado]="estado()">
+    @switch (estado()) {
+      @case ('cargando') {
+        Conectando con la API…
+      }
+      @case ('ok') {
+        API y base de datos funcionando.
+      }
+      @case ('sin-base') {
+        La API responde, pero no hay conexión con la base de datos.
+      }
+      @case ('sin-api') {
+        No se pudo conectar con la API.
+      }
+    }
+  </p>
+  <router-outlet />
+</main>

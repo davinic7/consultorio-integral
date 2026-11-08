@@ -1,0 +1,14 @@
+// Schema de Centro Integral. Ver docs/prototipo.md y docs/decisiones.md.
+// Regla: toda tabla de datos lleva centro_id (multi-tenant).
+
+generator client {
+  provider               = "prisma-client"
+  output                 = "../src/generated/prisma"
+  runtime                = "nodejs"
+  moduleFormat           = "esm"
+  importFileExtension    = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
