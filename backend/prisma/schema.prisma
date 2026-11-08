@@ -1,14 +1,422 @@
 // Schema de Centro Integral. Ver docs/prototipo.md y docs/decisiones.md.
-// Regla: toda tabla de datos lleva centro_id (multi-tenant).
+//
+// Reglas multi-tenant:
+//  1. Toda tabla con datos de un centro lleva centro_id.
+//  2. Cada una declara @@unique([centroId, id]) y las relaciones entre ellas usan
+//     claves foráneas compuestas (centro_id, x_id) -> (centro_id, id): PostgreSQL
+//     rechaza cualquier referencia a una fila de otro centro.
+//  3. La app consulta estas tablas solo a través del cliente con centro
+//     (src/prisma/centro.ts), que agrega centro_id en cada consulta.
+//
+// Nombres: modelos y campos en camelCase, tablas y columnas en snake_case (@@map/@map).
+// IDs: UUID v7 (ordenables por fecha, no enumerables, generables en el cliente móvil).
 
 generator client {
-  provider               = "prisma-client"
-  output                 = "../src/generated/prisma"
-  runtime                = "nodejs"
-  moduleFormat           = "esm"
-  importFileExtension    = "js"
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  runtime             = "nodejs"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+// ───────────────────────── Enums ─────────────────────────
+
+/// Módulos que un plan puede habilitar.
+enum Modulo {
+  agenda
+  asistencia
+  pacientes
+  cobros
+  liquidacion
+  reportes
+  obras_sociales
+  facturacion_arca
+
+  @@map("modulo")
+}
+
+/// Rol de un usuario dentro de un centro.
+enum Rol {
+  admin
+  recepcion
+  profesional
+
+  @@map("rol")
+}
+
+enum TipoFinanciador {
+  particular
+  obra_social
+  prepaga
+  cud
+
+  @@map("tipo_financiador")
+}
+
+enum EstadoAsistencia {
+  pendiente
+  presente
+  ausente_con_aviso
+  ausente_sin_aviso
+  cancelado_profesional
+
+  @@map("estado_asistencia")
+}
+
+enum MedioPago {
+  efectivo
+  transferencia
+  tarjeta
+  otro
+
+  @@map("medio_pago")
+}
+
+enum EstadoPago {
+  pendiente
+  cobrado
+  rechazado
+
+  @@map("estado_pago")
+}
+
+enum EstadoLiquidacion {
+  borrador
+  cerrada
+  pagada
+
+  @@map("estado_liquidacion")
+}
+
+// ───────────────────────── Globales (sin centro) ─────────────────────────
+
+model Plan {
+  id            String       @id @default(uuid(7)) @db.Uuid
+  codigo        String       @unique @db.VarChar(30)
+  nombre        String       @db.VarChar(80)
+  precioMensual Decimal      @map("precio_mensual") @db.Decimal(12, 2)
+  activo        Boolean      @default(true)
+  modulos       PlanModulo[]
+  centros       Centro[]
+
+  @@map("planes")
+}
+
+model PlanModulo {
+  planId String @map("plan_id") @db.Uuid
+  modulo Modulo
+  plan   Plan   @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@id([planId, modulo])
+  @@map("plan_modulos")
+}
+
+model Centro {
+  id          String   @id @default(uuid(7)) @db.Uuid
+  nombre      String   @db.VarChar(120)
+  /// Identificador corto para URLs y login (ej. "centro-norte").
+  slug        String   @unique @db.VarChar(60)
+  planId      String   @map("plan_id") @db.Uuid
+  zonaHoraria String   @default("America/Argentina/Catamarca") @map("zona_horaria") @db.VarChar(60)
+  activo      Boolean  @default(true)
+  creadoEn    DateTime @default(now()) @map("creado_en") @db.Timestamptz(3)
+
+  plan          Plan                  @relation(fields: [planId], references: [id], onDelete: Restrict)
+  miembros      Miembro[]
+  profesionales Profesional[]
+  salas         Sala[]
+  financiadores Financiador[]
+  pacientes     Paciente[]
+  pacienteProfs PacienteProfesional[]
+  recurrencias  Recurrencia[]
+  turnos        Turno[]
+  prestaciones  Prestacion[]
+  pagos         Pago[]
+  liquidaciones Liquidacion[]
+  notasSesion   NotaSesion[]
+
+  @@map("centros")
+}
+
+/// Persona que inicia sesión. Puede pertenecer a varios centros (ver Miembro).
+model Usuario {
+  id            String   @id @default(uuid(7)) @db.Uuid
+  /// Se guarda en minúsculas.
+  email         String   @unique @db.VarChar(160)
+  nombre        String   @db.VarChar(120)
+  passwordHash  String   @map("password_hash") @db.VarChar(255)
+  /// Superadministrador de la plataforma (DaviNic): gestiona centros y planes.
+  esSuperadmin  Boolean  @default(false) @map("es_superadmin")
+  activo        Boolean  @default(true)
+  creadoEn      DateTime @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn DateTime @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+
+  miembros      Miembro[]
+  profesionales Profesional[]
+
+  @@map("usuarios")
+}
+
+// ───────────────────────── Datos de cada centro ─────────────────────────
+
+/// Pertenencia de un usuario a un centro, con su rol.
+model Miembro {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  centroId  String   @map("centro_id") @db.Uuid
+  usuarioId String   @map("usuario_id") @db.Uuid
+  rol       Rol
+  activo    Boolean  @default(true)
+  creadoEn  DateTime @default(now()) @map("creado_en") @db.Timestamptz(3)
+
+  centro  Centro  @relation(fields: [centroId], references: [id], onDelete: Cascade)
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@unique([centroId, id])
+  @@unique([centroId, usuarioId])
+  @@index([usuarioId])
+  @@map("miembros")
+}
+
+model Profesional {
+  id                    String  @id @default(uuid(7)) @db.Uuid
+  centroId              String  @map("centro_id") @db.Uuid
+  /// Cuenta con la que inicia sesión (opcional: puede cargarse antes de tener acceso).
+  usuarioId             String? @map("usuario_id") @db.Uuid
+  nombre                String  @db.VarChar(80)
+  apellido              String  @db.VarChar(80)
+  disciplina            String  @db.VarChar(80)
+  matricula             String? @db.VarChar(40)
+  /// Porcentaje de lo cobrado que le corresponde al profesional (0 a 100).
+  porcentajeLiquidacion Decimal @default(0) @map("porcentaje_liquidacion") @db.Decimal(5, 2)
+  activo                Boolean @default(true)
+
+  centro        Centro                @relation(fields: [centroId], references: [id], onDelete: Cascade)
+  usuario       Usuario?              @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+  pacientes     PacienteProfesional[]
+  recurrencias  Recurrencia[]
+  turnos        Turno[]
+  liquidaciones Liquidacion[]
+  notasSesion   NotaSesion[]
+
+  @@unique([centroId, id])
+  @@unique([centroId, usuarioId])
+  @@map("profesionales")
+}
+
+model Sala {
+  id          String  @id @default(uuid(7)) @db.Uuid
+  centroId    String  @map("centro_id") @db.Uuid
+  nombre      String  @db.VarChar(80)
+  descripcion String? @db.VarChar(255)
+  activa      Boolean @default(true)
+
+  centro       Centro        @relation(fields: [centroId], references: [id], onDelete: Cascade)
+  recurrencias Recurrencia[]
+  turnos       Turno[]
+
+  @@unique([centroId, id])
+  @@unique([centroId, nombre])
+  @@map("salas")
+}
+
+/// Quién paga la sesión: particular, obra social, prepaga o CUD.
+/// Las reglas propias de cada uno (token, orden, máximo semanal...) llegan en el paso 7.
+model Financiador {
+  id       String          @id @default(uuid(7)) @db.Uuid
+  centroId String          @map("centro_id") @db.Uuid
+  nombre   String          @db.VarChar(120)
+  tipo     TipoFinanciador
+  activo   Boolean         @default(true)
+
+  centro       Centro       @relation(fields: [centroId], references: [id], onDelete: Cascade)
+  pacientes    Paciente[]
+  prestaciones Prestacion[]
+
+  @@unique([centroId, id])
+  @@unique([centroId, nombre])
+  @@map("financiadores")
+}
+
+model Paciente {
+  id                  String    @id @default(uuid(7)) @db.Uuid
+  centroId            String    @map("centro_id") @db.Uuid
+  nombre              String    @db.VarChar(80)
+  apellido            String    @db.VarChar(80)
+  dni                 String?   @db.VarChar(15)
+  fechaNacimiento     DateTime? @map("fecha_nacimiento") @db.Date
+  telefono            String?   @db.VarChar(30)
+  email               String?   @db.VarChar(160)
+  /// Responsable o tutor (pacientes infantiles).
+  responsableNombre   String?   @map("responsable_nombre") @db.VarChar(120)
+  responsableTelefono String?   @map("responsable_telefono") @db.VarChar(30)
+  financiadorId       String?   @map("financiador_id") @db.Uuid
+  nroAfiliado         String?   @map("nro_afiliado") @db.VarChar(40)
+  tieneCud            Boolean   @default(false) @map("tiene_cud")
+  cudVencimiento      DateTime? @map("cud_vencimiento") @db.Date
+  activo              Boolean   @default(true)
+  creadoEn            DateTime  @default(now()) @map("creado_en") @db.Timestamptz(3)
+
+  centro        Centro                @relation(fields: [centroId], references: [id], onDelete: Cascade)
+  financiador   Financiador?          @relation(fields: [centroId, financiadorId], references: [centroId, id], onDelete: Restrict)
+  profesionales PacienteProfesional[]
+  recurrencias  Recurrencia[]
+  turnos        Turno[]
+  notasSesion   NotaSesion[]
+
+  @@unique([centroId, id])
+  @@unique([centroId, dni])
+  @@index([centroId, apellido, nombre])
+  @@map("pacientes")
+}
+
+/// Profesionales que atienden a cada paciente (paciente compartido).
+model PacienteProfesional {
+  centroId      String @map("centro_id") @db.Uuid
+  pacienteId    String @map("paciente_id") @db.Uuid
+  profesionalId String @map("profesional_id") @db.Uuid
+
+  centro      Centro      @relation(fields: [centroId], references: [id], onDelete: Cascade)
+  paciente    Paciente    @relation(fields: [centroId, pacienteId], references: [centroId, id], onDelete: Cascade)
+  profesional Profesional @relation(fields: [centroId, profesionalId], references: [centroId, id], onDelete: Cascade)
+
+  @@id([centroId, pacienteId, profesionalId])
+  @@index([centroId, profesionalId])
+  @@map("paciente_profesional")
+}
+
+/// Turno que se repite cada semana (ej. todos los martes 10:00) hasta fechaHasta.
+model Recurrencia {
+  id            String    @id @default(uuid(7)) @db.Uuid
+  centroId      String    @map("centro_id") @db.Uuid
+  pacienteId    String    @map("paciente_id") @db.Uuid
+  profesionalId String    @map("profesional_id") @db.Uuid
+  salaId        String?   @map("sala_id") @db.Uuid
+  /// 1 = lunes … 7 = domingo (ISO 8601).
+  diaSemana     Int       @map("dia_semana") @db.SmallInt
+  hora          DateTime  @db.Time(0)
+  duracionMin   Int       @map("duracion_min") @db.SmallInt
+  fechaDesde    DateTime  @map("fecha_desde") @db.Date
+  fechaHasta    DateTime? @map("fecha_hasta") @db.Date
+
+  centro      Centro      @relation(fields: [centroId], references: [id], onDelete: Cascade)
+  paciente    Paciente    @relation(fields: [centroId, pacienteId], references: [centroId, id], onDelete: Cascade)
+  profesional Profesional @relation(fields: [centroId, profesionalId], references: [centroId, id], onDelete: Restrict)
+  sala        Sala?       @relation(fields: [centroId, salaId], references: [centroId, id], onDelete: Restrict)
+  turnos      Turno[]
+
+  @@unique([centroId, id])
+  @@map("recurrencias")
+}
+
+model Turno {
+  id               String           @id @default(uuid(7)) @db.Uuid
+  centroId         String           @map("centro_id") @db.Uuid
+  pacienteId       String           @map("paciente_id") @db.Uuid
+  profesionalId    String           @map("profesional_id") @db.Uuid
+  salaId           String?          @map("sala_id") @db.Uuid
+  inicio           DateTime         @db.Timestamptz(0)
+  fin              DateTime         @db.Timestamptz(0)
+  recurrenciaId    String?          @map("recurrencia_id") @db.Uuid
+  estadoAsistencia EstadoAsistencia @default(pendiente) @map("estado_asistencia")
+  observaciones    String?          @db.VarChar(500)
+  creadoEn         DateTime         @default(now()) @map("creado_en") @db.Timestamptz(3)
+
+  centro      Centro       @relation(fields: [centroId], references: [id], onDelete: Cascade)
+  paciente    Paciente     @relation(fields: [centroId, pacienteId], references: [centroId, id], onDelete: Restrict)
+  profesional Profesional  @relation(fields: [centroId, profesionalId], references: [centroId, id], onDelete: Restrict)
+  sala        Sala?        @relation(fields: [centroId, salaId], references: [centroId, id], onDelete: Restrict)
+  recurrencia Recurrencia? @relation(fields: [centroId, recurrenciaId], references: [centroId, id], onDelete: Restrict)
+  prestacion  Prestacion?
+  notasSesion NotaSesion[]
+
+  @@unique([centroId, id])
+  @@index([centroId, inicio])
+  @@index([centroId, profesionalId, inicio])
+  @@index([centroId, salaId, inicio])
+  @@index([centroId, pacienteId, inicio])
+  @@map("turnos")
+}
+
+/// Sesión asistida que se cobra o factura. Una por turno presente.
+model Prestacion {
+  id            String   @id @default(uuid(7)) @db.Uuid
+  centroId      String   @map("centro_id") @db.Uuid
+  turnoId       String   @map("turno_id") @db.Uuid
+  financiadorId String   @map("financiador_id") @db.Uuid
+  monto         Decimal  @db.Decimal(12, 2)
+  facturada     Boolean  @default(false)
+  /// Primer día del mes al que corresponde (ej. 2026-11-01).
+  periodo       DateTime @db.Date
+
+  centro      Centro      @relation(fields: [centroId], references: [id], onDelete: Cascade)
+  turno       Turno       @relation(fields: [centroId, turnoId], references: [centroId, id], onDelete: Restrict)
+  financiador Financiador @relation(fields: [centroId, financiadorId], references: [centroId, id], onDelete: Restrict)
+  pagos       Pago[]
+
+  @@unique([centroId, id])
+  @@unique([centroId, turnoId])
+  @@index([centroId, periodo])
+  @@map("prestaciones")
+}
+
+model Pago {
+  id           String     @id @default(uuid(7)) @db.Uuid
+  centroId     String     @map("centro_id") @db.Uuid
+  prestacionId String     @map("prestacion_id") @db.Uuid
+  monto        Decimal    @db.Decimal(12, 2)
+  fecha        DateTime   @db.Date
+  medio        MedioPago
+  estado       EstadoPago @default(pendiente)
+
+  centro     Centro     @relation(fields: [centroId], references: [id], onDelete: Cascade)
+  prestacion Prestacion @relation(fields: [centroId, prestacionId], references: [centroId, id], onDelete: Restrict)
+
+  @@unique([centroId, id])
+  @@index([centroId, fecha])
+  @@map("pagos")
+}
+
+model Liquidacion {
+  id             String            @id @default(uuid(7)) @db.Uuid
+  centroId       String            @map("centro_id") @db.Uuid
+  profesionalId  String            @map("profesional_id") @db.Uuid
+  /// Primer día del mes liquidado.
+  periodo        DateTime          @db.Date
+  totalBruto     Decimal           @map("total_bruto") @db.Decimal(12, 2)
+  porcentaje     Decimal           @db.Decimal(5, 2)
+  totalLiquidado Decimal           @map("total_liquidado") @db.Decimal(12, 2)
+  estado         EstadoLiquidacion @default(borrador)
+
+  centro      Centro      @relation(fields: [centroId], references: [id], onDelete: Cascade)
+  profesional Profesional @relation(fields: [centroId, profesionalId], references: [centroId, id], onDelete: Restrict)
+
+  @@unique([centroId, id])
+  @@unique([centroId, profesionalId, periodo])
+  @@map("liquidaciones")
+}
+
+/// Nota clínica. Privada del profesional salvo que se comparta con el equipo.
+/// El texto se guarda cifrado (AES-256-GCM, paso 6).
+model NotaSesion {
+  id            String   @id @default(uuid(7)) @db.Uuid
+  centroId      String   @map("centro_id") @db.Uuid
+  turnoId       String?  @map("turno_id") @db.Uuid
+  pacienteId    String   @map("paciente_id") @db.Uuid
+  profesionalId String   @map("profesional_id") @db.Uuid
+  texto         String
+  compartida    Boolean  @default(false)
+  creadaEn      DateTime @default(now()) @map("creada_en") @db.Timestamptz(3)
+
+  centro      Centro      @relation(fields: [centroId], references: [id], onDelete: Cascade)
+  turno       Turno?      @relation(fields: [centroId, turnoId], references: [centroId, id], onDelete: Restrict)
+  paciente    Paciente    @relation(fields: [centroId, pacienteId], references: [centroId, id], onDelete: Restrict)
+  profesional Profesional @relation(fields: [centroId, profesionalId], references: [centroId, id], onDelete: Restrict)
+
+  @@unique([centroId, id])
+  @@index([centroId, pacienteId, creadaEn])
+  @@map("notas_sesion")
 }

@@ -44,3 +44,26 @@ Para Android e iOS el plan es empaquetar la misma app Angular con Capacitor (acc
 - Backend: Vitest y oxlint (el linter que trae NestJS 12, compatible con las reglas de ESLint).
 - Frontend: Vitest y angular-eslint.
 - Node.js ≥ 24 (desarrollo en Node 26).
+
+## 7. Aislamiento entre centros en dos capas
+
+Equivale a `q()` + `pf()` de la referencia PHP, pero con una barrera en la base además de la de la app.
+
+1. **Base de datos:** toda tabla de un centro lleva `centro_id` y declara `UNIQUE (centro_id, id)`. Las relaciones entre ellas son claves foráneas compuestas: `turnos (centro_id, paciente_id) → pacientes (centro_id, id)`. PostgreSQL rechaza cualquier fila que mezcle datos de dos centros, sin importar cómo se haya escrito la consulta.
+2. **App:** `PrismaService.paraCentro(centroId)` (`backend/src/prisma/centro.ts`) devuelve un cliente que agrega `centro_id` a cada lectura, update y delete, lo completa en cada alta y rechaza pedir, escribir o mover datos de otro centro.
+
+Un test unitario verifica que la lista de modelos filtrados coincida con los modelos del schema que tienen `centroId`. Los tests de integración (`test/aislamiento-centros.e2e-spec.ts`) lo prueban contra PostgreSQL real con dos centros.
+
+Limitaciones conocidas:
+- Las consultas SQL crudas (`$queryRaw`) no pasan por el filtro y deben filtrar a mano.
+- Más adelante se puede sumar Row Level Security de PostgreSQL como tercera barrera.
+
+## 8. Ajustes al modelo de tablas del prototipo
+
+- **IDs UUID v7** en lugar de enteros: no son enumerables desde la API, se pueden generar en el cliente (útil para la app móvil sin conexión) y siguen ordenados por fecha.
+- **`miembros` (centro, usuario, rol)** en lugar de `usuarios.rol`: un mismo usuario puede trabajar en más de un centro con distinto rol. `usuarios.es_superadmin` marca al superadministrador de la plataforma.
+- **`profesionales.usuario_id` opcional** y con nombre propio: se puede cargar un profesional antes de darle acceso.
+- **`recurrencias`** lleva paciente, profesional y sala, porque sin ellos no se pueden generar los turnos.
+- **`periodo` como fecha** (primer día del mes, controlado con un CHECK) en lugar de texto `YYYY-MM`.
+- **Reglas en CHECK de la base:** fin posterior a inicio, porcentajes entre 0 y 100, montos no negativos, día de semana entre 1 y 7, email en minúsculas, y vencimiento de CUD solo si el paciente tiene CUD.
+- **Precios de los planes en 0** hasta definir la política comercial (`backend/prisma/seed.ts`).
