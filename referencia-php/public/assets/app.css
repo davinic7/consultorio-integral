@@ -1,0 +1,16 @@
+:root { --app: #3b4f7a; }
+body { background: #f4f5f8; }
+.app-nav { background: var(--app); }
+.card { border: 0; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+.tabla-compacta td, .tabla-compacta th { padding: .35rem .5rem; vertical-align: middle; }
+.estado-btns .btn { min-width: 2.6rem; }
+.ses-asistio { border-left: 4px solid #198754; }
+.ses-ausente_tarde { border-left: 4px solid #ffc107; }
+.ses-ausente_aviso, .ses-cancelada { border-left: 4px solid #adb5bd; opacity: .75; }
+.ses-programada { border-left: 4px solid #0d6efd; }
+.mic { width: 96px; height: 96px; border-radius: 50%; font-size: 2.4rem; }
+.mic.grabando { animation: pulso 1.2s infinite; }
+@keyframes pulso { 0%{box-shadow:0 0 0 0 rgba(220,53,69,.6)} 100%{box-shadow:0 0 0 18px rgba(220,53,69,0)} }
+.copiable { cursor: pointer; font-family: monospace; }
+.nota { white-space: pre-wrap; }
+@media (max-width: 576px) { h1 { font-size: 1.4rem; } .container { padding-left: .6rem; padding-right: .6rem; } }

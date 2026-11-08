@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.env
+*.sqlite*
+
+# Referencia PHP (no se ejecuta)
+referencia-php/config.php
+referencia-php/storage/*
+!referencia-php/storage/.htaccess
+!referencia-php/storage/cache/
+referencia-php/storage/cache/*
+!referencia-php/storage/cache/.gitkeep
+!referencia-php/storage/cache/.htaccess
