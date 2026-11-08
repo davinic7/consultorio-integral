@@ -82,3 +82,23 @@ Limitaciones conocidas:
   - El access token vive en memoria. El refresh token va en `localStorage`, y en la app móvil irá en el almacenamiento seguro del sistema.
   - Un interceptor renueva la sesión ante un 401 y reintenta; si varios pedidos fallan a la vez, comparten una sola renovación.
   - **Pendiente para producción web:** mover el refresh token a una cookie httpOnly para que un XSS no pueda leerlo.
+
+## 10. ABM de pacientes, profesionales y salas
+
+- **Permisos:**
+
+  | Recurso | Ver | Crear y editar |
+  | --- | --- | --- |
+  | Salas | todos los roles | admin |
+  | Profesionales | todos los roles | admin |
+  | Pacientes | admin y recepción ven todos; un profesional, solo los que tiene asignados | admin y recepción |
+
+- **Porcentaje de liquidación:** lo ven solo el admin y el propio profesional.
+- **Bajas lógicas:** `activa` o `activo = false`. Nada se borra, porque los turnos, las prestaciones y las liquidaciones guardan referencias.
+- **Vínculo profesional ↔ usuario:** un profesional se puede vincular con una cuenta del centro que tenga rol profesional. Es lo que le permite ver sus pacientes.
+- **Búsqueda de pacientes:** busca por nombre, apellido, DNI (con o sin puntos) o teléfono, sin importar tildes ni mayúsculas.
+  - La columna `pacientes.busqueda` guarda ese texto normalizado y la mantiene la app (`src/common/texto.ts`).
+  - Un índice GIN trigram (`pg_trgm`) hace rápidas las búsquedas "contiene".
+  - Se eligió así porque `unaccent` de PostgreSQL no se puede usar en índices sin funciones envoltorio y no se integra con Prisma.
+- **Errores de base:** un filtro global traduce los errores de Prisma a HTTP: único repetido → 409 con el campo, no encontrado → 404, referencia inválida → 409.
+- **Financiadores:** el paciente ya tiene `financiadorId`, pero las obras sociales se gestionan en el paso 7.

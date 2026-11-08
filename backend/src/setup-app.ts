@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { PrismaErroresFilter } from './common/prisma-errores.filter.js';
 import type { Env } from './config/env.js';
 
 /**
@@ -26,6 +27,7 @@ export function setupApp(app: INestApplication): void {
   });
   // Valida con Zod los parámetros declarados como @Body({ schema }), @Param(..., { schema }), etc.
   app.useGlobalPipes(new StandardSchemaValidationPipe());
+  app.useGlobalFilters(new PrismaErroresFilter());
   app.enableShutdownHooks();
 
   const documento = SwaggerModule.createDocument(

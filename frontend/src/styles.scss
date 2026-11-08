@@ -87,7 +87,8 @@ a {
   display: grid;
   gap: 0.25rem;
 
-  input {
+  input,
+  select {
     font: inherit;
     padding: 0.6rem 0.75rem;
     border: 1px solid var(--borde);
@@ -183,4 +184,247 @@ a {
   padding: 0;
   display: grid;
   gap: 0.5rem;
+}
+
+// ───────── Pantallas de gestión ─────────
+
+h2 {
+  margin: 0.5rem 0 0;
+  font-size: 1.05rem;
+}
+
+a.boton {
+  display: inline-block;
+  text-decoration: none;
+}
+
+.barra {
+  &__marca {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  &__menu {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1rem;
+
+    a {
+      text-decoration: none;
+      padding: 0.25rem 0;
+      border-bottom: 2px solid transparent;
+
+      &.activo {
+        border-bottom-color: var(--primario);
+        font-weight: 600;
+      }
+    }
+  }
+}
+
+.encabezado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.panel {
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid var(--borde);
+  border-radius: 0.75rem;
+  background: var(--superficie);
+}
+
+.form-linea {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+
+  .campo {
+    flex: 1 1 10rem;
+  }
+
+  .campo--ancho {
+    flex: 2 1 16rem;
+  }
+}
+
+.grilla-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0.75rem 1rem;
+}
+
+.campo--completo {
+  grid-column: 1 / -1;
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+}
+
+.opciones {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: 0.5rem;
+}
+
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.buscador {
+  flex: 1 1 16rem;
+  font: inherit;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--borde);
+  border-radius: 0.5rem;
+  background: var(--superficie);
+  color: var(--texto);
+}
+
+.lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--borde);
+  border-radius: 0.75rem;
+  background: var(--superficie);
+  overflow: hidden;
+
+  > li + li {
+    border-top: 1px solid var(--borde);
+  }
+
+  &__item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    padding: 0.75rem 1rem;
+
+    &--enlace {
+      color: inherit;
+      text-decoration: none;
+
+      &:hover {
+        background: var(--fondo);
+      }
+    }
+  }
+
+  &__acciones {
+    display: flex;
+    gap: 1rem;
+  }
+
+  &__lateral {
+    text-align: right;
+  }
+}
+
+.inactivo {
+  opacity: 0.6;
+}
+
+.etiqueta {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0 0.4rem;
+  border-radius: 0.25rem;
+  font-size: 0.8rem;
+  background: var(--alerta);
+
+  &--info {
+    background: var(--ok);
+  }
+}
+
+.enlace {
+  font: inherit;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--primario);
+  cursor: pointer;
+  text-decoration: underline;
+
+  &:disabled {
+    color: var(--sutil);
+    cursor: default;
+    text-decoration: none;
+  }
+}
+
+.boton--secundario-chico {
+  background: var(--superficie);
+  color: var(--texto);
+  border-color: var(--borde);
+}
+
+.paginacion {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.volver {
+  display: inline-block;
+  margin-bottom: 0.75rem;
+}
+
+.aviso--ok {
+  background: var(--ok);
+}
+
+.accesos {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: 0.75rem;
+}
+
+.tarjeta-acceso {
+  display: block;
+  padding: 1.25rem 1rem;
+  border: 1px solid var(--borde);
+  border-radius: 0.75rem;
+  background: var(--superficie);
+  color: inherit;
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    border-color: var(--primario);
+  }
+}
+
+input:disabled {
+  opacity: 0.8;
+  cursor: default;
 }

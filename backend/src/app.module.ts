@@ -6,7 +6,10 @@ import { AuthModule } from './auth/auth.module.js';
 import { CentrosModule } from './centros/centros.module.js';
 import { validateEnv } from './config/env.js';
 import { HealthModule } from './health/health.module.js';
+import { PacientesModule } from './pacientes/pacientes.js';
 import { PrismaModule } from './prisma/prisma.module.js';
+import { ProfesionalesModule } from './profesionales/profesionales.js';
+import { SalasModule } from './salas/salas.js';
 import { UsuariosModule } from './usuarios/usuarios.module.js';
 
 @Module({
@@ -19,6 +22,9 @@ import { UsuariosModule } from './usuarios/usuarios.module.js';
     AuthModule,
     UsuariosModule,
     CentrosModule,
+    SalasModule,
+    ProfesionalesModule,
+    PacientesModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

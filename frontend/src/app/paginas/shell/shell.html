@@ -1,0 +1,22 @@
+@if (auth.sesion(); as sesion) {
+  <header class="barra">
+    <a routerLink="/" class="barra__marca">
+      <strong>{{ sesion.centro?.nombre ?? 'Centro Integral' }}</strong>
+      @if (rol(); as r) {
+        <span class="sutil"> · {{ r }}</span>
+      }
+    </a>
+    <nav class="barra__menu" aria-label="Secciones">
+      @for (item of menu(); track item.ruta) {
+        <a [routerLink]="item.ruta" routerLinkActive="activo">{{ item.texto }}</a>
+      }
+    </nav>
+    <div class="barra__acciones">
+      @if (variosCentros()) {
+        <a routerLink="/elegir-centro">Cambiar de centro</a>
+      }
+      <button type="button" class="boton boton--chico" (click)="salir()">Salir</button>
+    </div>
+  </header>
+}
+<router-outlet />

@@ -1,0 +1,134 @@
+<main class="pagina">
+  <a routerLink="/pacientes" class="volver">← Pacientes</a>
+
+  @if (cargando()) {
+    <p class="sutil">Cargando…</p>
+  } @else {
+    <div class="encabezado">
+      <h1>
+        @if (paciente(); as p) {
+          {{ p.apellido }}, {{ p.nombre }}
+          @if (!p.activo) {
+            <span class="etiqueta">De baja</span>
+          }
+        } @else {
+          Nuevo paciente
+        }
+      </h1>
+      @if (paciente() && puedeEditar()) {
+        <button type="button" class="enlace" (click)="alternarActivo()">
+          {{ paciente()!.activo ? 'Dar de baja' : 'Reactivar' }}
+        </button>
+      }
+    </div>
+
+    <form class="panel grilla-form" [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+      <h2 class="campo--completo">Datos personales</h2>
+      <label class="campo">
+        <span>Nombre</span>
+        <input formControlName="nombre" autocomplete="off" />
+      </label>
+      <label class="campo">
+        <span>Apellido</span>
+        <input formControlName="apellido" autocomplete="off" />
+      </label>
+      <label class="campo">
+        <span>DNI</span>
+        <input formControlName="dni" inputmode="numeric" placeholder="Opcional" />
+        @if (form.controls.dni.touched && form.controls.dni.invalid) {
+          <small class="campo__error">Solo números (puede llevar puntos).</small>
+        }
+      </label>
+      <label class="campo">
+        <span>Fecha de nacimiento</span>
+        <input type="date" formControlName="fechaNacimiento" />
+      </label>
+      <label class="campo">
+        <span>Teléfono</span>
+        <input type="tel" formControlName="telefono" />
+      </label>
+      <label class="campo">
+        <span>Email</span>
+        <input type="email" formControlName="email" />
+        @if (form.controls.email.touched && form.controls.email.invalid) {
+          <small class="campo__error">Email inválido.</small>
+        }
+      </label>
+
+      <h2 class="campo--completo">Responsable o tutor</h2>
+      <label class="campo">
+        <span>Nombre</span>
+        <input formControlName="responsableNombre" placeholder="Para pacientes menores" />
+      </label>
+      <label class="campo">
+        <span>Teléfono</span>
+        <input type="tel" formControlName="responsableTelefono" />
+      </label>
+
+      <h2 class="campo--completo">Cobertura</h2>
+      <label class="campo">
+        <span>N.º de afiliado</span>
+        <input formControlName="nroAfiliado" placeholder="Opcional" />
+      </label>
+      <div class="campo">
+        <label class="check">
+          <input type="checkbox" formControlName="tieneCud" />
+          Tiene CUD
+        </label>
+        @if (form.controls.tieneCud.value) {
+          <label class="campo">
+            <span>Vencimiento del CUD</span>
+            <input type="date" formControlName="cudVencimiento" />
+          </label>
+        }
+      </div>
+      <p class="sutil campo--completo">
+        Las obras sociales y prepagas se cargan en un paso próximo.
+      </p>
+
+      @if (puedeEditar()) {
+        <h2 class="campo--completo">Profesionales que lo atienden</h2>
+        <div class="campo--completo opciones">
+          @for (prof of profesionales(); track prof.id) {
+            <label class="check">
+              <input
+                type="checkbox"
+                [checked]="asignados().has(prof.id)"
+                (change)="alternarProfesional(prof.id)"
+              />
+              {{ prof.apellido }}, {{ prof.nombre }}
+              <span class="sutil">· {{ prof.disciplina }}</span>
+            </label>
+          } @empty {
+            <p class="sutil">No hay profesionales cargados.</p>
+          }
+        </div>
+      } @else if (paciente(); as p) {
+        <h2 class="campo--completo">Profesionales que lo atienden</h2>
+        <p class="campo--completo">
+          @for (prof of p.profesionales; track prof.id; let ultimo = $last) {
+            {{ prof.apellido }}, {{ prof.nombre }}{{ ultimo ? '' : ' · ' }}
+          }
+        </p>
+      }
+
+      @if (form.touched && form.invalid) {
+        <small class="campo__error campo--completo">Revisá los datos marcados.</small>
+      }
+      @if (error(); as mensaje) {
+        <p class="aviso aviso--error campo--completo" role="alert">{{ mensaje }}</p>
+      }
+      @if (guardado()) {
+        <p class="aviso aviso--ok campo--completo" role="status">Cambios guardados.</p>
+      }
+
+      @if (puedeEditar()) {
+        <div class="acciones campo--completo">
+          <button type="submit" class="boton" [disabled]="guardando()">
+            {{ guardando() ? 'Guardando…' : esAlta() ? 'Crear paciente' : 'Guardar cambios' }}
+          </button>
+        </div>
+      }
+    </form>
+  }
+</main>

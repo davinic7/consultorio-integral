@@ -1,0 +1,71 @@
+<main class="pagina">
+  <div class="encabezado">
+    <h1>Salas</h1>
+    @if (esAdmin()) {
+      <label class="check">
+        <input type="checkbox" [checked]="verInactivas()" (change)="alternarInactivas()" />
+        Ver dadas de baja
+      </label>
+    }
+  </div>
+
+  @if (esAdmin()) {
+    <form class="panel form-linea" [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+      <label class="campo">
+        <span>Nombre</span>
+        <input formControlName="nombre" placeholder="Ej. Sala 3" />
+      </label>
+      <label class="campo campo--ancho">
+        <span>Descripción</span>
+        <input formControlName="descripcion" placeholder="Opcional" />
+      </label>
+      <div class="acciones">
+        <button type="submit" class="boton" [disabled]="guardando()">
+          {{ editando() ? 'Guardar cambios' : 'Agregar sala' }}
+        </button>
+        @if (editando()) {
+          <button type="button" class="boton boton--secundario-chico" (click)="cancelar()">
+            Cancelar
+          </button>
+        }
+      </div>
+      @if (form.controls.nombre.touched && form.controls.nombre.invalid) {
+        <small class="campo__error">El nombre es obligatorio.</small>
+      }
+    </form>
+  }
+
+  @if (error(); as mensaje) {
+    <p class="aviso aviso--error" role="alert">{{ mensaje }}</p>
+  }
+
+  @if (cargando()) {
+    <p class="sutil">Cargando…</p>
+  } @else if (salas().length === 0) {
+    <p class="sutil">Todavía no hay salas cargadas.</p>
+  } @else {
+    <ul class="lista">
+      @for (sala of salas(); track sala.id) {
+        <li class="lista__item" [class.inactivo]="!sala.activa">
+          <div>
+            <strong>{{ sala.nombre }}</strong>
+            @if (!sala.activa) {
+              <span class="etiqueta">De baja</span>
+            }
+            @if (sala.descripcion) {
+              <div class="sutil">{{ sala.descripcion }}</div>
+            }
+          </div>
+          @if (esAdmin()) {
+            <div class="lista__acciones">
+              <button type="button" class="enlace" (click)="editar(sala)">Editar</button>
+              <button type="button" class="enlace" (click)="alternarActiva(sala)">
+                {{ sala.activa ? 'Dar de baja' : 'Reactivar' }}
+              </button>
+            </div>
+          }
+        </li>
+      }
+    </ul>
+  }
+</main>

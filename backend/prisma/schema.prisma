@@ -284,6 +284,9 @@ model Paciente {
   cudVencimiento      DateTime? @map("cud_vencimiento") @db.Date
   activo              Boolean   @default(true)
   creadoEn            DateTime  @default(now()) @map("creado_en") @db.Timestamptz(3)
+  /// Nombre, apellido, DNI y teléfono sin tildes y en minúsculas, para buscar.
+  /// Lo mantiene la app (src/common/texto.ts).
+  busqueda            String    @default("") @db.VarChar(400)
 
   centro        Centro                @relation(fields: [centroId], references: [id], onDelete: Cascade)
   financiador   Financiador?          @relation(fields: [centroId, financiadorId], references: [centroId, id], onDelete: Restrict)
@@ -295,6 +298,7 @@ model Paciente {
   @@unique([centroId, id])
   @@unique([centroId, dni])
   @@index([centroId, apellido, nombre])
+  @@index([busqueda(ops: raw("gin_trgm_ops"))], type: Gin)
   @@map("pacientes")
 }
 

@@ -1,19 +1,4 @@
 @if (auth.sesion(); as sesion) {
-  <header class="barra">
-    <div>
-      <strong>{{ sesion.centro?.nombre ?? 'Centro Integral' }}</strong>
-      @if (rol(); as r) {
-        <span class="sutil"> · {{ r }}</span>
-      }
-    </div>
-    <nav class="barra__acciones">
-      @if (variosCentros()) {
-        <a routerLink="/elegir-centro">Cambiar de centro</a>
-      }
-      <button type="button" class="boton boton--chico" (click)="salir()">Salir</button>
-    </nav>
-  </header>
-
   <main class="pagina">
     <h1>Hola, {{ sesion.usuario.nombre }}</h1>
 
@@ -21,6 +6,12 @@
       <p>Entraste como superadministrador. La gestión de centros y planes llega con su pantalla.</p>
     } @else if (!sesion.centro) {
       <p class="aviso">Tu cuenta todavía no pertenece a ningún centro activo.</p>
+    } @else {
+      <ul class="accesos">
+        <li><a routerLink="/pacientes" class="tarjeta-acceso">Pacientes</a></li>
+        <li><a routerLink="/profesionales" class="tarjeta-acceso">Profesionales</a></li>
+        <li><a routerLink="/salas" class="tarjeta-acceso">Salas</a></li>
+      </ul>
     }
 
     <p class="estado" [attr.data-estado]="estadoApi()">

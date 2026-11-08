@@ -1,0 +1,101 @@
+<main class="pagina">
+  <div class="encabezado">
+    <h1>Pacientes</h1>
+    @if (puedeEditar()) {
+      <a routerLink="/pacientes/nuevo" class="boton">Nuevo paciente</a>
+    }
+  </div>
+
+  <div class="filtros">
+    <input
+      type="search"
+      class="buscador"
+      placeholder="Buscar por nombre, DNI o teléfono"
+      aria-label="Buscar pacientes"
+      (input)="buscar($any($event.target).value)"
+    />
+    @if (puedeEditar()) {
+      <label class="check">
+        <input type="checkbox" [checked]="verInactivos()" (change)="alternarInactivos()" />
+        Ver dados de baja
+      </label>
+    }
+  </div>
+
+  @if (esProfesional()) {
+    <p class="sutil">Ves los pacientes que tenés asignados.</p>
+  }
+
+  @if (error(); as mensaje) {
+    <p class="aviso aviso--error" role="alert">{{ mensaje }}</p>
+  }
+
+  @if (cargando() && pacientes().length === 0) {
+    <p class="sutil">Cargando…</p>
+  } @else if (pacientes().length === 0) {
+    <p class="sutil">
+      {{ q() ? 'No hay pacientes que coincidan con la búsqueda.' : 'Todavía no hay pacientes.' }}
+    </p>
+  } @else {
+    <ul class="lista">
+      @for (p of pacientes(); track p.id) {
+        <li>
+          <a
+            class="lista__item lista__item--enlace"
+            [routerLink]="['/pacientes', p.id]"
+            [class.inactivo]="!p.activo"
+          >
+            <div>
+              <strong>{{ p.apellido }}, {{ p.nombre }}</strong>
+              @if (!p.activo) {
+                <span class="etiqueta">De baja</span>
+              }
+              @if (p.tieneCud) {
+                <span class="etiqueta etiqueta--info">CUD</span>
+              }
+              <div class="sutil">
+                @if (p.dni) {
+                  DNI {{ p.dni }}
+                }
+                @if (p.telefono) {
+                  · {{ p.telefono }}
+                }
+              </div>
+            </div>
+            <div class="sutil lista__lateral">
+              @for (prof of p.profesionales; track prof.id; let ultimo = $last) {
+                {{ prof.apellido }}{{ ultimo ? '' : ', ' }}
+              } @empty {
+                Sin profesional
+              }
+            </div>
+          </a>
+        </li>
+      }
+    </ul>
+
+    @if (paginas() > 1) {
+      <nav class="paginacion" aria-label="Páginas">
+        <button
+          type="button"
+          class="enlace"
+          [disabled]="pagina() === 1"
+          (click)="irA(pagina() - 1)"
+        >
+          ← Anterior
+        </button>
+        <span class="sutil"
+          >Página {{ pagina() }} de {{ paginas() }} · {{ total() }} pacientes</span
+        >
+        <button
+          type="button"
+          class="enlace"
+          [disabled]="pagina() === paginas()"
+          (click)="irA(pagina() + 1)"
+        >
+          Siguiente →
+        </button>
+      </nav>
+    }
+  }
+</main>
