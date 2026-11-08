@@ -1,1 +1,186 @@
-/* You can add global styles to this file, and also import other style files */
+// Estilos base. Colores como variables para soportar modo oscuro.
+:root {
+  color-scheme: light dark;
+  --fondo: #f6f7f9;
+  --superficie: #ffffff;
+  --texto: #1d2125;
+  --sutil: #5f6b76;
+  --borde: #d5dbe1;
+  --primario: #1f6f8b;
+  --primario-texto: #ffffff;
+  --ok: #e6f4ea;
+  --alerta: #fff4e5;
+  --error: #fdecea;
+  --error-texto: #a1251b;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fondo: #14181c;
+    --superficie: #1d2328;
+    --texto: #e7ebee;
+    --sutil: #9aa6b1;
+    --borde: #34404a;
+    --primario: #4fa6c4;
+    --primario-texto: #0b1a20;
+    --ok: #1f3a2a;
+    --alerta: #3d3020;
+    --error: #3f2220;
+    --error-texto: #f3a59d;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--texto);
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  line-height: 1.5;
+}
+
+h1 {
+  margin: 0 0 0.25rem;
+  font-size: 1.5rem;
+}
+
+a {
+  color: var(--primario);
+}
+
+.sutil {
+  color: var(--sutil);
+}
+
+.pagina {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+
+  &--centrada {
+    min-height: 100dvh;
+    display: grid;
+    place-items: center;
+  }
+}
+
+.tarjeta {
+  width: 100%;
+  max-width: 24rem;
+  padding: 1.5rem;
+  border: 1px solid var(--borde);
+  border-radius: 0.75rem;
+  background: var(--superficie);
+  display: grid;
+  gap: 1rem;
+}
+
+.campo {
+  display: grid;
+  gap: 0.25rem;
+
+  input {
+    font: inherit;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid var(--borde);
+    border-radius: 0.5rem;
+    background: var(--fondo);
+    color: var(--texto);
+  }
+
+  &__error {
+    color: var(--error-texto);
+  }
+}
+
+.boton {
+  font: inherit;
+  padding: 0.6rem 1rem;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  background: var(--primario);
+  color: var(--primario-texto);
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+
+  &--secundario {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    background: var(--superficie);
+    color: var(--texto);
+    border-color: var(--borde);
+    text-align: left;
+  }
+
+  &--chico {
+    padding: 0.3rem 0.75rem;
+  }
+}
+
+.aviso {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  background: var(--alerta);
+
+  &--error {
+    background: var(--error);
+    color: var(--error-texto);
+  }
+}
+
+.estado {
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+
+  &[data-estado='ok'] {
+    background: var(--ok);
+  }
+  &[data-estado='sin-base'] {
+    background: var(--alerta);
+  }
+  &[data-estado='sin-api'] {
+    background: var(--error);
+  }
+}
+
+.barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--superficie);
+  border-bottom: 1px solid var(--borde);
+
+  &__acciones {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+}
+
+.lista-centros {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}

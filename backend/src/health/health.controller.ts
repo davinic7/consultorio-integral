@@ -1,5 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { Publico } from '../auth/decoradores.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
 export interface EstadoSalud {
@@ -7,6 +8,7 @@ export interface EstadoSalud {
   db: 'up' | 'down';
 }
 
+@Publico()
 @ApiTags('health')
 @Controller('health')
 export class HealthController {

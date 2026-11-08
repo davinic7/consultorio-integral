@@ -67,3 +67,18 @@ Limitaciones conocidas:
 - **`periodo` como fecha** (primer día del mes, controlado con un CHECK) en lugar de texto `YYYY-MM`.
 - **Reglas en CHECK de la base:** fin posterior a inicio, porcentajes entre 0 y 100, montos no negativos, día de semana entre 1 y 7, email en minúsculas, y vencimiento de CUD solo si el paciente tiene CUD.
 - **Precios de los planes en 0** hasta definir la política comercial (`backend/prisma/seed.ts`).
+
+## 9. Autenticación y roles
+
+- **Contraseñas:** scrypt de Node (sin dependencias nativas, que complican Windows y el despliegue). Los parámetros viajan en el hash (`scrypt$N$r$p$salt$hash`), así se pueden endurecer sin invalidar los existentes. Al login se verifica siempre un hash, exista o no el email, para no revelar cuentas por el tiempo de respuesta.
+- **Tokens:**
+  - **Access token:** JWT HS256 de 15 minutos con usuario, sesión, centro, rol y si es superadmin.
+  - **Refresh token:** valor al azar de 30 días, del que en la tabla `sesiones` se guarda solo su SHA-256. Rota en cada uso; si llega uno ya rotado, se asume robo y se cierran todas las sesiones del usuario.
+- **Varios centros:** si el usuario tiene un solo centro entra directo; si tiene varios elige después (`POST /auth/centro`). El rol se toma de `miembros` en cada renovación: un cambio de rol o una baja se aplica como mucho a los 15 minutos.
+- **Guards:** toda ruta exige token salvo `@Publico()`. `@Roles(...)` exige centro elegido y rol, y `@SoloSuperadmin()` restringe al superadmin, que no ve datos de centros salvo que sea miembro.
+- **Límites:** 10 intentos de login por minuto por IP y 300 pedidos por minuto en general (`@nestjs/throttler`).
+- **No se usó `@nestjs/authentication` ni `@nestjs/authorization`:** están en versión 0.1, demasiado inmaduras para la base de seguridad. Se usa `@nestjs/jwt` (estable) con guards propios.
+- **Frontend:**
+  - El access token vive en memoria. El refresh token va en `localStorage`, y en la app móvil irá en el almacenamiento seguro del sistema.
+  - Un interceptor renueva la sesión ante un 401 y reintenta; si varios pedidos fallan a la vez, comparten una sola renovación.
+  - **Pendiente para producción web:** mover el refresh token a una cookie httpOnly para que un XSS no pueda leerlo.

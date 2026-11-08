@@ -151,3 +151,15 @@ export function clienteDeCentro(prisma: PrismaClient, centroId: string) {
 }
 
 export type ClienteDeCentro = ReturnType<typeof clienteDeCentro>;
+
+/**
+ * Datos para crear un registro con el cliente de centro, sin centroId (lo
+ * completa la extensión). Evita castear a any y sigue chequeando el resto:
+ *
+ *   db.sala.create({ data: sinCentro<Prisma.SalaUncheckedCreateInput>({ nombre }) })
+ */
+export function sinCentro<T extends { centroId: string }>(
+  datos: Omit<T, 'centroId'>,
+): T {
+  return datos as T;
+}

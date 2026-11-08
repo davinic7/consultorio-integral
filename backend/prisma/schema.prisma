@@ -138,6 +138,7 @@ model Centro {
   pagos         Pago[]
   liquidaciones Liquidacion[]
   notasSesion   NotaSesion[]
+  sesiones      Sesion[]
 
   @@map("centros")
 }
@@ -157,8 +158,32 @@ model Usuario {
 
   miembros      Miembro[]
   profesionales Profesional[]
+  sesiones      Sesion[]
 
   @@map("usuarios")
+}
+
+/// Sesión iniciada: guarda el hash del refresh token (rotación en cada uso).
+/// Si llega un refresh token ya rotado, se asume robo y se revocan todas las sesiones del usuario.
+model Sesion {
+  id               String    @id @default(uuid(7)) @db.Uuid
+  usuarioId        String    @map("usuario_id") @db.Uuid
+  /// Centro elegido en esta sesión (null: superadmin sin centro).
+  centroId         String?   @map("centro_id") @db.Uuid
+  /// SHA-256 del refresh token; el token en claro nunca se guarda.
+  tokenHash        String    @unique @map("token_hash") @db.Char(64)
+  creadaEn         DateTime  @default(now()) @map("creada_en") @db.Timestamptz(3)
+  expiraEn         DateTime  @map("expira_en") @db.Timestamptz(3)
+  revocadaEn       DateTime? @map("revocada_en") @db.Timestamptz(3)
+  /// Sesión que la reemplazó al rotar el token.
+  reemplazadaPorId String?   @map("reemplazada_por_id") @db.Uuid
+  userAgent        String?   @map("user_agent") @db.VarChar(255)
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  centro  Centro? @relation(fields: [centroId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId])
+  @@map("sesiones")
 }
 
 // ───────────────────────── Datos de cada centro ─────────────────────────

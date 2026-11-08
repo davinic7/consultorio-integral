@@ -26,14 +26,18 @@
     "db:studio": "prisma studio",
     "db:generate": "prisma generate",
     "db:seed": "prisma db seed",
-    "db:reset": "prisma migrate reset && prisma generate && prisma db seed"
+    "db:reset": "prisma migrate reset && prisma generate && prisma db seed",
+    "crear-superadmin": "tsx scripts/crear-superadmin.ts",
+    "db:demo": "tsx prisma/demo.ts"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.1",
     "@nestjs/config": "^12.1.1",
     "@nestjs/core": "^12.0.1",
+    "@nestjs/jwt": "^12.0.4",
     "@nestjs/platform-express": "^12.0.1",
     "@nestjs/swagger": "^12.1.1",
+    "@nestjs/throttler": "^6.7.1",
     "@prisma/adapter-pg": "7.10.1",
     "@prisma/client": "7.10.1",
     "pg": "^8.23.1",

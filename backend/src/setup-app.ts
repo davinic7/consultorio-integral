@@ -1,4 +1,8 @@
-import { INestApplication, VersioningType } from '@nestjs/common';
+import {
+  INestApplication,
+  StandardSchemaValidationPipe,
+  VersioningType,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import type { Env } from './config/env.js';
@@ -20,6 +24,8 @@ export function setupApp(app: INestApplication): void {
       .filter(Boolean),
     credentials: true,
   });
+  // Valida con Zod los parámetros declarados como @Body({ schema }), @Param(..., { schema }), etc.
+  app.useGlobalPipes(new StandardSchemaValidationPipe());
   app.enableShutdownHooks();
 
   const documento = SwaggerModule.createDocument(

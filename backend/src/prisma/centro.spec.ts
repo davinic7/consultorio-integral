@@ -10,13 +10,15 @@ const C = '0190f000-0000-7000-8000-000000000001';
 const OTRO = '0190f000-0000-7000-8000-000000000002';
 
 describe('MODELOS_DE_CENTRO', () => {
-  it('incluye exactamente los modelos del schema que tienen centroId', () => {
+  // Cuenta solo centroId obligatorio: Sesion tiene un centroId opcional
+  // (centro elegido al iniciar sesión) y no es un dato del centro.
+  it('incluye exactamente los modelos del schema que tienen centroId obligatorio', () => {
     const schema = readFileSync(
       join(import.meta.dirname, '../../prisma/schema.prisma'),
       'utf8',
     );
     const conCentro = [...schema.matchAll(/^model (\w+) \{([\s\S]*?)^\}/gm)]
-      .filter(([, , cuerpo]) => /^\s+centroId\s/m.test(cuerpo))
+      .filter(([, , cuerpo]) => /^\s+centroId\s+String\s/m.test(cuerpo))
       .map(([, nombre]) => nombre)
       .sort();
     expect([...MODELOS_DE_CENTRO].sort()).toEqual(conCentro);

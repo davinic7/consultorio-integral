@@ -9,6 +9,12 @@ export const envSchema = z.object({
   DATABASE_URL: z.string().url(),
   /** Orígenes permitidos para CORS, separados por coma (web, app móvil). */
   CORS_ORIGINS: z.string().default('http://localhost:4200'),
+  /** Clave para firmar los access tokens (JWT). Mínimo 32 caracteres, al azar. */
+  JWT_SECRET: z.string().min(32, 'debe tener al menos 32 caracteres'),
+  /** Vida del access token, en segundos (15 minutos por defecto). */
+  ACCESS_TOKEN_TTL_SEG: z.coerce.number().int().positive().default(900),
+  /** Vida del refresh token, en días. */
+  REFRESH_TOKEN_TTL_DIAS: z.coerce.number().int().positive().default(30),
 });
 
 export type Env = z.infer<typeof envSchema>;

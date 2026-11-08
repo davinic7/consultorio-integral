@@ -7,6 +7,7 @@ cp .env.example .env      # ajustar DATABASE_URL
 npm install               # genera también el cliente de Prisma
 npm run db:migrate        # aplica migraciones y regenera el cliente de Prisma
 npm run db:seed           # planes y módulos
+npm run db:demo           # opcional: centros y usuarios demo (DEMO_PASSWORD en .env)
 npm run start:dev         # http://localhost:3000/api/v1
 ```
 
@@ -14,4 +15,6 @@ npm run start:dev         # http://localhost:3000/api/v1
 - Salud: `GET /api/v1/health`
 - Tests: `npm test` (unitarios) y `npm run test:e2e` (integración; usa `TEST_DATABASE_URL`, una base aparte que se vacía en cada corrida)
 - Datos de un centro: siempre `prisma.paraCentro(centroId)` (ver `src/prisma/centro.ts` y docs/decisiones.md §7)
+- Primer superadmin: `npm run crear-superadmin -- email@dominio.com "Nombre"`
+- Auth: `POST /api/v1/auth/login`, `/refresh`, `/logout`, `/centro`; `GET /api/v1/auth/yo`
 - Lint: `npm run lint` (oxlint)
