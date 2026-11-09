@@ -10,9 +10,9 @@ Actualizado: 9 de noviembre de 2026. Orden de pasos según [prototipo.md](protot
 | 2 | Modelo de datos multi-centro: `centro_id` y claves foráneas compuestas en todas las tablas, `paraCentro()` | `b663287` |
 | 3 | Usuarios, login con tokens rotativos y roles por centro; login en Angular | `d04baf2` |
 | 4 | ABM de salas, profesionales y pacientes; búsqueda sin tildes; menú por rol | `032f01e` |
-| 5 | Agenda: superposición controlada por PostgreSQL, turnos semanales, vistas día, semana y salas; el profesional gestiona los suyos y se avisa a admin y recepción | sin commitear |
+| 5 | Agenda: superposición controlada por PostgreSQL, turnos semanales, vistas día, semana y salas; el profesional gestiona los suyos y se avisa a admin y recepción | `ac8c46d` |
 
-Sin commitear todavía: el paso 5 completo, [guia-de-pruebas.md](guia-de-pruebas.md) y este archivo.
+Cómo probar todo: [guia-de-pruebas.md](guia-de-pruebas.md).
 
 ## Próximo: paso 6 — Asistencia, pacientes compartidos y notas cifradas
 
@@ -44,7 +44,7 @@ Decisiones abiertas para el paso 6:
 - `backend/AGENTS.md` (generado por NestJS, promociona su telemetría): decidir si se borra.
 - Agenda: arrastrar y soltar turnos para moverlos (hoy se mueven desde el panel) y horario visible configurable por centro (hoy 07:00 a 22:00).
 - Avisos: hoy se consultan cada minuto; más adelante, notificaciones push en la app móvil.
-- Publicar el sistema en un servidor para verlo desde cualquier navegador. GitHub Pages no sirve para el backend ni la base: hace falta un servicio que corra Node y PostgreSQL.
+- Publicación: ya está preparada para Render (Docker + `render.yaml`, ver [publicar.md](publicar.md)). Falta crear la cuenta y el Blueprint en render.com, y probar ahí el primer deploy.
 
 ## Cómo retomar
 

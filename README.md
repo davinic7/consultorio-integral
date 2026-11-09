@@ -12,3 +12,4 @@ Stack: TypeScript, Node.js, Angular, PostgreSQL.
 - `frontend/` — Angular ([README](frontend/README.md))
 - `docs/` — [prototipo](docs/prototipo.md) y [decisiones de arquitectura](docs/decisiones.md)
 - `referencia-php/` — sistema original del consultorio (solo lectura)
+- `Dockerfile` y `render.yaml` — imagen de producción y publicación en Render ([cómo publicar](docs/publicar.md))

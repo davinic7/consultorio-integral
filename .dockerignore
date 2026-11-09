@@ -1,0 +1,15 @@
+# No entra a la imagen: dependencias y compilados locales, secretos, la referencia PHP.
+**/node_modules
+**/dist
+**/.angular
+**/coverage
+**/*.tsbuildinfo
+**/.env
+**/.env.*
+!**/.env.example
+backend/src/generated
+referencia-php
+docs
+.git
+.claude
+.vscode

@@ -13,8 +13,15 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { hashPassword } from '../src/auth/password.js';
 import { PrismaClient, Rol } from '../src/generated/prisma/client.js';
 
-if (process.env.NODE_ENV === 'production') {
-  throw new Error('Los datos demo no se cargan en producción');
+// En un servidor (NODE_ENV=production) solo se cargan si se pide explícitamente
+// con CARGAR_DEMO=true, por ejemplo en un ambiente de demostración.
+if (
+  process.env.NODE_ENV === 'production' &&
+  process.env.CARGAR_DEMO !== 'true'
+) {
+  throw new Error(
+    'Los datos demo no se cargan en producción (salvo CARGAR_DEMO=true)',
+  );
 }
 const password = process.env.DEMO_PASSWORD;
 if (!password || password.length < 10) {

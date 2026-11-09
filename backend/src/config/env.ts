@@ -15,6 +15,11 @@ export const envSchema = z.object({
   ACCESS_TOKEN_TTL_SEG: z.coerce.number().int().positive().default(900),
   /** Vida del refresh token, en días. */
   REFRESH_TOKEN_TTL_DIAS: z.coerce.number().int().positive().default(30),
+  /**
+   * Carpeta con la app Angular compilada (frontend/dist/frontend/browser).
+   * Si se define, la API también sirve la web. En desarrollo no hace falta.
+   */
+  FRONTEND_DIR: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
