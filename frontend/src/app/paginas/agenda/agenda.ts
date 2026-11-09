@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import {
@@ -17,10 +17,13 @@ import type {
   Turno,
 } from '../../core/api/modelos';
 import { ESTADOS_MARCABLES, NOMBRE_ESTADO, sePuedeMarcar } from '../../core/asistencia';
+import { colorDisciplina, type ColorDisciplina } from '../../core/disciplina';
 import { AuthService } from '../../core/auth/auth.service';
 import {
+  ahoraEn,
   diaSemana,
   diasDesde,
+  minutos,
   etiquetaDia,
   fechaLarga,
   hoyEn,
@@ -244,6 +247,28 @@ export class Agenda implements OnInit {
   }
 
   // ───────── Panel ─────────
+
+  /** Fecha y minuto actuales del centro (línea "ahora" y turnos en curso). */
+  protected readonly ahora = signal(ahoraEn(this.zona()));
+  protected readonly lineaAhora = computed(() => {
+    const m = this.ahora().minutos;
+    if (m < HORA_INICIO * 60 || m > HORA_FIN * 60) return null;
+    return ((m - HORA_INICIO * 60) / 60) * PX_POR_HORA;
+  });
+  private readonly reloj = (() => {
+    const id = setInterval(() => this.ahora.set(ahoraEn(this.zona())), 30_000);
+    inject(DestroyRef).onDestroy(() => clearInterval(id));
+    return id;
+  })();
+
+  protected color(t: Turno): ColorDisciplina {
+    return colorDisciplina(t.profesional.disciplina);
+  }
+
+  protected enCurso(t: Turno): boolean {
+    const a = this.ahora();
+    return t.fecha === a.fecha && minutos(t.hora) <= a.minutos && a.minutos < minutos(t.horaFin);
+  }
 
   protected readonly nombreEstado = NOMBRE_ESTADO;
   protected readonly estadosMarcables = ESTADOS_MARCABLES;

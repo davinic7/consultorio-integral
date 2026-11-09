@@ -1,20 +1,25 @@
-<main class="pagina pagina--ancha">
-  <div class="encabezado">
+<main class="oc-contenido">
+  <div class="agenda-encabezado">
     <h1>Agenda</h1>
     @if (puedeCrear()) {
-      <button type="button" class="boton" (click)="abrirNuevo()">Nuevo turno</button>
+      <button type="button" class="oc-btn oc-btn--primario agenda-nuevo" (click)="abrirNuevo()">
+        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M12 5v14M5 12h14" />
+        </svg>
+        Nuevo turno
+      </button>
     }
   </div>
 
   <div class="agenda-controles">
-    <div class="segmentado" role="group" aria-label="Vista">
-      <button type="button" [class.activo]="vista() === 'dia'" (click)="cambiarVista('dia')">
+    <div class="oc-segmentado" role="group" aria-label="Vista">
+      <button type="button" [attr.aria-pressed]="vista() === 'dia'" (click)="cambiarVista('dia')">
         Día
       </button>
-      <button type="button" [class.activo]="vista() === 'semana'" (click)="cambiarVista('semana')">
+      <button type="button" [attr.aria-pressed]="vista() === 'semana'" (click)="cambiarVista('semana')">
         Semana
       </button>
-      <button type="button" [class.activo]="vista() === 'salas'" (click)="cambiarVista('salas')">
+      <button type="button" [attr.aria-pressed]="vista() === 'salas'" (click)="cambiarVista('salas')">
         Salas
       </button>
     </div>
@@ -22,16 +27,16 @@
     <div class="agenda-nav">
       <button
         type="button"
-        class="boton boton--secundario-chico"
+        class="oc-btn oc-btn--chico"
         (click)="mover(-1)"
         aria-label="Anterior"
       >
         ‹
       </button>
-      <button type="button" class="boton boton--secundario-chico" (click)="irAHoy()">Hoy</button>
+      <button type="button" class="oc-btn oc-btn--chico" (click)="irAHoy()">Hoy</button>
       <button
         type="button"
-        class="boton boton--secundario-chico"
+        class="oc-btn oc-btn--chico"
         (click)="mover(1)"
         aria-label="Siguiente"
       >
@@ -77,23 +82,23 @@
   <h2 class="agenda-titulo">
     {{ titulo() }}
     @if (cargando()) {
-      <span class="sutil"> · cargando…</span>
+      <span class="oc-suave"> · cargando…</span>
     }
   </h2>
 
   @if (esProfesional() && !miProfesional()) {
-    <p class="aviso">
+    <p class="oc-alerta oc-alerta--aviso">
       Tu cuenta no está vinculada a una ficha de profesional: pedile al admin que la vincule.
     </p>
   }
   @if (vista() === 'salas' && salas().length === 0) {
-    <p class="aviso">No hay salas cargadas.</p>
+    <p class="oc-alerta oc-alerta--aviso">No hay salas cargadas.</p>
   }
   @if (error(); as mensaje) {
-    <p class="aviso aviso--error" role="alert">{{ mensaje }}</p>
+    <p class="oc-alerta oc-alerta--error" role="alert">{{ mensaje }}</p>
   }
   @if (aviso(); as mensaje) {
-    <p class="aviso aviso--ok" role="status">
+    <p class="oc-alerta oc-alerta--ok" role="status">
       {{ mensaje }}
       <button type="button" class="enlace" (click)="aviso.set(null)">Cerrar</button>
     </p>
@@ -124,6 +129,9 @@
             [attr.role]="puedeCrear() ? 'button' : null"
             [attr.aria-label]="'Agregar turno: ' + col.titulo"
           >
+            @if (col.fecha === ahora().fecha && lineaAhora() !== null) {
+              <span class="oc-ahora calendario__ahora" [style.top.px]="lineaAhora()" aria-hidden="true"></span>
+            }
             @for (b of col.bloques; track $index) {
               @let t = b.item.turno;
               <button
@@ -132,6 +140,8 @@
                 [class.turno--ocupado]="!t"
                 [class.turno--recurrente]="t?.recurrenciaId"
                 [attr.data-estado]="t?.estado"
+                [attr.data-color]="t ? color(t) : null"
+                [class.turno--en-curso]="t && enCurso(t)"
                 [style.top.px]="b.top"
                 [style.height.px]="b.alto"
                 [style.left.%]="b.izquierda"
@@ -163,7 +173,7 @@
     </div>
 
     @if (panel()) {
-      <aside class="panel agenda-panel" aria-label="Turno">
+      <aside class="oc-tarjeta agenda-panel" aria-label="Turno">
         <button type="button" class="enlace agenda-panel__cerrar" (click)="cerrarPanel()">
           Cerrar
         </button>
@@ -210,7 +220,7 @@
                     @for (e of estadosMarcables; track e) {
                       <button
                         type="button"
-                        class="boton boton--asistencia"
+                        class="oc-btn boton--asistencia"
                         [attr.data-estado]="e"
                         [class.elegido]="t.estado === e"
                         [attr.aria-pressed]="t.estado === e"
@@ -231,28 +241,28 @@
                       Volver a pendiente (para corregir, mover o cancelar)
                     </button>
                   } @else if (!sePuedeMarcar('presente', t.inicio)) {
-                    <p class="sutil">
+                    <p class="oc-suave">
                       Presente y ausente sin aviso se marcan cuando empieza el turno.
                     </p>
                   }
                 }
                 @if (errorPanel(); as mensaje) {
-                  <p class="aviso aviso--error" role="alert">{{ mensaje }}</p>
+                  <p class="oc-alerta oc-alerta--error" role="alert">{{ mensaje }}</p>
                 }
               </section>
 
               @if (puedeGestionar(t)) {
                 <div class="acciones">
-                  <button type="button" class="boton" (click)="editar()">Mover o editar</button>
+                  <button type="button" class="oc-btn oc-btn--primario" (click)="editar()">Mover o editar</button>
                 </div>
-                <label class="campo">
+                <label class="oc-campo">
                   <span>Motivo de cancelación (opcional)</span>
                   <input [(ngModel)]="motivoCancelacion" maxlength="300" />
                 </label>
                 <div class="acciones">
                   <button
                     type="button"
-                    class="boton boton--peligro"
+                    class="oc-btn oc-btn--peligro"
                     [disabled]="guardando()"
                     (click)="cancelar()"
                   >
@@ -270,7 +280,7 @@
                   }
                 </div>
                 @if (esProfesional()) {
-                  <p class="sutil">Los cambios que hagas se avisan a administración y recepción.</p>
+                  <p class="oc-suave">Los cambios que hagas se avisan a administración y recepción.</p>
                 }
               }
             }
@@ -283,7 +293,7 @@
               (ngSubmit)="panel() === 'nuevo' ? guardarNuevo() : guardarCambios()"
             >
               @if (panel() === 'nuevo') {
-                <label class="campo">
+                <label class="oc-campo">
                   <span>Buscar paciente</span>
                   <input
                     type="search"
@@ -293,7 +303,7 @@
                     placeholder="Nombre, DNI o teléfono"
                   />
                 </label>
-                <label class="campo">
+                <label class="oc-campo">
                   <span>Paciente</span>
                   <select name="pacienteId" [(ngModel)]="form.pacienteId" required>
                     <option value="">Elegí un paciente</option>
@@ -302,7 +312,7 @@
                     }
                   </select>
                   @if (esProfesional()) {
-                    <small class="sutil">Aparecen los pacientes que tenés asignados.</small>
+                    <small class="oc-suave">Aparecen los pacientes que tenés asignados.</small>
                   }
                 </label>
               } @else if (seleccionado(); as t) {
@@ -312,7 +322,7 @@
               }
 
               @if (!esProfesional()) {
-                <label class="campo">
+                <label class="oc-campo">
                   <span>Profesional</span>
                   <select name="profesionalId" [(ngModel)]="form.profesionalId" required>
                     <option value="">Elegí un profesional</option>
@@ -325,7 +335,7 @@
                 </label>
               }
 
-              <label class="campo">
+              <label class="oc-campo">
                 <span>Sala</span>
                 <select name="salaId" [(ngModel)]="form.salaId">
                   <option value="">Sin sala</option>
@@ -336,15 +346,15 @@
               </label>
 
               <div class="fila-campos">
-                <label class="campo">
+                <label class="oc-campo">
                   <span>Fecha</span>
                   <input type="date" name="fecha" [(ngModel)]="form.fecha" required />
                 </label>
-                <label class="campo">
+                <label class="oc-campo">
                   <span>Hora</span>
                   <input type="time" name="hora" [(ngModel)]="form.hora" step="300" required />
                 </label>
-                <label class="campo">
+                <label class="oc-campo">
                   <span>Duración (min)</span>
                   <input
                     type="number"
@@ -359,7 +369,7 @@
               </div>
 
               @if (panel() === 'nuevo') {
-                <label class="check">
+                <label class="oc-check">
                   <input type="checkbox" name="repetir" [(ngModel)]="form.repetir" />
                   Repetir todas las semanas
                   @if (form.fecha) {
@@ -367,7 +377,7 @@
                   }
                 </label>
                 @if (form.repetir) {
-                  <label class="campo">
+                  <label class="oc-campo">
                     <span>Hasta (opcional; sin fecha, 6 meses)</span>
                     <input
                       type="date"
@@ -379,20 +389,20 @@
                 }
               }
 
-              <label class="campo">
+              <label class="oc-campo">
                 <span>Observaciones</span>
                 <input name="observaciones" [(ngModel)]="form.observaciones" maxlength="500" />
               </label>
 
               @if (errorPanel(); as mensaje) {
-                <p class="aviso aviso--error" role="alert">{{ mensaje }}</p>
+                <p class="oc-alerta oc-alerta--error" role="alert">{{ mensaje }}</p>
               }
               @if (esProfesional()) {
-                <p class="sutil">Administración y recepción reciben un aviso de este cambio.</p>
+                <p class="oc-suave">Administración y recepción reciben un aviso de este cambio.</p>
               }
 
               <div class="acciones">
-                <button type="submit" class="boton" [disabled]="guardando()">
+                <button type="submit" class="oc-btn oc-btn--primario" [disabled]="guardando()">
                   {{
                     guardando() ? 'Guardando…' : panel() === 'nuevo' ? 'Agendar' : 'Guardar cambios'
                   }}
@@ -409,4 +419,12 @@
       </aside>
     }
   </div>
+
+  @if (puedeCrear()) {
+    <button type="button" class="oc-btn oc-btn--primario agenda-fab" (click)="abrirNuevo()" aria-label="Nuevo turno">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M12 5v14M5 12h14" />
+      </svg>
+    </button>
+  }
 </main>
