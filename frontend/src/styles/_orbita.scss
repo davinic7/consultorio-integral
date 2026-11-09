@@ -1,0 +1,808 @@
+// Órbita Cian — sistema de diseño de Centro Integral.
+// Referencia visual: docs/diseno/orbita-cian.md y el lienzo de diseño.
+// Todo usa el prefijo `oc-` para convivir con los estilos actuales mientras se migra.
+//
+// Tema: oscuro por defecto; sigue al dispositivo salvo que el usuario elija.
+//   <html data-tema="claro">  fuerza claro
+//   <html data-tema="oscuro"> fuerza oscuro
+//   sin atributo              usa prefers-color-scheme
+
+@use 'sass:map';
+
+// ---------------------------------------------------------------------------
+// Tokens
+// ---------------------------------------------------------------------------
+
+$oscuro: (
+  fondo: #05080f,
+  grilla: rgba(148, 197, 255, 0.045),
+  brillo: rgba(34, 211, 238, 0.14),
+  brillo-2: rgba(91, 141, 239, 0.12),
+  lateral: rgba(255, 255, 255, 0.02),
+  panel: rgba(255, 255, 255, 0.035),
+  tarjeta: rgba(10, 15, 26, 0.78),
+  borde: rgba(148, 197, 255, 0.12),
+  borde-suave: rgba(148, 197, 255, 0.07),
+  texto: #e8f1ff,
+  texto-medio: #c9d6ea,
+  texto-suave: #8fa3bf,
+  acento: #22d3ee,
+  acento-texto: #67e8f9,
+  acento-fondo: rgba(34, 211, 238, 0.1),
+  acento-borde: rgba(34, 211, 238, 0.32),
+  acento-fuerte: #a5f3fc,
+  sobre-acento: #04121a,
+  campo: rgba(5, 8, 15, 0.55),
+  pista: rgba(148, 197, 255, 0.15),
+  carril: rgba(148, 197, 255, 0.03),
+  ok: #34d399,
+  ok-texto: #6ee7b7,
+  ok-fondo: rgba(52, 211, 153, 0.1),
+  ok-borde: rgba(52, 211, 153, 0.35),
+  aviso: #fbbf24,
+  aviso-texto: #fcd34d,
+  aviso-fondo: rgba(251, 191, 36, 0.1),
+  aviso-borde: rgba(251, 191, 36, 0.35),
+  error: #f87171,
+  error-texto: #fca5a5,
+  error-fondo: rgba(248, 113, 113, 0.1),
+  error-borde: rgba(248, 113, 113, 0.45),
+  azul: #5b8def,
+  azul-texto: #b9cdfb,
+  azul-fondo: rgba(91, 141, 239, 0.14),
+  azul-borde: rgba(91, 141, 239, 0.5),
+  lila: #a78bfa,
+  // Disciplinas (color de línea / fondo / borde / texto sobre el bloque)
+  psi: #22d3ee,
+  psi-fondo: rgba(34, 211, 238, 0.14),
+  psi-borde: rgba(34, 211, 238, 0.5),
+  psi-texto: #e8f1ff,
+  to: #5b8def,
+  to-fondo: rgba(91, 141, 239, 0.16),
+  to-borde: rgba(91, 141, 239, 0.55),
+  to-texto: #e8f1ff,
+  fono: #a78bfa,
+  fono-fondo: rgba(167, 139, 250, 0.16),
+  fono-borde: rgba(167, 139, 250, 0.55),
+  fono-texto: #e8f1ff,
+  psicoped: #fbbf24,
+  psicoped-fondo: rgba(251, 191, 36, 0.12),
+  psicoped-borde: rgba(251, 191, 36, 0.5),
+  psicoped-texto: #e8f1ff,
+  marca-anillo-1: #ffffff,
+  marca-anillo-2: #67e8f9,
+  marca-satelite: #e8f1ff,
+  sombra: 0 24px 70px rgba(0, 0, 0, 0.45),
+);
+
+$claro: (
+  fondo: #f3f7fc,
+  grilla: rgba(14, 116, 144, 0.055),
+  brillo: rgba(34, 211, 238, 0.2),
+  brillo-2: rgba(91, 141, 239, 0.12),
+  lateral: rgba(255, 255, 255, 0.7),
+  panel: #ffffff,
+  tarjeta: rgba(255, 255, 255, 0.9),
+  borde: #dce6f2,
+  borde-suave: #e3ecf6,
+  texto: #0b1726,
+  texto-medio: #2a3b52,
+  texto-suave: #4a5b73,
+  acento: #06b6d4,
+  acento-texto: #0e7490,
+  acento-fondo: #e3f6fa,
+  acento-borde: #a5e3ef,
+  acento-fuerte: #0b5566,
+  sobre-acento: #04121a,
+  campo: #ffffff,
+  pista: #e3ecf6,
+  carril: #f7fafd,
+  ok: #10b981,
+  ok-texto: #046c4e,
+  ok-fondo: #e6f7ef,
+  ok-borde: #a7e3c8,
+  aviso: #f59e0b,
+  aviso-texto: #8a4f04,
+  aviso-fondo: #fef4df,
+  aviso-borde: #f6d58e,
+  error: #ef4444,
+  error-texto: #b42318,
+  error-fondo: #fdecea,
+  error-borde: #f5b9b3,
+  azul: #2f5fd0,
+  azul-texto: #1e3f8f,
+  azul-fondo: #e4ecfb,
+  azul-borde: #93aeea,
+  lila: #6d4bd8,
+  psi: #06b6d4,
+  psi-fondo: #ddf6fb,
+  psi-borde: #67cfe3,
+  psi-texto: #0b4655,
+  to: #2f5fd0,
+  to-fondo: #e4ecfb,
+  to-borde: #93aeea,
+  to-texto: #1e3f8f,
+  fono: #6d4bd8,
+  fono-fondo: #ece7fb,
+  fono-borde: #b3a1ee,
+  fono-texto: #46309a,
+  psicoped: #f59e0b,
+  psicoped-fondo: #fef4df,
+  psicoped-borde: #f6d58e,
+  psicoped-texto: #6e3f03,
+  marca-anillo-1: #0b1726,
+  marca-anillo-2: #0e7490,
+  marca-satelite: #0b1726,
+  sombra: 0 20px 60px rgba(14, 60, 90, 0.1),
+);
+
+@mixin tema($mapa) {
+  @each $nombre, $valor in $mapa {
+    --oc-#{$nombre}: #{$valor};
+  }
+}
+
+:root {
+  @include tema($oscuro);
+  color-scheme: dark;
+
+  // Tipografía
+  --oc-fuente: 'Sora', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --oc-fuente-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Mono', monospace;
+  --oc-t-display: 600 clamp(2.125rem, 4.4vw, 3.5rem) / 1.05 var(--oc-fuente);
+  --oc-t-titulo: 600 clamp(1.5rem, 2.4vw, 1.875rem) / 1.2 var(--oc-fuente);
+  --oc-t-subtitulo: 600 0.9375rem / 1.4 var(--oc-fuente);
+  --oc-t-cuerpo: 400 0.9375rem / 1.6 var(--oc-fuente);
+  --oc-t-chico: 400 0.8125rem / 1.5 var(--oc-fuente);
+  --oc-t-etiqueta: 500 0.6875rem / 1.4 var(--oc-fuente-mono); // + letter-spacing .1em, MAYÚSCULAS
+  --oc-t-dato: 500 1.75rem / 1.2 var(--oc-fuente-mono);
+
+  // Forma y espacio
+  --oc-radio-chico: 0.5rem; // 8
+  --oc-radio: 0.75rem; // 12: botones, campos, ítems del menú
+  --oc-radio-tarjeta: 1rem; // 16: tarjetas e indicadores
+  --oc-radio-panel: 1.125rem; // 18: paneles grandes
+  --oc-radio-hero: 1.5rem; // 24: encabezados destacados
+  --oc-espacio-1: 0.25rem;
+  --oc-espacio-2: 0.5rem;
+  --oc-espacio-3: 0.75rem;
+  --oc-espacio-4: 1rem;
+  --oc-espacio-5: 1.25rem;
+  --oc-espacio-6: 1.75rem;
+  --oc-margen-pagina: clamp(1rem, 3vw, 1.75rem);
+  --oc-alto-control: 2.875rem; // 46px; nada clickeable por debajo de 44px
+
+  // Movimiento
+  --oc-rapido: 0.15s ease;
+  --oc-normal: 0.2s ease;
+  --oc-brillo-acento: 0 0 0 1px rgba(103, 232, 249, 0.5), 0 8px 24px rgba(34, 211, 238, 0.32);
+}
+
+:root[data-tema='claro'] {
+  @include tema($claro);
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-tema='oscuro']) {
+    @include tema($claro);
+    color-scheme: light;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Base
+// ---------------------------------------------------------------------------
+
+.oc-app {
+  min-height: 100dvh;
+  font: var(--oc-t-cuerpo);
+  color: var(--oc-texto);
+  background-color: var(--oc-fondo);
+  background-image:
+    radial-gradient(900px 520px at 20% -10%, var(--oc-brillo), transparent 62%),
+    radial-gradient(800px 480px at 100% 0%, var(--oc-brillo-2), transparent 60%),
+    linear-gradient(var(--oc-grilla) 1px, transparent 1px),
+    linear-gradient(90deg, var(--oc-grilla) 1px, transparent 1px);
+  background-size:
+    auto,
+    auto,
+    48px 48px,
+    48px 48px;
+  background-attachment: fixed;
+}
+
+.oc-mono {
+  font-family: var(--oc-fuente-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.oc-etiqueta {
+  font: var(--oc-t-etiqueta);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--oc-texto-suave);
+}
+
+.oc-suave {
+  color: var(--oc-texto-suave);
+}
+
+:where(.oc-app) :focus-visible {
+  outline: 2px solid var(--oc-acento);
+  outline-offset: 2px;
+}
+
+// ---------------------------------------------------------------------------
+// Estructura: menú lateral + barra superior + contenido
+// ---------------------------------------------------------------------------
+
+.oc-shell {
+  display: flex;
+  flex-wrap: wrap;
+  min-height: 100dvh;
+}
+
+.oc-nav {
+  flex: 1 1 232px;
+  max-width: 100%;
+  padding: 1.375rem 0.875rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  border-right: 1px solid var(--oc-borde);
+  background: var(--oc-lateral);
+  font-size: 0.84375rem;
+
+  &__items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  &__item {
+    flex: 1 1 160px;
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    min-height: 44px;
+    padding: 0 0.75rem;
+    border: 1px solid transparent;
+    border-radius: var(--oc-radio);
+    color: var(--oc-texto-suave);
+    text-decoration: none;
+    transition:
+      background-color var(--oc-rapido),
+      color var(--oc-rapido);
+
+    &:hover {
+      background: var(--oc-acento-fondo);
+      color: var(--oc-texto);
+    }
+
+    &.activo,
+    &[aria-current='page'] {
+      background: var(--oc-acento-fondo);
+      border-color: var(--oc-acento-borde);
+      color: var(--oc-acento-fuerte);
+      font-weight: 500;
+    }
+  }
+
+  &__pie {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 0.5rem;
+  }
+}
+
+.oc-principal {
+  flex: 999 1 560px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.oc-barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem var(--oc-margen-pagina);
+  border-bottom: 1px solid var(--oc-borde);
+}
+
+.oc-contenido {
+  padding: var(--oc-margen-pagina);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+// Marca: <svg class="oc-marca__iso"> + texto
+.oc-marca {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  color: var(--oc-texto);
+  text-decoration: none;
+  font-size: 0.9375rem;
+  letter-spacing: -0.01em;
+
+  &__iso {
+    flex-shrink: 0;
+    filter: drop-shadow(0 0 8px rgba(34, 211, 238, 0.4));
+  }
+
+  b {
+    font-weight: 600;
+  }
+
+  span {
+    font-weight: 300;
+  }
+}
+
+// Sello DaviNic: globo plateado con el logo original recortado al isotipo
+.oc-globo {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 35% 30%, #ffffff, #d7dee8 75%);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.45),
+    0 6px 18px rgba(0, 0, 0, 0.3);
+  transition:
+    transform var(--oc-normal),
+    box-shadow var(--oc-normal);
+
+  &:hover {
+    transform: scale(1.1);
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.7),
+      0 0 18px rgba(34, 211, 238, 0.45);
+  }
+
+  // El PNG trae el texto debajo del isotipo: la caja recorta a 23×22 (proporción 353×330 del original)
+  &__recorte {
+    width: 23px;
+    height: 22px;
+    overflow: hidden;
+    display: block;
+  }
+
+  img {
+    width: 23px;
+    display: block;
+    mix-blend-mode: multiply;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Controles
+// ---------------------------------------------------------------------------
+
+.oc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: var(--oc-alto-control);
+  padding: 0 1.125rem;
+  border: 1px solid var(--oc-borde);
+  border-radius: var(--oc-radio);
+  background: var(--oc-panel);
+  color: var(--oc-texto);
+  font: 500 0.875rem/1 var(--oc-fuente);
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    filter 0.18s ease,
+    border-color var(--oc-rapido);
+
+  &:hover {
+    border-color: var(--oc-acento-borde);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: default;
+    transform: none;
+  }
+
+  // Acción principal: siempre cian con texto oscuro (11:1), en los dos temas
+  &--primario {
+    border-color: transparent;
+    background: #22d3ee;
+    color: var(--oc-sobre-acento);
+    font-weight: 600;
+    box-shadow: var(--oc-brillo-acento);
+
+    &:hover:not(:disabled) {
+      transform: translateY(-1px);
+      filter: brightness(1.06);
+      box-shadow:
+        0 0 0 1px rgba(103, 232, 249, 0.6),
+        0 10px 30px rgba(34, 211, 238, 0.42);
+    }
+  }
+
+  &--fantasma {
+    border-color: transparent;
+    background: transparent;
+    color: var(--oc-acento-texto);
+  }
+
+  &--peligro {
+    border-color: var(--oc-error-borde);
+    background: var(--oc-error-fondo);
+    color: var(--oc-error-texto);
+  }
+
+  &--chico {
+    min-height: 2.25rem;
+    padding: 0 0.875rem;
+    font-size: 0.8125rem;
+  }
+
+  &--icono {
+    width: 2.625rem;
+    min-height: 2.625rem;
+    padding: 0;
+  }
+}
+
+.oc-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  color: var(--oc-texto-medio);
+
+  input,
+  select,
+  textarea {
+    min-height: 3rem;
+    padding: 0 0.875rem;
+    border: 1px solid var(--oc-borde);
+    border-radius: var(--oc-radio);
+    background: var(--oc-campo);
+    color: var(--oc-texto);
+    font: 400 0.9375rem var(--oc-fuente);
+    transition:
+      border-color var(--oc-rapido),
+      box-shadow var(--oc-rapido);
+
+    &:focus {
+      outline: none;
+      border-color: var(--oc-acento);
+      box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.18);
+    }
+  }
+
+  textarea {
+    padding: 0.75rem 0.875rem;
+    resize: vertical;
+  }
+
+  &__error {
+    color: var(--oc-error-texto);
+  }
+}
+
+.oc-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-height: 44px;
+  font-size: 0.8125rem;
+  color: var(--oc-texto-medio);
+
+  input {
+    width: 18px;
+    height: 18px;
+    accent-color: #22d3ee;
+  }
+}
+
+.oc-buscador {
+  flex: 1 1 260px;
+  max-width: 440px;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  height: 42px;
+  padding: 0 0.875rem;
+  border: 1px solid var(--oc-borde);
+  border-radius: var(--oc-radio);
+  background: var(--oc-panel);
+  color: var(--oc-texto-suave);
+
+  input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    color: var(--oc-texto);
+    font: 400 0.8125rem var(--oc-fuente);
+    outline: none;
+  }
+}
+
+// Control segmentado (Día / Semana). Marcar el activo con aria-pressed="true" o aria-selected="true".
+.oc-segmentado {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--oc-borde);
+  border-radius: 0.875rem;
+  background: var(--oc-campo);
+
+  button {
+    min-height: 2.25rem;
+    padding: 0 1rem;
+    border: 0;
+    border-radius: 0.625rem;
+    background: transparent;
+    color: var(--oc-texto-suave);
+    font: 600 0.8125rem var(--oc-fuente);
+    cursor: pointer;
+
+    &[aria-pressed='true'],
+    &[aria-selected='true'] {
+      background: var(--oc-acento-fondo);
+      box-shadow: inset 0 0 0 1px var(--oc-acento-borde);
+      color: var(--oc-acento-fuerte);
+    }
+  }
+}
+
+// Pestañas con subrayado (ficha del paciente)
+.oc-pestanas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  border-bottom: 1px solid var(--oc-borde);
+
+  button,
+  a {
+    padding: 0.75rem 0;
+    margin-bottom: -1px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: none;
+    color: var(--oc-texto-suave);
+    font: 500 0.875rem var(--oc-fuente);
+    text-decoration: none;
+    cursor: pointer;
+
+    &[aria-selected='true'],
+    &.activo {
+      color: var(--oc-texto);
+      border-bottom-color: #22d3ee;
+      box-shadow: 0 6px 12px -8px rgba(34, 211, 238, 0.9);
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Contenedores y datos
+// ---------------------------------------------------------------------------
+
+.oc-tarjeta {
+  padding: 1.125rem;
+  border: 1px solid var(--oc-borde);
+  border-radius: var(--oc-radio-tarjeta);
+  background: var(--oc-panel);
+  transition:
+    border-color var(--oc-normal),
+    transform var(--oc-normal),
+    box-shadow var(--oc-normal);
+
+  &--interactiva:hover {
+    border-color: var(--oc-acento-borde);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 36px rgba(34, 211, 238, 0.1);
+  }
+
+  &--destacada {
+    border-color: var(--oc-acento-borde);
+    background: linear-gradient(160deg, var(--oc-acento-fondo), transparent 70%), var(--oc-panel);
+  }
+}
+
+.oc-indicadores {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.875rem;
+}
+
+.oc-kpi {
+  &__titulo {
+    font-size: 0.78125rem;
+    color: var(--oc-texto-suave);
+  }
+
+  &__valor {
+    margin-top: 0.5rem;
+    font: var(--oc-t-dato);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.oc-tabla-caja {
+  overflow-x: auto;
+  border: 1px solid var(--oc-borde);
+  border-radius: var(--oc-radio-panel);
+  background: var(--oc-panel);
+}
+
+.oc-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.84375rem;
+
+  th {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--oc-borde);
+    text-align: left;
+    font: 500 0.6875rem var(--oc-fuente-mono);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--oc-texto-suave);
+  }
+
+  td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--oc-borde);
+  }
+
+  tbody tr {
+    transition: background-color var(--oc-rapido);
+
+    &:hover {
+      background: var(--oc-acento-fondo);
+    }
+  }
+}
+
+// Estado de turno / pago. Siempre con texto, nunca solo color.
+.oc-estado {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4375rem;
+  padding: 0.3125rem 0.6875rem;
+  border: 1px solid var(--oc-borde);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  color: var(--oc-texto-suave);
+
+  &::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: currentColor;
+  }
+
+  @each $tipo, $base in (ok: ok, aviso: aviso, error: error, info: azul) {
+    &--#{$tipo} {
+      border-color: var(--oc-#{$base}-borde);
+      background: var(--oc-#{$base}-fondo);
+      color: var(--oc-#{$base}-texto);
+    }
+  }
+
+  &--atendido {
+    border-color: var(--oc-acento-borde);
+    background: var(--oc-acento-fondo);
+    color: var(--oc-acento-fuerte);
+  }
+}
+
+.oc-alerta {
+  display: flex;
+  gap: 0.625rem;
+  padding: 0.75rem 0.875rem;
+  border: 1px solid var(--oc-acento-borde);
+  border-radius: var(--oc-radio);
+  background: var(--oc-acento-fondo);
+  color: var(--oc-acento-fuerte);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+
+  @each $tipo in (ok, aviso, error) {
+    &--#{$tipo} {
+      border-color: var(--oc-#{$tipo}-borde);
+      background: var(--oc-#{$tipo}-fondo);
+      color: var(--oc-#{$tipo}-texto);
+    }
+  }
+}
+
+// Bloque de turno en la agenda: .oc-turno.oc-turno--psi | --to | --fono | --psicoped
+.oc-turno {
+  box-sizing: border-box;
+  padding: 0.4375rem 0.625rem;
+  border: 1px solid;
+  border-radius: var(--oc-radio);
+  font-size: 0.75rem;
+  overflow: hidden;
+  cursor: pointer;
+  transition:
+    transform var(--oc-rapido),
+    box-shadow var(--oc-rapido);
+
+  &:hover {
+    transform: scale(1.02);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  }
+
+  @each $d in (psi, to, fono, psicoped) {
+    &--#{$d} {
+      border-color: var(--oc-#{$d}-borde);
+      background: var(--oc-#{$d}-fondo);
+      color: var(--oc-#{$d}-texto);
+    }
+  }
+
+  &--en-curso {
+    box-shadow: 0 0 22px var(--oc-to-borde);
+  }
+
+  &--ausente {
+    border-style: dashed;
+    border-color: var(--oc-error-borde);
+    color: var(--oc-error-texto);
+    background: repeating-linear-gradient(
+      135deg,
+      var(--oc-error-fondo) 0 6px,
+      transparent 6px 12px
+    );
+  }
+}
+
+// Línea de "ahora" en agenda y línea de tiempo
+.oc-ahora {
+  position: absolute;
+  height: 2px;
+  background: linear-gradient(90deg, var(--oc-acento), transparent);
+  box-shadow: 0 0 10px rgba(34, 211, 238, 0.6);
+  pointer-events: none;
+}
+
+// Punto que late (EN VIVO, notificación)
+.oc-vivo {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #22d3ee;
+  animation: oc-pulso 2s ease-in-out infinite;
+}
+
+@keyframes oc-pulso {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.6);
+  }
+
+  50% {
+    box-shadow: 0 0 0 6px rgba(34, 211, 238, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oc-app *,
+  .oc-app *::before,
+  .oc-app *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

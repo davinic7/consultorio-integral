@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Ingresar · Centro Integral</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:inherit}
+@keyframes pulso{0%,100%{box-shadow:0 0 0 0 rgba(34,211,238,.6)}50%{box-shadow:0 0 0 6px rgba(34,211,238,0)}}
+@keyframes giro{to{transform:rotate(360deg)}}
+.vivo{animation:pulso 2s ease-in-out infinite}
+.orbita{animation:giro 60s linear infinite;transform-origin:50% 50%}
+.btn{transition:transform .18s ease,box-shadow .18s ease,filter .18s ease;cursor:pointer}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.06);box-shadow:0 0 0 1px rgba(103,232,249,.6),0 10px 30px rgba(34,211,238,.45)}
+.campo{transition:border-color .15s ease,box-shadow .15s ease}
+.campo:focus{outline:none;border-color:#22D3EE;box-shadow:0 0 0 4px rgba(34,211,238,.18)}
+.globo{transition:transform .2s ease,box-shadow .2s ease}
+.globo:hover{transform:scale(1.1);box-shadow:0 0 0 1px rgba(255,255,255,.7),0 0 18px rgba(34,211,238,.45)}
+</style>
+</helmet>
+<div style="min-height:100vh; box-sizing:border-box; position:relative; display:flex; flex-wrap:wrap; font-family:Sora, system-ui, sans-serif; color:{{t.text}}; background-color:{{t.bg}}; background-image:radial-gradient(760px 520px at 28% 42%, {{t.glow}}, transparent 65%), radial-gradient(600px 400px at 100% 100%, {{t.glow2}}, transparent 60%), linear-gradient({{t.grid}} 1px, transparent 1px), linear-gradient(90deg, {{t.grid}} 1px, transparent 1px); background-size:auto, auto, 48px 48px, 48px 48px">
+
+<section style="flex:1 1 520px; min-width:0; box-sizing:border-box; padding:clamp(28px, 5vw, 64px); display:flex; flex-direction:column; justify-content:space-between; gap:48px; position:relative; overflow:hidden">
+<svg class="orbita" aria-hidden="true" viewBox="0 0 600 600" style="position:absolute; right:-160px; top:50%; width:620px; height:620px; margin-top:-310px; opacity:.55; pointer-events:none"><circle cx="300" cy="300" r="290" fill="none" stroke="{{t.line}}" stroke-width="1"></circle><circle cx="300" cy="300" r="210" fill="none" stroke="{{t.line}}" stroke-width="1" stroke-dasharray="4 8"></circle><circle cx="300" cy="300" r="130" fill="none" stroke="{{t.line}}" stroke-width="1"></circle><circle cx="590" cy="300" r="6" fill="{{t.acc}}"></circle><circle cx="300" cy="90" r="4" fill="{{t.blue}}"></circle><circle cx="170" cy="300" r="4" fill="{{t.lilac}}"></circle><circle cx="300" cy="300" r="10" fill="{{t.acc}}"></circle></svg>
+
+<div style="display:flex; align-items:center; gap:12px; position:relative"><svg aria-hidden="true" width="40" height="40" viewBox="0 0 48 48" style="filter:drop-shadow(0 0 10px rgba(34,211,238,.45))"><defs><linearGradient id="ciLg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="{{t.ring1}}"></stop><stop offset="1" stop-color="{{t.ring2}}"></stop></linearGradient></defs><path d="M37.79 12.43 A18 18 0 1 0 37.79 35.57" fill="none" stroke="url(#ciLg)" stroke-width="4" stroke-linecap="round"></path><path d="M24 24 H40" stroke="{{t.acc}}" stroke-width="2" stroke-linecap="round" opacity=".7"></path><circle cx="24" cy="24" r="5" fill="{{t.acc}}"></circle><circle cx="42" cy="24" r="3" fill="{{t.sat}}"></circle></svg><span style="font-size:20px; letter-spacing:-0.02em"><span style="font-weight:600">Centro</span> <span style="font-weight:300">Integral</span></span></div>
+
+<div style="display:flex; flex-direction:column; gap:18px; position:relative; max-width:520px">
+<h1 style="margin:0; font-size:clamp(34px, 4.4vw, 56px); font-weight:600; letter-spacing:-0.04em; line-height:1.05">Tu centro, <span style="color:{{t.accTx}}; text-shadow:0 0 28px {{t.glow}}">en órbita</span>.</h1>
+<p style="margin:0; font-size:16px; line-height:1.65; color:{{t.muted}}">Agenda, asistencia y cobros de todo el equipo, en un solo lugar y desde cualquier dispositivo.</p>
+<div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:6px">
+<span style="display:inline-flex; align-items:center; gap:8px; padding:8px 14px; border-radius:999px; border:1px solid {{t.line}}; background:{{t.panel}}; font-size:13px; color:{{t.soft}}"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="{{t.accTx}}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg>Turnos por sala</span>
+<span style="display:inline-flex; align-items:center; gap:8px; padding:8px 14px; border-radius:999px; border:1px solid {{t.line}}; background:{{t.panel}}; font-size:13px; color:{{t.soft}}"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="{{t.accTx}}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"></rect><path d="m8 12 3 3 5-6"></path></svg>Asistencia en un toque</span>
+<span style="display:inline-flex; align-items:center; gap:8px; padding:8px 14px; border-radius:999px; border:1px solid {{t.line}}; background:{{t.panel}}; font-size:13px; color:{{t.soft}}"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="{{t.accTx}}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path></svg>Liquidación clara</span>
+</div>
+</div>
+<span style="font:400 11px 'JetBrains Mono', monospace; color:{{t.muted}}; position:relative">v2.0</span>
+</section>
+
+<section style="flex:1 1 420px; min-width:0; box-sizing:border-box; padding:clamp(20px, 4vw, 48px); display:flex; align-items:center; justify-content:center">
+<form style="width:100%; max-width:420px; box-sizing:border-box; padding:clamp(24px, 4vw, 40px); border-radius:24px; border:1px solid {{t.line}}; background:{{t.card}}; box-shadow:{{t.shadow}}; display:flex; flex-direction:column; gap:18px; backdrop-filter:blur(14px)">
+<div style="display:flex; justify-content:space-between; align-items:center; gap:12px">
+<span style="display:inline-flex; align-items:center; gap:8px; font:500 11px 'JetBrains Mono', monospace; letter-spacing:.1em; color:{{t.accSoft}}"><span class="vivo" style="width:7px; height:7px; border-radius:999px; background:#22D3EE"></span>ACCESO SEGURO</span>
+<button type="button" onClick="{{toggle}}" aria-label="{{temaLabel}}" title="{{temaLabel}}" style="width:40px; height:40px; border-radius:12px; border:1px solid {{t.line}}; background:{{t.panel}}; color:{{t.soft}}; display:flex; align-items:center; justify-content:center; cursor:pointer">
+<sc-if value="{{dark}}" hint-placeholder-val="{{true}}"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg></sc-if>
+<sc-if value="{{light}}" hint-placeholder-val="{{false}}"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"></path></svg></sc-if>
+</button>
+</div>
+<div><h2 style="margin:0; font-size:28px; font-weight:600; letter-spacing:-0.02em">Ingresá a tu centro</h2><p style="margin:8px 0 0; font-size:14px; line-height:1.5; color:{{t.muted}}">Usá el correo y la contraseña que te dio tu centro.</p></div>
+<label for="l-mail" style="display:flex; flex-direction:column; gap:6px; font-size:13px; color:{{t.soft}}">Correo<input class="campo" id="l-mail" type="email" autocomplete="email" placeholder="nombre@centro.com" style="height:48px; box-sizing:border-box; border:1px solid {{t.line}}; border-radius:12px; padding:0 14px; font:400 15px Sora, sans-serif; color:{{t.text}}; background:{{t.input}}"></label>
+<label for="l-pass" style="display:flex; flex-direction:column; gap:6px; font-size:13px; color:{{t.soft}}">Contraseña
+<span style="position:relative; display:block"><input class="campo" id="l-pass" type="{{tipo}}" autocomplete="current-password" placeholder="Tu contraseña" style="width:100%; height:48px; box-sizing:border-box; border:1px solid {{t.line}}; border-radius:12px; padding:0 52px 0 14px; font:400 15px Sora, sans-serif; color:{{t.text}}; background:{{t.input}}"><button type="button" onClick="{{verClave}}" aria-label="{{verLabel}}" style="position:absolute; right:2px; top:2px; width:44px; height:44px; border:0; border-radius:10px; background:transparent; color:{{t.muted}}; cursor:pointer; display:flex; align-items:center; justify-content:center"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg></button></span>
+</label>
+<div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap">
+<label for="l-rec" style="display:flex; align-items:center; gap:10px; font-size:13px; min-height:44px; color:{{t.soft}}"><input id="l-rec" type="checkbox" checked style="width:18px; height:18px; accent-color:#22D3EE">Recordarme en este equipo</label>
+<a href="#" style="font-size:13px; color:{{t.accTx}}">Olvidé mi contraseña</a>
+</div>
+<a href="Panel.dc.html" class="btn" style="height:50px; border-radius:12px; background:#22D3EE; color:#04121A; font:600 15px Sora, sans-serif; display:flex; align-items:center; justify-content:center; gap:8px; text-decoration:none; box-shadow:0 0 0 1px rgba(103,232,249,.5), 0 8px 24px rgba(34,211,238,.35)">Ingresar<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+<p style="margin:0; font-size:12.5px; line-height:1.5; color:{{t.muted}}; text-align:center">¿No tenés usuario? Pedíselo a quien administra tu centro.</p>
+</form>
+</section>
+
+<a href="#" class="globo" title="Desarrollado por DaviNic Developer" aria-label="Desarrollado por DaviNic Developer" style="position:absolute; right:20px; bottom:20px; width:36px; height:36px; border-radius:999px; display:flex; align-items:center; justify-content:center; background:radial-gradient(circle at 35% 30%, #FFFFFF, #D7DEE8 75%); box-shadow:0 0 0 1px rgba(255,255,255,.45), 0 6px 18px rgba(0,0,0,.35)"><span style="width:23px; height:22px; overflow:hidden; display:block"><img src="/_blob/562a25969fa561da310a6e1995bba8bc" alt="" style="width:23px; display:block; mix-blend-mode:multiply"></span></a>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"oscuro":{"editor":"boolean","default":true},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { dark: props.oscuro ?? true, ver: false };
+  }
+  renderVals() {
+    const OSC = {bg:'#05080F',grid:'rgba(148,197,255,.045)',glow:'rgba(34,211,238,.16)',glow2:'rgba(91,141,239,.12)',panel:'rgba(255,255,255,.035)',card:'rgba(10,15,26,.78)',line:'rgba(148,197,255,.14)',text:'#E8F1FF',muted:'#8FA3BF',soft:'#C9D6EA',acc:'#22D3EE',accTx:'#22D3EE',accSoft:'#A5F3FC',input:'rgba(5,8,15,.6)',blue:'#5B8DEF',lilac:'#A78BFA',shadow:'0 30px 80px rgba(0,0,0,.5)',ring1:'#FFFFFF',ring2:'#67E8F9',sat:'#E8F1FF'};
+    const CLA = {bg:'#F3F7FC',grid:'rgba(14,116,144,.055)',glow:'rgba(34,211,238,.22)',glow2:'rgba(91,141,239,.14)',panel:'#FFFFFF',card:'rgba(255,255,255,.88)',line:'#DCE6F2',text:'#0B1726',muted:'#4A5B73',soft:'#2A3B52',acc:'#06B6D4',accTx:'#0E7490',accSoft:'#0B5566',input:'#FFFFFF',blue:'#2F5FD0',lilac:'#6D4BD8',shadow:'0 30px 80px rgba(14,60,90,.14)',ring1:'#0B1726',ring2:'#0E7490',sat:'#0B1726'};
+    const dark = this.state.dark;
+    return {
+      t: dark ? OSC : CLA,
+      dark: dark,
+      light: !dark,
+      temaLabel: dark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro',
+      toggle: () => this.setState({ dark: !this.state.dark }),
+      tipo: this.state.ver ? 'text' : 'password',
+      verLabel: this.state.ver ? 'Ocultar contraseña' : 'Mostrar contraseña',
+      verClave: () => this.setState({ ver: !this.state.ver })
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Agenda · Centro Integral</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:inherit}
+@keyframes pulso{0%,100%{box-shadow:0 0 0 0 rgba(34,211,238,.6)}50%{box-shadow:0 0 0 6px rgba(34,211,238,0)}}
+.vivo{animation:pulso 2s ease-in-out infinite}
+.btn{transition:transform .18s ease,box-shadow .18s ease,filter .18s ease;cursor:pointer}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.06);box-shadow:0 0 0 1px rgba(103,232,249,.6),0 10px 30px rgba(34,211,238,.4)}
+.nav{transition:background-color .15s ease}
+.nav:hover{background:rgba(34,211,238,.08)}
+.ev{transition:transform .15s ease,box-shadow .15s ease;cursor:pointer}
+.ev:hover{transform:scale(1.02);box-shadow:0 8px 24px rgba(0,0,0,.25);z-index:2}
+.chip{transition:background-color .15s ease,border-color .15s ease;cursor:pointer}
+.chip:hover{border-color:rgba(34,211,238,.5)!important}
+.globo{transition:transform .2s ease,box-shadow .2s ease}
+.globo:hover{transform:scale(1.1);box-shadow:0 0 0 1px rgba(255,255,255,.7),0 0 18px rgba(34,211,238,.45)}
+</style>
+</helmet>
+<div style="min-height:100vh; box-sizing:border-box; display:flex; flex-wrap:wrap; font-family:Sora, system-ui, sans-serif; color:{{t.text}}; background-color:{{t.bg}}; background-image:radial-gradient(900px 520px at 20% -10%, {{t.glow}}, transparent 62%), radial-gradient(800px 480px at 100% 0%, {{t.glow2}}, transparent 60%), linear-gradient({{t.grid}} 1px, transparent 1px), linear-gradient(90deg, {{t.grid}} 1px, transparent 1px); background-size:auto, auto, 48px 48px, 48px 48px">
+
+<nav aria-label="Navegación principal" style="flex:1 1 232px; max-width:100%; box-sizing:border-box; padding:22px 14px 16px; display:flex; flex-direction:column; gap:16px; border-right:1px solid {{t.line}}; background:{{t.side}}; font-size:13.5px">
+<a href="Panel.dc.html" style="display:flex; align-items:center; gap:10px; padding:0 8px; text-decoration:none; color:{{t.text}}; font-size:15px; letter-spacing:-0.01em"><svg aria-hidden="true" width="32" height="32" viewBox="0 0 48 48" style="flex-shrink:0; filter:drop-shadow(0 0 8px rgba(34,211,238,.4))"><defs><linearGradient id="ciAg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="{{t.ring1}}"></stop><stop offset="1" stop-color="{{t.ring2}}"></stop></linearGradient></defs><path d="M37.79 12.43 A18 18 0 1 0 37.79 35.57" fill="none" stroke="url(#ciAg)" stroke-width="4" stroke-linecap="round"></path><path d="M24 24 H40" stroke="{{t.acc}}" stroke-width="2" stroke-linecap="round" opacity=".7"></path><circle cx="24" cy="24" r="5" fill="{{t.acc}}"></circle><circle cx="42" cy="24" r="3" fill="{{t.sat}}"></circle></svg><span><span style="font-weight:600">Centro</span> <span style="font-weight:300">Integral</span></span></a>
+<div style="display:flex; flex-wrap:wrap; gap:4px">
+<a href="Panel.dc.html" class="nav" style="flex:1 1 160px; display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; text-decoration:none; {{nav.panel}}"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="2"></rect><rect x="14" y="3" width="7" height="5" rx="2"></rect><rect x="14" y="12" width="7" height="9" rx="2"></rect><rect x="3" y="16" width="7" height="5" rx="2"></rect></svg>Panel</a>
+<a href="Agenda.dc.html" class="nav" aria-current="page" style="flex:1 1 160px; display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; text-decoration:none; {{nav.agenda}}"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg>Agenda</a>
+<a href="Asistencia.dc.html" class="nav" style="flex:1 1 160px; display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; text-decoration:none; {{nav.asistencia}}"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"></rect><path d="m8 12 3 3 5-6"></path></svg>Asistencia</a>
+<a href="Ficha.dc.html" class="nav" style="flex:1 1 160px; display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; text-decoration:none; {{nav.pacientes}}"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c1.8.7 3 2.5 3.5 5.2"></path></svg>Pacientes</a>
+<a href="Cobros.dc.html" class="nav" style="flex:1 1 160px; display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; text-decoration:none; {{nav.cobros}}"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="3"></rect><path d="M3 10h18M16 15h2"></path></svg>Cobros y liquidación</a>
+</div>
+<div style="flex:1"></div>
+<div style="display:flex; align-items:center; justify-content:space-between; padding:0 8px"><span style="font:400 11px 'JetBrains Mono', monospace; color:{{t.muted}}">v2.0</span><a href="#" class="globo" title="Desarrollado por DaviNic Developer" aria-label="Desarrollado por DaviNic Developer" style="width:36px; height:36px; border-radius:999px; display:flex; align-items:center; justify-content:center; background:radial-gradient(circle at 35% 30%, #FFFFFF, #D7DEE8 75%); box-shadow:0 0 0 1px rgba(255,255,255,.45), 0 6px 18px rgba(0,0,0,.3)"><span style="width:23px; height:22px; overflow:hidden; display:block"><img src="/_blob/562a25969fa561da310a6e1995bba8bc" alt="" style="width:23px; display:block; mix-blend-mode:multiply"></span></a></div>
+</nav>
+
+<div style="flex:999 1 560px; min-width:0; display:flex; flex-direction:column">
+<header style="display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:14px clamp(16px, 3vw, 28px); border-bottom:1px solid {{t.line}}">
+<label for="buscar" style="flex:1 1 260px; max-width:440px; display:flex; align-items:center; gap:10px; height:42px; padding:0 14px; box-sizing:border-box; border-radius:12px; border:1px solid {{t.line}}; background:{{t.panel}}; color:{{t.muted}}; font-size:13px"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg><input id="buscar" placeholder="Buscar paciente, turno o profesional" style="flex:1; min-width:0; border:0; background:transparent; font:400 13px Sora, sans-serif; color:{{t.text}}; outline:none"><span style="font:500 11px 'JetBrains Mono', monospace; padding:2px 6px; border-radius:6px; border:1px solid {{t.line}}">Ctrl K</span></label>
+<span style="margin-left:auto; display:inline-flex; align-items:center; gap:8px; font:500 12px 'JetBrains Mono', monospace; color:{{t.accSoft}}"><span class="vivo" style="width:7px; height:7px; border-radius:999px; background:#22D3EE"></span>EN VIVO · 10:48</span>
+<button onClick="{{toggle}}" aria-label="{{temaLabel}}" title="{{temaLabel}}" style="width:42px; height:42px; border-radius:12px; border:1px solid {{t.line}}; background:{{t.panel}}; color:{{t.soft}}; display:flex; align-items:center; justify-content:center; cursor:pointer"><sc-if value="{{dark}}" hint-placeholder-val="{{true}}"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg></sc-if><sc-if value="{{light}}" hint-placeholder-val="{{false}}"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"></path></svg></sc-if></button>
+<span title="Laura Méndez · Recepción" style="width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg, #22D3EE, #5B8DEF); color:#04121A; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center">LM</span>
+</header>
+
+<main style="padding:clamp(16px, 3vw, 28px); display:flex; flex-direction:column; gap:18px">
+<div style="display:flex; flex-wrap:wrap; align-items:center; gap:12px">
+<h1 style="margin:0; font-size:clamp(24px, 2.4vw, 30px); font-weight:600; letter-spacing:-0.02em; margin-right:6px">Agenda</h1>
+<div style="display:flex; align-items:center; gap:2px; height:44px; padding:0 4px; box-sizing:border-box; border-radius:12px; border:1px solid {{t.line}}; background:{{t.panel}}">
+<button aria-label="Anterior" style="width:36px; height:36px; border:0; border-radius:9px; background:transparent; color:{{t.muted}}; cursor:pointer; display:flex; align-items:center; justify-content:center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"></path></svg></button>
+<span style="font-size:13.5px; font-weight:500; padding:0 8px; white-space:nowrap">{{fechaTxt}}</span>
+<button aria-label="Siguiente" style="width:36px; height:36px; border:0; border-radius:9px; background:transparent; color:{{t.muted}}; cursor:pointer; display:flex; align-items:center; justify-content:center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"></path></svg></button>
+</div>
+<button style="height:44px; padding:0 14px; border-radius:12px; border:1px solid {{t.line}}; background:{{t.panel}}; color:{{t.text}}; font:500 13px Sora, sans-serif; cursor:pointer">Hoy</button>
+<div role="group" aria-label="Vista" style="display:flex; padding:4px; gap:4px; border-radius:14px; border:1px solid {{t.line}}; background:{{t.input}}">
+<button onClick="{{verDia}}" aria-pressed="{{esDia}}" style="height:34px; padding:0 16px; border:0; border-radius:10px; font:600 13px Sora, sans-serif; cursor:pointer; {{segDia}}">Día</button>
+<button onClick="{{verSemana}}" aria-pressed="{{esSemana}}" style="height:34px; padding:0 16px; border:0; border-radius:10px; font:600 13px Sora, sans-serif; cursor:pointer; {{segSemana}}">Semana</button>
+</div>
+<sc-if value="{{esDia}}" hint-placeholder-val="{{true}}">
+<div role="group" aria-label="Agrupar por" style="display:flex; align-items:center; gap:4px; padding:4px; border-radius:14px; border:1px solid {{t.line}}; background:{{t.input}}">
+<span style="font-size:12px; color:{{t.muted}}; padding:0 6px">Columnas</span>
+<button onClick="{{porSala}}" aria-pressed="{{esSala}}" style="height:34px; padding:0 12px; border:0; border-radius:10px; font:500 13px Sora, sans-serif; cursor:pointer; {{segSala}}">Salas</button>
+<button onClick="{{porProf}}" aria-pressed="{{esProf}}" style="height:34px; padding:0 12px; border:0; border-radius:10px; font:500 13px Sora, sans-serif; cursor:pointer; {{segProf}}">Profesionales</button>
+</div>
+</sc-if>
+<button class="btn" style="margin-left:auto; height:46px; padding:0 18px; display:flex; align-items:center; gap:8px; border:0; border-radius:12px; background:#22D3EE; color:#04121A; font:600 14px Sora, sans-serif; box-shadow:0 0 0 1px rgba(103,232,249,.5), 0 8px 24px rgba(34,211,238,.32)"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>Nuevo turno</button>
+</div>
+
+<div style="display:flex; flex-wrap:wrap; gap:16px; align-items:flex-start">
+<section aria-label="Calendario de turnos" style="flex:999 1 600px; min-width:0; border-radius:18px; border:1px solid {{t.line}}; background:{{t.panel}}; overflow:hidden">
+<div style="overflow-x:auto">
+<div style="min-width:720px">
+
+<sc-if value="{{esDia}}" hint-placeholder-val="{{true}}">
+<div style="display:flex; border-bottom:1px solid {{t.line}}; padding:12px 0">
+<span style="width:64px; flex-shrink:0"></span>
+<sc-for list="{{columnas}}" as="c" hint-placeholder-count="4">
+<div style="flex:1; min-width:0; display:flex; align-items:center; gap:10px; padding:0 12px"><span style="width:10px; height:10px; border-radius:999px; flex-shrink:0; {{c.dot}}"></span><span style="min-width:0"><span style="display:block; font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">{{c.titulo}}</span><span style="font-size:11.5px; color:{{t.muted}}">{{c.sub}}</span></span></div>
+</sc-for>
+</div>
+<div style="display:flex; padding:10px 0 14px">
+<div style="width:64px; flex-shrink:0; display:flex; flex-direction:column; font:400 11.5px 'JetBrains Mono', monospace; color:{{t.muted}}; text-align:right; box-sizing:border-box; padding-right:12px">
+<sc-for list="{{horas}}" as="h" hint-placeholder-count="6"><span style="height:72px">{{h}}</span></sc-for>
+</div>
+<div style="flex:1; display:flex; position:relative; height:432px; background:repeating-linear-gradient(180deg, {{t.line2}} 0 1px, transparent 1px 72px)">
+<sc-for list="{{columnas}}" as="c" hint-placeholder-count="4">
+<div style="flex:1; min-width:0; position:relative; border-left:1px solid {{t.line2}}">
+<sc-for list="{{c.eventos}}" as="e" hint-placeholder-count="2">
+<div class="ev" title="{{e.titulo}}" style="position:absolute; left:6px; right:6px; box-sizing:border-box; padding:7px 10px; border-radius:12px; overflow:hidden; font-size:12px; {{e.st}}"><span style="display:block; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">{{e.pac}}</span><span style="display:block; font:400 11px 'JetBrains Mono', monospace; opacity:.85; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">{{e.linea}}</span></div>
+</sc-for>
+</div>
+</sc-for>
+<span aria-hidden="true" style="position:absolute; left:-6px; right:0; top:201px; height:2px; background:linear-gradient(90deg, {{t.acc}}, transparent); box-shadow:0 0 10px rgba(34,211,238,.6)"></span>
+<span aria-hidden="true" style="position:absolute; left:-10px; top:196px; width:12px; height:12px; border-radius:999px; background:{{t.acc}}; box-shadow:0 0 12px {{t.acc}}"></span>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{esSemana}}" hint-placeholder-val="{{false}}">
+<div style="display:flex; border-bottom:1px solid {{t.line}}; padding:12px 0">
+<span style="width:64px; flex-shrink:0"></span>
+<sc-for list="{{dias}}" as="d" hint-placeholder-count="5">
+<div style="flex:1; min-width:0; padding:0 12px; display:flex; align-items:baseline; gap:8px"><span style="font-size:13px; font-weight:600; {{d.tituloSt}}">{{d.titulo}}</span><span style="font:400 11px 'JetBrains Mono', monospace; color:{{t.muted}}">{{d.cant}}</span></div>
+</sc-for>
+</div>
+<div style="display:flex; padding:10px 0 14px">
+<div style="width:64px; flex-shrink:0; display:flex; flex-direction:column; font:400 11.5px 'JetBrains Mono', monospace; color:{{t.muted}}; text-align:right; box-sizing:border-box; padding-right:12px">
+<sc-for list="{{horas}}" as="h" hint-placeholder-count="6"><span style="height:56px">{{h}}</span></sc-for>
+</div>
+<div style="flex:1; display:flex; position:relative; height:336px; background:repeating-linear-gradient(180deg, {{t.line2}} 0 1px, transparent 1px 56px)">
+<sc-for list="{{dias}}" as="d" hint-placeholder-count="5">
+<div style="flex:1; min-width:0; position:relative; border-left:1px solid {{t.line2}}; {{d.colSt}}">
+<sc-for list="{{d.eventos}}" as="e" hint-placeholder-count="4">
+<div class="ev" title="{{e.titulo}}" style="position:absolute; box-sizing:border-box; padding:4px 6px; border-radius:8px; overflow:hidden; font-size:11px; font-weight:500; white-space:nowrap; text-overflow:ellipsis; {{e.st}}">{{e.pac}}</div>
+</sc-for>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+</div>
+</div>
+</section>
+
+<aside style="flex:1 1 260px; min-width:0; display:flex; flex-direction:column; gap:16px">
+<section aria-labelledby="mes-t" style="padding:16px; border-radius:18px; border:1px solid {{t.line}}; background:{{t.panel}}">
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px"><h2 id="mes-t" style="margin:0; font-size:14px; font-weight:600">Noviembre 2026</h2><span style="display:flex; gap:2px"><button aria-label="Mes anterior" style="width:32px; height:32px; border:0; border-radius:8px; background:transparent; color:{{t.muted}}; cursor:pointer">‹</button><button aria-label="Mes siguiente" style="width:32px; height:32px; border:0; border-radius:8px; background:transparent; color:{{t.muted}}; cursor:pointer">›</button></span></div>
+<div style="display:grid; grid-template-columns:repeat(7, minmax(0, 1fr)); gap:2px; text-align:center; font:400 12px 'JetBrains Mono', monospace">
+<sc-for list="{{semanaTit}}" as="w" hint-placeholder-count="7"><span style="padding:4px 0; font-size:10.5px; color:{{t.muted}}">{{w}}</span></sc-for>
+<sc-for list="{{celdas}}" as="c" hint-placeholder-count="35"><span style="height:32px; display:flex; align-items:center; justify-content:center; border-radius:9px; {{c.st}}">{{c.d}}</span></sc-for>
+</div>
+</section>
+
+<section aria-labelledby="pro-t" style="padding:16px; border-radius:18px; border:1px solid {{t.line}}; background:{{t.panel}}; display:flex; flex-direction:column; gap:8px">
+<h2 id="pro-t" style="margin:0 0 4px; font-size:14px; font-weight:600">Profesionales</h2>
+<sc-for list="{{filtros}}" as="f" hint-placeholder-count="4">
+<button class="chip" onClick="{{f.alternar}}" aria-pressed="{{f.activo}}" style="display:flex; align-items:center; gap:10px; min-height:44px; padding:6px 10px; border-radius:12px; font:400 13px Sora, sans-serif; text-align:left; cursor:pointer; {{f.st}}"><span style="width:20px; height:20px; border-radius:6px; flex-shrink:0; display:flex; align-items:center; justify-content:center; {{f.caja}}"><sc-if value="{{f.activo}}" hint-placeholder-val="{{true}}"><svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#04121A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"></path></svg></sc-if></span><span style="flex:1; min-width:0"><span style="display:block; font-weight:500">{{f.n}}</span><span style="font-size:11.5px; color:{{t.muted}}">{{f.esp}}</span></span></button>
+</sc-for>
+</section>
+
+<section style="padding:14px 16px; border-radius:18px; border:1px solid {{t.accBd}}; background:{{t.accBg}}; color:{{t.accSoft}}; font-size:13px; line-height:1.5; display:flex; gap:10px"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-top:2px"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4M12 16h.01"></path></svg><span>Libre ahora: <strong>Consultorio 4</strong> hasta las 12:30.</span></section>
+</aside>
+</div>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"oscuro":{"editor":"boolean","default":true},"$preview":{"width":1440,"height":1080}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { dark: props.oscuro ?? true, vista: 'dia', agrupar: 'sala', ocultos: {} };
+  }
+  tokens(dark) {
+    if (dark) return {bg:'#05080F',grid:'rgba(148,197,255,.045)',glow:'rgba(34,211,238,.14)',glow2:'rgba(91,141,239,.12)',side:'rgba(255,255,255,.02)',panel:'rgba(255,255,255,.035)',line:'rgba(148,197,255,.12)',line2:'rgba(148,197,255,.07)',text:'#E8F1FF',muted:'#8FA3BF',soft:'#C9D6EA',acc:'#22D3EE',accTx:'#67E8F9',accBg:'rgba(34,211,238,.10)',accBd:'rgba(34,211,238,.32)',accSoft:'#A5F3FC',input:'rgba(5,8,15,.55)',segOn:'background:rgba(34,211,238,.16); box-shadow:inset 0 0 0 1px rgba(34,211,238,.45); color:#A5F3FC',segOff:'background:transparent; color:#8FA3BF',bTx:'#FCA5A5',bBg:'rgba(248,113,113,.10)',bBd:'rgba(248,113,113,.55)',ring1:'#FFFFFF',ring2:'#67E8F9',sat:'#E8F1FF',hoyCol:'background:rgba(34,211,238,.04)',k:{psi:['rgba(34,211,238,.14)','rgba(34,211,238,.5)','#E8F1FF','#22D3EE'],to:['rgba(91,141,239,.16)','rgba(91,141,239,.55)','#E8F1FF','#5B8DEF'],fo:['rgba(167,139,250,.16)','rgba(167,139,250,.55)','#E8F1FF','#A78BFA'],pd:['rgba(251,191,36,.12)','rgba(251,191,36,.5)','#E8F1FF','#FBBF24']}};
+    return {bg:'#F3F7FC',grid:'rgba(14,116,144,.055)',glow:'rgba(34,211,238,.20)',glow2:'rgba(91,141,239,.12)',side:'rgba(255,255,255,.7)',panel:'#FFFFFF',line:'#DCE6F2',line2:'#E3ECF6',text:'#0B1726',muted:'#4A5B73',soft:'#2A3B52',acc:'#06B6D4',accTx:'#0E7490',accBg:'#E3F6FA',accBd:'#A5E3EF',accSoft:'#0B5566',input:'#F3F7FC',segOn:'background:#FFFFFF; box-shadow:0 0 0 1px #A5E3EF, 0 2px 8px rgba(6,182,212,.18); color:#0B5566',segOff:'background:transparent; color:#4A5B73',bTx:'#B42318',bBg:'#FDECEA',bBd:'#EE8E86',ring1:'#0B1726',ring2:'#0E7490',sat:'#0B1726',hoyCol:'background:rgba(6,182,212,.05)',k:{psi:['#DDF6FB','#67CFE3','#0B4655','#06B6D4'],to:['#E4ECFB','#93AEEA','#1E3F8F','#2F5FD0'],fo:['#ECE7FB','#B3A1EE','#46309A','#6D4BD8'],pd:['#FEF4DF','#F6D58E','#6E3F03','#F59E0B']}};
+  }
+  hora(x) {
+    const h = Math.floor(x), m = Math.round((x - h) * 60);
+    return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
+  }
+  renderVals() {
+    const s = this.state, dark = s.dark, t = this.tokens(dark);
+    const on = 'background:' + t.accBg + '; border:1px solid ' + t.accBd + '; color:' + t.accSoft + '; font-weight:500';
+    const off = 'border:1px solid transparent; color:' + t.muted;
+    const profes = [
+      { n: 'Lic. Ana Paz', esp: 'Psicología', k: 'psi' },
+      { n: 'Lic. Carlos Ferreyra', esp: 'Terapia ocupacional', k: 'to' },
+      { n: 'Flga. Gabriela Molina', esp: 'Fonoaudiología', k: 'fo' },
+      { n: 'Lic. Rocío Herrera', esp: 'Psicopedagogía', k: 'pd' }
+    ];
+    const kDe = {}; profes.forEach((p) => { kDe[p.n] = p.k; });
+    const visible = (prof) => !s.ocultos[prof];
+    const hoy = [
+      ['Pedro Vega', 'Lic. Carlos Ferreyra', 'Consultorio 4', 8, 1, ''],
+      ['Martina Gómez', 'Lic. Ana Paz', 'Sala 1', 8.5, 0.75, ''],
+      ['Benjamín Acosta', 'Flga. Gabriela Molina', 'Sala 2', 9, 1, ''],
+      ['Mateo López', 'Lic. Carlos Ferreyra', 'Sala 3', 9.5, 0.75, ''],
+      ['Valentina Sosa', 'Flga. Gabriela Molina', 'Sala 2', 10, 0.75, ''],
+      ['Tomás Ruiz', 'Lic. Carlos Ferreyra', 'Sala 1', 10.5, 1, 'curso'],
+      ['Lucía Pereyra', 'Flga. Gabriela Molina', 'Sala 2', 11, 0.75, ''],
+      ['Sofía Díaz', 'Lic. Rocío Herrera', 'Sala 3', 11.25, 0.75, 'aus'],
+      ['Lucas Bravo', 'Lic. Ana Paz', 'Sala 1', 12, 0.75, ''],
+      ['Emma Ríos', 'Lic. Rocío Herrera', 'Consultorio 4', 12.5, 1, ''],
+      ['Joaquín Medina', 'Lic. Ana Paz', 'Sala 2', 13, 0.75, '']
+    ];
+    const estilo = (k, estado) => {
+      const c = t.k[k];
+      if (estado === 'aus') return 'color:' + t.bTx + '; border:1px dashed ' + t.bBd + '; background:repeating-linear-gradient(135deg, ' + t.bBg + ' 0 6px, transparent 6px 12px)';
+      return 'background:' + c[0] + '; border:1px solid ' + c[1] + '; color:' + c[2] + (estado === 'curso' ? '; box-shadow:0 0 22px ' + c[1] : '');
+    };
+    const corto = (n) => n.replace('Lic. ', '').replace('Flga. ', '').split(' ').map((w, i) => i === 0 ? w[0] + '.' : w).join(' ');
+    let columnas;
+    if (s.agrupar === 'sala') {
+      columnas = ['Sala 1', 'Sala 2', 'Sala 3', 'Consultorio 4'].map((sala) => {
+        const evs = hoy.filter((e) => e[2] === sala && visible(e[1]));
+        return { titulo: sala, sub: evs.length + ' turnos', dot: 'background:' + t.acc + '; box-shadow:0 0 8px ' + t.acc, eventos: evs.map((e) => ({ pac: e[0], linea: this.hora(e[3]) + ' · ' + corto(e[1]) + (e[5] === 'aus' ? ' · ausente' : e[5] === 'curso' ? ' · en curso' : ''), titulo: e[0] + ', ' + this.hora(e[3]) + ', ' + e[1], st: 'top:' + ((e[3] - 8) * 72 + 2) + 'px; height:' + (e[4] * 72 - 4) + 'px; ' + estilo(kDe[e[1]], e[5]) })) };
+      });
+    } else {
+      columnas = profes.filter((p) => visible(p.n)).map((p) => {
+        const evs = hoy.filter((e) => e[1] === p.n);
+        return { titulo: p.n, sub: p.esp, dot: 'background:' + t.k[p.k][3], eventos: evs.map((e) => ({ pac: e[0], linea: this.hora(e[3]) + ' · ' + e[2] + (e[5] === 'aus' ? ' · ausente' : ''), titulo: e[0] + ', ' + this.hora(e[3]) + ', ' + e[2], st: 'top:' + ((e[3] - 8) * 72 + 2) + 'px; height:' + (e[4] * 72 - 4) + 'px; ' + estilo(p.k, e[5]) })) };
+      });
+    }
+    const semana = [
+      { titulo: 'Lun 9', hoy: true, ev: hoy.map((e) => [e[3], e[4], e[0], e[1], e[5]]) },
+      { titulo: 'Mar 10', ev: [[8.5, 0.75, 'Ramiro Castro', 'Lic. Ana Paz'], [9.5, 1, 'Tomás Ruiz', 'Lic. Carlos Ferreyra'], [10, 0.75, 'Lucía Pereyra', 'Flga. Gabriela Molina'], [11, 0.75, 'Abril Núñez', 'Lic. Rocío Herrera'], [12.5, 0.75, 'Martina Gómez', 'Lic. Ana Paz']] },
+      { titulo: 'Mié 11', ev: [[8, 1, 'Pedro Vega', 'Lic. Carlos Ferreyra'], [9, 0.75, 'Benjamín Acosta', 'Flga. Gabriela Molina'], [10.5, 0.75, 'Joaquín Medina', 'Lic. Ana Paz'], [11.5, 1, 'Emma Ríos', 'Lic. Rocío Herrera'], [13, 0.75, 'Valentina Sosa', 'Flga. Gabriela Molina']] },
+      { titulo: 'Jue 12', ev: [[9, 0.75, 'Lucas Bravo', 'Lic. Ana Paz'], [9.5, 1, 'Mateo López', 'Lic. Carlos Ferreyra'], [11, 0.75, 'Lucía Pereyra', 'Flga. Gabriela Molina'], [12, 0.75, 'Sofía Díaz', 'Lic. Rocío Herrera']] },
+      { titulo: 'Vie 13', ev: [[8.5, 1, 'Tomás Ruiz', 'Lic. Carlos Ferreyra'], [10, 0.75, 'Martina Gómez', 'Lic. Ana Paz'], [10, 0.75, 'Benjamín Acosta', 'Flga. Gabriela Molina'], [11.5, 0.75, 'Ramiro Castro', 'Lic. Ana Paz'], [13, 0.75, 'Emma Ríos', 'Lic. Rocío Herrera']] }
+    ];
+    const dias = semana.map((d) => {
+      const evs = d.ev.filter((e) => visible(e[3])).sort((a, b) => a[0] - b[0]);
+      const fin = [];
+      const carril = evs.map((e) => {
+        let i = fin.findIndex((f) => f <= e[0]);
+        if (i === -1) { fin.push(e[0] + e[1]); i = fin.length - 1; } else { fin[i] = e[0] + e[1]; }
+        return i;
+      });
+      const n = Math.max(1, fin.length);
+      return {
+        titulo: d.titulo, cant: evs.length + '',
+        tituloSt: d.hoy ? 'color:' + t.accTx : '',
+        colSt: d.hoy ? t.hoyCol : '',
+        eventos: evs.map((e, i) => ({ pac: e[2].split(' ')[0] + ' ' + e[2].split(' ')[1][0] + '.', titulo: e[2] + ', ' + this.hora(e[0]) + ', ' + e[3], st: 'top:' + ((e[0] - 8) * 56 + 2) + 'px; height:' + (e[1] * 56 - 4) + 'px; left:calc(' + (carril[i] * 100 / n) + '% + 3px); width:calc(' + (100 / n) + '% - 6px); ' + estilo(kDe[e[3]], e[4]) }))
+      };
+    });
+    const celdas = [];
+    for (let i = 0; i < 6; i++) celdas.push({ d: '', st: '' });
+    for (let d = 1; d <= 30; d++) {
+      let st = 'color:' + t.soft;
+      if (d === 9) st = 'background:#22D3EE; color:#04121A; font-weight:600; box-shadow:0 0 14px rgba(34,211,238,.5)';
+      else if (d >= 10 && d <= 13) st = 'background:' + t.accBg + '; color:' + t.accSoft;
+      else if ((d + 5) % 7 >= 5) st = 'color:' + t.muted;
+      celdas.push({ d: d + '', st: st });
+    }
+    const filtros = profes.map((p) => {
+      const activo = !s.ocultos[p.n];
+      const c = t.k[p.k];
+      return {
+        n: p.n, esp: p.esp, activo: activo,
+        st: 'border:1px solid ' + (activo ? t.line : 'transparent') + '; background:' + (activo ? t.panel : 'transparent') + '; color:' + (activo ? t.text : t.muted),
+        caja: activo ? 'background:' + c[3] + '; border:1px solid ' + c[3] : 'border:1.5px solid ' + c[3],
+        alternar: () => { const o = Object.assign({}, this.state.ocultos); o[p.n] = !o[p.n]; this.setState({ ocultos: o }); }
+      };
+    });
+    const esDia = s.vista === 'dia';
+    return {
+      t: t, dark: dark, light: !dark,
+      nav: { panel: off, agenda: on, asistencia: off, pacientes: off, cobros: off },
+      temaLabel: dark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro',
+      toggle: () => this.setState({ dark: !this.state.dark }),
+      esDia: esDia, esSemana: !esDia,
+      segDia: esDia ? t.segOn : t.segOff, segSemana: esDia ? t.segOff : t.segOn,
+      esSala: s.agrupar === 'sala', esProf: s.agrupar === 'prof',
+      segSala: s.agrupar === 'sala' ? t.segOn : t.segOff, segProf: s.agrupar === 'prof' ? t.segOn : t.segOff,
+      verDia: () => this.setState({ vista: 'dia' }), verSemana: () => this.setState({ vista: 'semana' }),
+      porSala: () => this.setState({ agrupar: 'sala' }), porProf: () => this.setState({ agrupar: 'prof' }),
+      fechaTxt: esDia ? 'Lunes 9 de noviembre' : '9 al 13 de noviembre',
+      horas: ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00'],
+      columnas: columnas, dias: dias,
+      semanaTit: ['L', 'M', 'M', 'J', 'V', 'S', 'D'], celdas: celdas, filtros: filtros
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Ficha del paciente · Centro Integral</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:inherit}
+@keyframes pulso{0%,100%{box-shadow:0 0 0 0 rgba(34,211,238,.6)}50%{box-shadow:0 0 0 6px rgba(34,211,238,0)}}
+.vivo{animation:pulso 2s ease-in-out infinite}
+.btn{transition:transform .18s ease,box-shadow .18s ease,filter .18s ease;cursor:pointer}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.06);box-shadow:0 0 0 1px rgba(103,232,249,.6),0 10px 30px rgba(34,211,238,.4)}
+.nav{transition:background-color .15s ease}
+.nav:hover{background:rgba(34,211,238,.08)}
+.card{transition:border-color .2s ease,transform .2s ease}
+.card:hover{border-color:rgba(34,211,238,.45)!important;transform:translateY(-2px)}
+.fila{transition:background-color .15s ease}
+.fila:hover{background:rgba(34,211,238,.06)}
+.globo{transition:transform .2s ease,box-shadow .2s ease}
+.globo:hover{transform:scale(1.1);box-shadow:0 0 0 1px rgba(255,255,255,.7),0 0 18px rgba(34,211,238,.45)}
+</style>
+</helmet>
+<div style="min-height:100vh; box-sizing:border-box; display:flex; flex-wrap:wrap; font-family:Sora, system-ui, sans-serif; color:{{t.text}}; background-color:{{t.bg}}; background-image:radial-gradient(900px 520px at 20% -10%, {{t.glow}}, transparent 62%), radial-gradient(800px 480px at 100% 0%, {{t.glow2}}, transparent 60%), linear-gradient({{t.grid}} 1px, transparent 1px), linear-gradient(90deg, {{t.grid}} 1px, transparent 1px); background-size:auto, auto, 48px 48px, 48px 48px">
+
+<nav aria-label="Navegación principal" style="flex:1 1 232px; max-width:100%; box-sizing:border-box; padding:22px 14px 16px; display:flex; flex-direction:column; gap:16px; border-right:1px solid {{t.line}}; background:{{t.side}}; font-size:13.5px">
+<a href="Panel.dc.html" style="display:flex; align-items:center; gap:10px; padding:0 8px; text-decoration:none; color:{{t.text}}; font-size:15px; letter-spacing:-0.01em"><svg aria-hidden="true" width="32" height="32" viewBox="0 0 48 48" style="flex-shrink:0; filter:drop-shadow(0 0 8px rgba(34,211,238,.4))"><defs><linearGradient id="ciFi" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="{{t.ring1}}"></stop><stop offset="1" stop-color="{{t.ring2}}"></stop></linearGradient></defs><path d="M37.79 12.43 A18 18 0 1 0 37.79 35.57" fill="none" stroke="url(#ciFi)" stroke-width="4" stroke-linecap="round"></path><path d="M24 24 H40" stroke="{{t.acc}}" stroke-width="2" stroke-linecap="round" opacity=".7"></path><circle cx="24" cy="24" r="5" fill="{{t.acc}}"></circle><circle cx="42" cy="24" r="3" fill="{{t.sat}}"></circle></svg><span><span style="font-weight:600">Centro</span> <span style="font-weight:300">Integral</span></span></a>
+<div style="display:flex; flex-wrap:wrap; gap:4px">
+<a href="Panel.dc.html" class="nav" style="flex:1 1 160px; display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; text-decoration:none; {{nav.panel}}"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="2"></rect><rect x="14" y="3" width="7" height="5" rx="2"></rect><rect x="14" y="12" width="7" height="9" rx="2"></rect><rect x="3" y="16" width="7" height="5" rx="2"></rect></svg>Panel</a>
+<a href="Agenda.dc.html" class="nav" style="flex:1 1 160px; display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; text-decoration:none; {{nav.agenda}}"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg>Agenda</a>
+<a href="Asistencia.dc.html" class="nav" style="flex:1 1 160px; display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; text-decoration:none; {{nav.asistencia}}"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"></rect><path d="m8 12 3 3 5-6"></path></svg>Asistencia</a>
+<a href="Ficha.dc.html" class="nav" aria-current="page" style="flex:1 1 160px; display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; text-decoration:none; {{nav.pacientes}}"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c1.8.7 3 2.5 3.5 5.2"></path></svg>Pacientes</a>
+<a href="Cobros.dc.html" class="nav" style="flex:1 1 160px; display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; text-decoration:none; {{nav.cobros}}"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="3"></rect><path d="M3 10h18M16 15h2"></path></svg>Cobros y liquidación</a>
+</div>
+<div style="flex:1"></div>
+<div style="display:flex; align-items:center; justify-content:space-between; padding:0 8px"><span style="font:400 11px 'JetBrains Mono', monospace; color:{{t.muted}}">v2.0</span><a href="#" class="globo" title="Desarrollado por DaviNic Developer" aria-label="Desarrollado por DaviNic Developer" style="width:36px; height:36px; border-radius:999px; display:flex; align-items:center; justify-content:center; background:radial-gradient(circle at 35% 30%, #FFFFFF, #D7DEE8 75%); box-shadow:0 0 0 1px rgba(255,255,255,.45), 0 6px 18px rgba(0,0,0,.3)"><span style="width:23px; height:22px; overflow:hidden; display:block"><img src="/_blob/562a25969fa561da310a6e1995bba8bc" alt="" style="width:23px; display:block; mix-blend-mode:multiply"></span></a></div>
+</nav>
+
+<div style="flex:999 1 560px; min-width:0; display:flex; flex-direction:column">
+<header style="display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:14px clamp(16px, 3vw, 28px); border-bottom:1px solid {{t.line}}">
+<label for="buscar" style="flex:1 1 260px; max-width:440px; display:flex; align-items:center; gap:10px; height:42px; padding:0 14px; box-sizing:border-box; border-radius:12px; border:1px solid {{t.line}}; background:{{t.panel}}; color:{{t.muted}}; font-size:13px"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg><input id="buscar" placeholder="Buscar paciente, turno o profesional" style="flex:1; min-width:0; border:0; background:transparent; font:400 13px Sora, sans-serif; color:{{t.text}}; outline:none"><span style="font:500 11px 'JetBrains Mono', monospace; padding:2px 6px; border-radius:6px; border:1px solid {{t.line}}">Ctrl K</span></label>
+<span style="margin-left:auto; display:inline-flex; align-items:center; gap:8px; font:500 12px 'JetBrains Mono', monospace; color:{{t.accSoft}}"><span class="vivo" style="width:7px; height:7px; border-radius:999px; background:#22D3EE"></span>EN VIVO · 10:48</span>
+<button onClick="{{toggle}}" aria-label="{{temaLabel}}" title="{{temaLabel}}" style="width:42px; height:42px; border-radius:12px; border:1px solid {{t.line}}; background:{{t.panel}}; color:{{t.soft}}; display:flex; align-items:center; justify-content:center; cursor:pointer"><sc-if value="{{dark}}" hint-placeholder-val="{{true}}"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg></sc-if><sc-if value="{{light}}" hint-placeholder-val="{{false}}"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"></path></svg></sc-if></button>
+<span title="Laura Méndez · Recepción" style="width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg, #22D3EE, #5B8DEF); color:#04121A; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center">LM</span>
+</header>
+
+<main style="padding:clamp(16px, 3vw, 28px); display:flex; flex-direction:column; gap:18px">
+<nav aria-label="Ubicación" style="font-size:13px; color:{{t.muted}}; display:flex; gap:8px"><a href="#" style="color:{{t.muted}}">Pacientes</a><span aria-hidden="true">/</span><span style="color:{{t.text}}">Lucía Pereyra</span></nav>
+
+<section style="position:relative; overflow:hidden; display:flex; flex-wrap:wrap; align-items:center; gap:20px; padding:clamp(18px, 2.4vw, 26px); border-radius:22px; border:1px solid {{t.line}}; background:radial-gradient(500px 220px at 0% 0%, {{t.foBg}}, transparent 70%), {{t.panel}}">
+<span style="width:84px; height:84px; flex-shrink:0; border-radius:26px; display:flex; align-items:center; justify-content:center; font-size:28px; font-weight:600; background:{{t.foBg}}; color:{{t.foTx}}; border:1px solid {{t.foBd}}; box-shadow:0 0 30px {{t.foBg}}">LP</span>
+<div style="flex:1 1 300px; min-width:0; display:flex; flex-direction:column; gap:10px">
+<h1 style="margin:0; font-size:clamp(26px, 2.6vw, 34px); font-weight:600; letter-spacing:-0.03em">Lucía Pereyra</h1>
+<div style="display:flex; flex-wrap:wrap; gap:8px; font-size:12.5px">
+<span style="padding:5px 11px; border-radius:999px; border:1px solid {{t.line}}; color:{{t.soft}}">8 años</span>
+<span style="padding:5px 11px; border-radius:999px; border:1px solid {{t.foBd}}; background:{{t.foBg}}; color:{{t.foTx}}">Fonoaudiología</span>
+<span style="padding:5px 11px; border-radius:999px; border:1px solid {{t.line}}; color:{{t.soft}}">OSEP · Plan A</span>
+<span style="display:inline-flex; align-items:center; gap:6px; padding:5px 11px; border-radius:999px; border:1px solid {{t.okBd}}; background:{{t.okBg}}; color:{{t.okTx}}"><span style="width:6px; height:6px; border-radius:999px; background:{{t.ok}}"></span>En tratamiento</span>
+</div>
+</div>
+<div style="display:flex; flex-wrap:wrap; gap:10px">
+<button style="height:46px; padding:0 16px; display:flex; align-items:center; gap:8px; border-radius:12px; border:1px solid {{t.line}}; background:{{t.panel}}; color:{{t.text}}; font:500 14px Sora, sans-serif; cursor:pointer"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-12.6 7.4L3 20.5l1.6-5.2A8.5 8.5 0 1 1 21 11.5z"></path></svg>WhatsApp</button>
+<a href="Agenda.dc.html" class="btn" style="height:46px; padding:0 18px; display:flex; align-items:center; gap:8px; border-radius:12px; background:#22D3EE; color:#04121A; font:600 14px Sora, sans-serif; text-decoration:none; box-shadow:0 0 0 1px rgba(103,232,249,.5), 0 8px 24px rgba(34,211,238,.32)"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>Nuevo turno</a>
+</div>
+</section>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:14px">
+<div class="card" style="padding:16px; border-radius:16px; border:1px solid {{t.line}}; background:{{t.panel}}; display:flex; align-items:center; gap:14px"><svg aria-hidden="true" width="58" height="58" viewBox="0 0 48 48" style="flex-shrink:0"><circle cx="24" cy="24" r="18" fill="none" stroke="{{t.track}}" stroke-width="4"></circle><circle cx="24" cy="24" r="18" fill="none" stroke="{{t.lilac}}" stroke-width="4" stroke-linecap="round" stroke-dasharray="56.5 113.1" transform="rotate(-90 24 24)"></circle><text x="24" y="27.5" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="{{t.text}}">6/12</text></svg><div><div style="font-size:12.5px; color:{{t.muted}}">Sesiones de la orden</div><div style="font-size:14px; font-weight:500; margin-top:4px">Quedan 6</div><div style="font-size:12px; color:{{t.wTx}}">Vence el 30/12</div></div></div>
+<div class="card" style="padding:16px; border-radius:16px; border:1px solid {{t.line}}; background:{{t.panel}}"><div style="font-size:12.5px; color:{{t.muted}}">Asistencia</div><div style="font:500 26px 'JetBrains Mono', monospace; margin-top:6px">92%</div><div style="display:flex; gap:4px; margin-top:10px"><sc-for list="{{puntos}}" as="p" hint-placeholder-count="12"><span title="{{p.tit}}" style="flex:1; height:8px; border-radius:3px; {{p.st}}"></span></sc-for></div></div>
+<div class="card" style="padding:16px; border-radius:16px; border:1px solid {{t.accBd}}; background:linear-gradient(160deg, {{t.accBg}}, transparent 70%), {{t.panel}}"><div style="font-size:12.5px; color:{{t.muted}}">Próximo turno</div><div style="font:500 22px 'JetBrains Mono', monospace; margin-top:6px; color:{{t.accTx}}">Hoy 11:00</div><div style="font-size:12px; color:{{t.muted}}">Flga. Molina · Sala 2</div></div>
+<div class="card" style="padding:16px; border-radius:16px; border:1px solid {{t.line}}; background:{{t.panel}}"><div style="font-size:12.5px; color:{{t.muted}}">Saldo</div><div style="font:500 26px 'JetBrains Mono', monospace; margin-top:6px">$0</div><div style="font-size:12px; color:{{t.okTx}}">Al día</div></div>
+</div>
+
+<div role="tablist" aria-label="Secciones de la ficha" style="display:flex; flex-wrap:wrap; gap:24px; border-bottom:1px solid {{t.line}}">
+<sc-for list="{{tabs}}" as="x" hint-placeholder-count="4"><button role="tab" aria-selected="{{x.activo}}" onClick="{{x.elegir}}" style="border:0; background:none; padding:12px 0; margin-bottom:-1px; font:500 14px Sora, sans-serif; cursor:pointer; {{x.st}}">{{x.n}}</button></sc-for>
+</div>
+
+<sc-if value="{{enResumen}}" hint-placeholder-val="{{true}}">
+<div style="display:flex; flex-wrap:wrap; gap:16px; align-items:flex-start">
+<section aria-labelledby="dat-t" style="flex:1 1 340px; min-width:0; padding:20px; border-radius:18px; border:1px solid {{t.line}}; background:{{t.panel}}">
+<h2 id="dat-t" style="margin:0 0 14px; font-size:15px; font-weight:600">Datos</h2>
+<dl style="margin:0; display:grid; grid-template-columns:minmax(0, 150px) minmax(0, 1fr); gap:12px 16px; font-size:13.5px">
+<sc-for list="{{datos}}" as="d" hint-placeholder-count="8"><dt style="color:{{t.muted}}">{{d.k}}</dt><dd style="margin:0">{{d.v}}</dd></sc-for>
+</dl>
+</section>
+<div style="flex:1 1 340px; min-width:0; display:flex; flex-direction:column; gap:16px">
+<section aria-labelledby="eq-t" style="padding:20px; border-radius:18px; border:1px solid {{t.line}}; background:{{t.panel}}; display:flex; flex-direction:column; gap:12px">
+<h2 id="eq-t" style="margin:0; font-size:15px; font-weight:600">Equipo tratante</h2>
+<div style="display:flex; align-items:center; gap:12px"><span style="width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; background:{{t.foBg}}; color:{{t.foTx}}; border:1px solid {{t.foBd}}">GM</span><div style="flex:1"><div style="font-size:14px; font-weight:500">Flga. Gabriela Molina</div><div style="font-size:12px; color:{{t.muted}}">Fonoaudiología · lunes y miércoles</div></div></div>
+<div style="display:flex; align-items:center; gap:12px"><span style="width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; background:{{t.pdBg}}; color:{{t.pdTx}}; border:1px solid {{t.pdBd}}">RH</span><div style="flex:1"><div style="font-size:14px; font-weight:500">Lic. Rocío Herrera</div><div style="font-size:12px; color:{{t.muted}}">Psicopedagogía · quincenal</div></div></div>
+</section>
+<section aria-labelledby="ult-t" style="padding:20px; border-radius:18px; border:1px solid {{t.line}}; background:{{t.panel}}; display:flex; flex-direction:column; gap:12px">
+<div style="display:flex; justify-content:space-between; align-items:center"><h2 id="ult-t" style="margin:0; font-size:15px; font-weight:600">Última nota</h2><button onClick="{{irNotas}}" style="border:0; background:none; color:{{t.accTx}}; font:500 13px Sora, sans-serif; cursor:pointer; padding:8px 0">Ver todas</button></div>
+<p style="margin:0; font-size:14px; line-height:1.6; color:{{t.soft}}">Mejoró la articulación de /r/ en palabras aisladas. Seguimos con juegos de repetición en casa, 10 minutos por día.</p>
+<span style="font:400 11.5px 'JetBrains Mono', monospace; color:{{t.muted}}">04/11 · Flga. Molina</span>
+</section>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{enSesiones}}" hint-placeholder-val="{{false}}">
+<section aria-label="Sesiones" style="border-radius:18px; border:1px solid {{t.line}}; background:{{t.panel}}; overflow:hidden">
+<div style="overflow-x:auto">
+<table style="width:100%; min-width:620px; border-collapse:collapse; font-size:13.5px">
+<thead><tr style="text-align:left; color:{{t.muted}}; font:500 11px 'JetBrains Mono', monospace; letter-spacing:.06em"><th style="padding:14px 18px; border-bottom:1px solid {{t.line}}">FECHA</th><th style="padding:14px 18px; border-bottom:1px solid {{t.line}}">PROFESIONAL</th><th style="padding:14px 18px; border-bottom:1px solid {{t.line}}">SALA</th><th style="padding:14px 18px; border-bottom:1px solid {{t.line}}">N.º</th><th style="padding:14px 18px; border-bottom:1px solid {{t.line}}">ESTADO</th></tr></thead>
+<tbody>
+<sc-for list="{{sesiones}}" as="s" hint-placeholder-count="6"><tr class="fila"><td style="padding:13px 18px; border-bottom:1px solid {{t.line}}; font-family:'JetBrains Mono', monospace">{{s.f}}</td><td style="padding:13px 18px; border-bottom:1px solid {{t.line}}">{{s.p}}</td><td style="padding:13px 18px; border-bottom:1px solid {{t.line}}; color:{{t.muted}}">{{s.sala}}</td><td style="padding:13px 18px; border-bottom:1px solid {{t.line}}; font-family:'JetBrains Mono', monospace; color:{{t.muted}}">{{s.n}}</td><td style="padding:13px 18px; border-bottom:1px solid {{t.line}}"><span style="display:inline-flex; align-items:center; gap:6px; font-size:12px; padding:4px 10px; border-radius:999px; {{s.st}}">{{s.e}}</span></td></tr></sc-for>
+</tbody>
+</table>
+</div>
+</section>
+</sc-if>
+
+<sc-if value="{{enNotas}}" hint-placeholder-val="{{false}}">
+<div style="display:flex; flex-wrap:wrap; gap:16px; align-items:flex-start">
+<section aria-label="Notas de evolución" style="flex:999 1 420px; min-width:0; display:flex; flex-direction:column; gap:0; padding:8px 20px; border-radius:18px; border:1px solid {{t.line}}; background:{{t.panel}}">
+<sc-for list="{{notas}}" as="n" hint-placeholder-count="3">
+<article style="display:flex; gap:14px; padding:16px 0; border-bottom:1px solid {{t.line}}"><span style="width:10px; height:10px; margin-top:6px; flex-shrink:0; border-radius:999px; {{n.dot}}"></span><div style="flex:1; min-width:0"><div style="display:flex; flex-wrap:wrap; gap:8px; align-items:baseline"><strong style="font-size:14px; font-weight:600">{{n.autor}}</strong><span style="font:400 11.5px 'JetBrains Mono', monospace; color:{{t.muted}}">{{n.f}}</span></div><p style="margin:6px 0 0; font-size:14px; line-height:1.6; color:{{t.soft}}">{{n.txt}}</p></div></article>
+</sc-for>
+</section>
+<section aria-labelledby="nn-t" style="flex:1 1 300px; min-width:0; padding:20px; border-radius:18px; border:1px solid {{t.line}}; background:{{t.panel}}; display:flex; flex-direction:column; gap:12px">
+<h2 id="nn-t" style="margin:0; font-size:15px; font-weight:600">Nueva nota</h2>
+<label for="nota" style="font-size:13px; color:{{t.soft}}">Qué trabajaron hoy</label>
+<textarea id="nota" rows="5" placeholder="Escribí la evolución de la sesión" style="box-sizing:border-box; width:100%; border:1px solid {{t.line}}; border-radius:12px; padding:12px 14px; font:400 14px Sora, sans-serif; color:{{t.text}}; background:{{t.input}}; resize:vertical"></textarea>
+<label for="priv" style="display:flex; align-items:center; gap:10px; font-size:13px; min-height:44px; color:{{t.soft}}"><input id="priv" type="checkbox" style="width:18px; height:18px; accent-color:#22D3EE">Visible solo para profesionales</label>
+<button class="btn" style="height:46px; border:0; border-radius:12px; background:#22D3EE; color:#04121A; font:600 14px Sora, sans-serif">Guardar nota</button>
+</section>
+</div>
+</sc-if>
+
+<sc-if value="{{enPagos}}" hint-placeholder-val="{{false}}">
+<div style="display:flex; flex-wrap:wrap; gap:16px; align-items:flex-start">
+<section aria-label="Pagos" style="flex:999 1 420px; min-width:0; padding:8px; border-radius:18px; border:1px solid {{t.line}}; background:{{t.panel}}">
+<sc-for list="{{pagos}}" as="p" hint-placeholder-count="4">
+<div class="fila" style="display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:12px; border-radius:12px"><span style="font:400 12.5px 'JetBrains Mono', monospace; color:{{t.muted}}; width:50px">{{p.f}}</span><div style="flex:1 1 180px; min-width:0"><div style="font-size:14px; font-weight:500">{{p.c}}</div><div style="font-size:12px; color:{{t.muted}}">{{p.m}}</div></div><span style="font:500 14px 'JetBrains Mono', monospace">{{p.v}}</span><span style="display:inline-flex; font-size:12px; padding:4px 10px; border-radius:999px; {{p.st}}">{{p.e}}</span></div>
+</sc-for>
+</section>
+<section style="flex:1 1 260px; min-width:0; padding:20px; border-radius:18px; border:1px solid {{t.okBd}}; background:{{t.okBg}}; display:flex; flex-direction:column; gap:6px"><span style="font-size:13px; color:{{t.okTx}}">Saldo de la cuenta</span><span style="font:500 32px 'JetBrains Mono', monospace">$0</span><span style="font-size:13px; color:{{t.soft}}">La obra social cubre 6 sesiones por orden. El resto se cobra como particular.</span></section>
+</div>
+</sc-if>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"oscuro":{"editor":"boolean","default":true},"$preview":{"width":1440,"height":1100}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { dark: props.oscuro ?? true, tab: 'resumen' };
+  }
+  tokens(dark) {
+    if (dark) return {bg:'#05080F',grid:'rgba(148,197,255,.045)',glow:'rgba(34,211,238,.14)',glow2:'rgba(91,141,239,.12)',side:'rgba(255,255,255,.02)',panel:'rgba(255,255,255,.035)',line:'rgba(148,197,255,.12)',text:'#E8F1FF',muted:'#8FA3BF',soft:'#C9D6EA',acc:'#22D3EE',accTx:'#67E8F9',accBg:'rgba(34,211,238,.10)',accBd:'rgba(34,211,238,.32)',accSoft:'#A5F3FC',input:'rgba(5,8,15,.55)',track:'rgba(148,197,255,.18)',ok:'#34D399',okTx:'#6EE7B7',okBg:'rgba(52,211,153,.10)',okBd:'rgba(52,211,153,.35)',wTx:'#FCD34D',b:'#F87171',bTx:'#FCA5A5',bBg:'rgba(248,113,113,.10)',bBd:'rgba(248,113,113,.4)',lilac:'#A78BFA',foBg:'rgba(167,139,250,.16)',foBd:'rgba(167,139,250,.5)',foTx:'#DDD6FE',pdBg:'rgba(251,191,36,.12)',pdBd:'rgba(251,191,36,.45)',pdTx:'#FDE68A',ring1:'#FFFFFF',ring2:'#67E8F9',sat:'#E8F1FF'};
+    return {bg:'#F3F7FC',grid:'rgba(14,116,144,.055)',glow:'rgba(34,211,238,.20)',glow2:'rgba(91,141,239,.12)',side:'rgba(255,255,255,.7)',panel:'#FFFFFF',line:'#DCE6F2',text:'#0B1726',muted:'#4A5B73',soft:'#2A3B52',acc:'#06B6D4',accTx:'#0E7490',accBg:'#E3F6FA',accBd:'#A5E3EF',accSoft:'#0B5566',input:'#F7FAFD',track:'#E3ECF6',ok:'#10B981',okTx:'#046C4E',okBg:'#E6F7EF',okBd:'#A7E3C8',wTx:'#8A4F04',b:'#EF4444',bTx:'#B42318',bBg:'#FDECEA',bBd:'#F5B9B3',lilac:'#6D4BD8',foBg:'#ECE7FB',foBd:'#B3A1EE',foTx:'#46309A',pdBg:'#FEF4DF',pdBd:'#F6D58E',pdTx:'#6E3F03',ring1:'#0B1726',ring2:'#0E7490',sat:'#0B1726'};
+  }
+  renderVals() {
+    const s = this.state, dark = s.dark, t = this.tokens(dark);
+    const on = 'background:' + t.accBg + '; border:1px solid ' + t.accBd + '; color:' + t.accSoft + '; font-weight:500';
+    const off = 'border:1px solid transparent; color:' + t.muted;
+    const okSt = 'background:' + t.okBg + '; border:1px solid ' + t.okBd + '; color:' + t.okTx;
+    const badSt = 'background:' + t.bBg + '; border:1px solid ' + t.bBd + '; color:' + t.bTx;
+    const accSt = 'background:' + t.accBg + '; border:1px solid ' + t.accBd + '; color:' + t.accSoft;
+    const tab = (k, n) => ({ n: n, activo: s.tab === k, st: s.tab === k ? 'color:' + t.text + '; border-bottom:2px solid #22D3EE; box-shadow:0 6px 12px -8px rgba(34,211,238,.9)' : 'color:' + t.muted + '; border-bottom:2px solid transparent', elegir: () => this.setState({ tab: k }) });
+    const asis = [1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1];
+    return {
+      t: t, dark: dark, light: !dark,
+      nav: { panel: off, agenda: off, asistencia: off, pacientes: on, cobros: off },
+      temaLabel: dark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro',
+      toggle: () => this.setState({ dark: !this.state.dark }),
+      tabs: [tab('resumen', 'Resumen'), tab('sesiones', 'Sesiones'), tab('notas', 'Notas'), tab('pagos', 'Pagos')],
+      enResumen: s.tab === 'resumen', enSesiones: s.tab === 'sesiones', enNotas: s.tab === 'notas', enPagos: s.tab === 'pagos',
+      irNotas: () => this.setState({ tab: 'notas' }),
+      puntos: asis.map((a, i) => ({ tit: 'Sesión ' + (i + 1) + (a ? ': asistió' : ': faltó'), st: a ? 'background:' + t.acc : 'background:' + t.b })),
+      datos: [
+        { k: 'Nacimiento', v: '14/03/2018' },
+        { k: 'DNI', v: '[DNI]' },
+        { k: 'Tutora', v: 'Carolina Pereyra (madre)' },
+        { k: 'Teléfono', v: '[TELÉFONO]' },
+        { k: 'Obra social', v: 'OSEP · Plan A' },
+        { k: 'N.º de afiliado', v: '[N.º AFILIADO]' },
+        { k: 'Derivada por', v: 'Dra. Silvia Romero, pediatra' },
+        { k: 'Motivo', v: 'Dificultades de articulación y lenguaje expresivo' }
+      ],
+      sesiones: [
+        { f: '09/11', p: 'Flga. Molina', sala: 'Sala 2', n: '7', e: 'Hoy 11:00', st: accSt },
+        { f: '04/11', p: 'Flga. Molina', sala: 'Sala 2', n: '6', e: 'Asistió', st: okSt },
+        { f: '02/11', p: 'Flga. Molina', sala: 'Sala 2', n: '5', e: 'Asistió', st: okSt },
+        { f: '28/10', p: 'Lic. Herrera', sala: 'Sala 3', n: '—', e: 'Asistió', st: okSt },
+        { f: '28/10', p: 'Flga. Molina', sala: 'Sala 2', n: '4', e: 'Faltó', st: badSt },
+        { f: '26/10', p: 'Flga. Molina', sala: 'Sala 2', n: '3', e: 'Asistió', st: okSt }
+      ],
+      notas: [
+        { autor: 'Flga. Gabriela Molina', f: '04/11 · 11:45', txt: 'Mejoró la articulación de /r/ en palabras aisladas. Seguimos con juegos de repetición en casa, 10 minutos por día.', dot: 'background:' + t.lilac + '; box-shadow:0 0 10px ' + t.lilac },
+        { autor: 'Lic. Rocío Herrera', f: '28/10 · 12:10', txt: 'Buena disposición. Se trabajó lectura de sílabas complejas; conviene coordinar con la escuela.', dot: 'background:#FBBF24' },
+        { autor: 'Flga. Gabriela Molina', f: '26/10 · 11:40', txt: 'Primera evaluación completa. Se arma plan de 12 sesiones con foco en fonemas vibrantes.', dot: 'background:' + t.lilac }
+      ],
+      pagos: [
+        { f: '04/11', c: 'Sesión 6 · Fonoaudiología', m: 'OSEP · orden 2231', v: '$12.000', e: 'Cubierto', st: okSt },
+        { f: '02/11', c: 'Sesión 5 · Fonoaudiología', m: 'OSEP · orden 2231', v: '$12.000', e: 'Cubierto', st: okSt },
+        { f: '28/10', c: 'Psicopedagogía', m: 'Transferencia', v: '$14.000', e: 'Pagado', st: okSt },
+        { f: '26/10', c: 'Evaluación inicial', m: 'Efectivo', v: '$15.000', e: 'Pagado', st: okSt }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

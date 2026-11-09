@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Panel · Centro Integral</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:inherit}
+@keyframes pulso{0%,100%{box-shadow:0 0 0 0 rgba(34,211,238,.6)}50%{box-shadow:0 0 0 6px rgba(34,211,238,0)}}
+.vivo{animation:pulso 2s ease-in-out infinite}
+.btn{transition:transform .18s ease,box-shadow .18s ease,filter .18s ease;cursor:pointer}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.06);box-shadow:0 0 0 1px rgba(103,232,249,.6),0 10px 30px rgba(34,211,238,.4)}
+.card{transition:border-color .2s ease,box-shadow .2s ease,transform .2s ease}
+.card:hover{border-color:rgba(34,211,238,.45)!important;box-shadow:0 12px 36px rgba(34,211,238,.12);transform:translateY(-2px)}
+.nav{transition:background-color .15s ease,color .15s ease}
+.nav:hover{background:rgba(34,211,238,.08)}
+.fila{transition:background-color .15s ease}
+.fila:hover{background:rgba(34,211,238,.06)}
+.globo{transition:transform .2s ease,box-shadow .2s ease}
+.globo:hover{transform:scale(1.1);box-shadow:0 0 0 1px rgba(255,255,255,.7),0 0 18px rgba(34,211,238,.45)}
+</style>
+</helmet>
+<div style="min-height:100vh; box-sizing:border-box; display:flex; flex-wrap:wrap; font-family:Sora, system-ui, sans-serif; color:{{t.text}}; background-color:{{t.bg}}; background-image:radial-gradient(900px 520px at 20% -10%, {{t.glow}}, transparent 62%), radial-gradient(800px 480px at 100% 0%, {{t.glow2}}, transparent 60%), linear-gradient({{t.grid}} 1px, transparent 1px), linear-gradient(90deg, {{t.grid}} 1px, transparent 1px); background-size:auto, auto, 48px 48px, 48px 48px">
+
+<nav aria-label="Navegación principal" style="flex:1 1 232px; max-width:100%; box-sizing:border-box; padding:22px 14px 16px; display:flex; flex-direction:column; gap:16px; border-right:1px solid {{t.line}}; background:{{t.side}}; font-size:13.5px">
+<a href="Panel.dc.html" style="display:flex; align-items:center; gap:10px; padding:0 8px; text-decoration:none; color:{{t.text}}; font-size:15px; letter-spacing:-0.01em"><svg aria-hidden="true" width="32" height="32" viewBox="0 0 48 48" style="flex-shrink:0; filter:drop-shadow(0 0 8px rgba(34,211,238,.4))"><defs><linearGradient id="ciPn" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="{{t.ring1}}"></stop><stop offset="1" stop-color="{{t.ring2}}"></stop></linearGradient></defs><path d="M37.79 12.43 A18 18 0 1 0 37.79 35.57" fill="none" stroke="url(#ciPn)" stroke-width="4" stroke-linecap="round"></path><path d="M24 24 H40" stroke="{{t.acc}}" stroke-width="2" stroke-linecap="round" opacity=".7"></path><circle cx="24" cy="24" r="5" fill="{{t.acc}}"></circle><circle cx="42" cy="24" r="3" fill="{{t.sat}}"></circle></svg><span><span style="font-weight:600">Centro</span> <span style="font-weight:300">Integral</span></span></a>
+<div style="display:flex; flex-wrap:wrap; gap:4px">
+<a href="Panel.dc.html" class="nav" style="flex:1 1 160px; display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; text-decoration:none; {{nav.panel}}"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="2"></rect><rect x="14" y="3" width="7" height="5" rx="2"></rect><rect x="14" y="12" width="7" height="9" rx="2"></rect><rect x="3" y="16" width="7" height="5" rx="2"></rect></svg>Panel</a>
+<a href="Agenda.dc.html" class="nav" style="flex:1 1 160px; display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; text-decoration:none; {{nav.agenda}}"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg>Agenda</a>
+<a href="Asistencia.dc.html" class="nav" style="flex:1 1 160px; display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; text-decoration:none; {{nav.asistencia}}"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"></rect><path d="m8 12 3 3 5-6"></path></svg>Asistencia</a>
+<a href="Ficha.dc.html" class="nav" style="flex:1 1 160px; display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; text-decoration:none; {{nav.pacientes}}"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c1.8.7 3 2.5 3.5 5.2"></path></svg>Pacientes</a>
+<a href="Cobros.dc.html" class="nav" style="flex:1 1 160px; display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; text-decoration:none; {{nav.cobros}}"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="3"></rect><path d="M3 10h18M16 15h2"></path></svg>Cobros y liquidación</a>
+</div>
+<div style="flex:1"></div>
+<div style="display:flex; align-items:center; justify-content:space-between; padding:0 8px"><span style="font:400 11px 'JetBrains Mono', monospace; color:{{t.muted}}">v2.0</span><a href="#" class="globo" title="Desarrollado por DaviNic Developer" aria-label="Desarrollado por DaviNic Developer" style="width:36px; height:36px; border-radius:999px; display:flex; align-items:center; justify-content:center; background:radial-gradient(circle at 35% 30%, #FFFFFF, #D7DEE8 75%); box-shadow:0 0 0 1px rgba(255,255,255,.45), 0 6px 18px rgba(0,0,0,.3)"><span style="width:23px; height:22px; overflow:hidden; display:block"><img src="/_blob/562a25969fa561da310a6e1995bba8bc" alt="" style="width:23px; display:block; mix-blend-mode:multiply"></span></a></div>
+</nav>
+
+<div style="flex:999 1 560px; min-width:0; display:flex; flex-direction:column">
+<header style="display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:14px clamp(16px, 3vw, 28px); border-bottom:1px solid {{t.line}}">
+<label for="buscar" style="flex:1 1 260px; max-width:440px; display:flex; align-items:center; gap:10px; height:42px; padding:0 14px; box-sizing:border-box; border-radius:12px; border:1px solid {{t.line}}; background:{{t.panel}}; color:{{t.muted}}; font-size:13px"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg><input id="buscar" placeholder="Buscar paciente, turno o profesional" style="flex:1; min-width:0; border:0; background:transparent; font:400 13px Sora, sans-serif; color:{{t.text}}; outline:none"><span style="font:500 11px 'JetBrains Mono', monospace; padding:2px 6px; border-radius:6px; border:1px solid {{t.line}}">Ctrl K</span></label>
+<span style="margin-left:auto; display:inline-flex; align-items:center; gap:8px; font:500 12px 'JetBrains Mono', monospace; color:{{t.accSoft}}"><span class="vivo" style="width:7px; height:7px; border-radius:999px; background:#22D3EE"></span>EN VIVO · 10:48</span>
+<button onClick="{{toggle}}" aria-label="{{temaLabel}}" title="{{temaLabel}}" style="width:42px; height:42px; border-radius:12px; border:1px solid {{t.line}}; background:{{t.panel}}; color:{{t.soft}}; display:flex; align-items:center; justify-content:center; cursor:pointer"><sc-if value="{{dark}}" hint-placeholder-val="{{true}}"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg></sc-if><sc-if value="{{light}}" hint-placeholder-val="{{false}}"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"></path></svg></sc-if></button>
+<button aria-label="Notificaciones, 2 nuevas" style="position:relative; width:42px; height:42px; border-radius:12px; border:1px solid {{t.line}}; background:{{t.panel}}; color:{{t.soft}}; display:flex; align-items:center; justify-content:center; cursor:pointer"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16v-5a6 6 0 1 1 12 0v5l1.5 2h-15z"></path><path d="M10 20a2 2 0 0 0 4 0"></path></svg><span style="position:absolute; top:9px; right:10px; width:7px; height:7px; border-radius:999px; background:#22D3EE; box-shadow:0 0 8px #22D3EE"></span></button>
+<span title="Laura Méndez · Recepción" style="width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg, #22D3EE, #5B8DEF); color:#04121A; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center">LM</span>
+</header>
+
+<main style="padding:clamp(16px, 3vw, 28px); display:flex; flex-direction:column; gap:20px">
+<div style="display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:16px">
+<div><div style="font:500 11px 'JetBrains Mono', monospace; letter-spacing:.1em; color:{{t.muted}}">LUNES 09 · NOVIEMBRE</div><h1 style="margin:6px 0 0; font-size:clamp(24px, 2.4vw, 30px); font-weight:600; letter-spacing:-0.02em">Buen día, Laura</h1></div>
+<div style="display:flex; flex-wrap:wrap; gap:10px">
+<a href="Asistencia.dc.html" style="height:46px; padding:0 18px; display:flex; align-items:center; gap:8px; border-radius:12px; border:1px solid {{t.line}}; background:{{t.panel}}; color:{{t.text}}; font:500 14px Sora, sans-serif; text-decoration:none"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"></rect><path d="m8 12 3 3 5-6"></path></svg>Tomar asistencia</a>
+<a href="Agenda.dc.html" class="btn" style="height:46px; padding:0 18px; display:flex; align-items:center; gap:8px; border-radius:12px; background:#22D3EE; color:#04121A; font:600 14px Sora, sans-serif; text-decoration:none; box-shadow:0 0 0 1px rgba(103,232,249,.5), 0 8px 24px rgba(34,211,238,.32)"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>Nuevo turno</a>
+</div>
+</div>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:14px">
+<div class="card" style="padding:18px; border-radius:16px; border:1px solid {{t.line}}; background:{{t.panel}}"><div style="font-size:12.5px; color:{{t.muted}}">Turnos hoy</div><div style="display:flex; align-items:baseline; gap:8px; margin-top:8px"><span style="font:500 32px 'JetBrains Mono', monospace">18</span><span style="font-size:12.5px; color:{{t.okTx}}">12 confirmados</span></div><div style="display:flex; gap:3px; margin-top:14px"><span style="flex:12; height:5px; border-radius:4px; background:{{t.acc}}; box-shadow:0 0 10px rgba(34,211,238,.55)"></span><span style="flex:4; height:5px; border-radius:4px; background:{{t.w}}"></span><span style="flex:2; height:5px; border-radius:4px; background:{{t.track}}"></span></div><div style="display:flex; gap:12px; margin-top:8px; font-size:11px; color:{{t.muted}}"><span>12 confirm.</span><span>4 a confirmar</span><span>2 libres</span></div></div>
+<div class="card" style="padding:18px; border-radius:16px; border:1px solid {{t.line}}; background:{{t.panel}}; display:flex; align-items:center; gap:16px"><svg aria-hidden="true" width="64" height="64" viewBox="0 0 48 48" style="flex-shrink:0"><circle cx="24" cy="24" r="18" fill="none" stroke="{{t.track}}" stroke-width="4"></circle><circle cx="24" cy="24" r="18" fill="none" stroke="{{t.acc}}" stroke-width="4" stroke-linecap="round" stroke-dasharray="88 113" transform="rotate(-90 24 24)" style="filter:drop-shadow(0 0 4px rgba(34,211,238,.7))"></circle><text x="24" y="27.5" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="{{t.text}}">78%</text></svg><div><div style="font-size:12.5px; color:{{t.muted}}">Asistencias</div><div style="font:500 28px 'JetBrains Mono', monospace; margin-top:4px">7/9</div><div style="font-size:12.5px; color:{{t.bTx}}">2 ausentes</div></div></div>
+<div class="card" style="padding:18px; border-radius:16px; border:1px solid {{t.line}}; background:{{t.panel}}"><div style="font-size:12.5px; color:{{t.muted}}">Cobrado hoy</div><div style="font:500 28px 'JetBrains Mono', monospace; margin-top:8px">$84.500</div><svg aria-hidden="true" width="100%" height="30" viewBox="0 0 200 30" preserveAspectRatio="none" style="margin-top:6px"><polyline points="0,26 25,21 50,23 75,14 100,16 125,9 150,11 175,4 200,6" fill="none" stroke="{{t.blue}}" stroke-width="2" style="filter:drop-shadow(0 0 4px rgba(91,141,239,.7))"></polyline></svg><div style="font-size:11px; color:{{t.muted}}">7 pagos · 4 en efectivo, 3 transferencias</div></div>
+<div class="card" style="padding:18px; border-radius:16px; border:1px solid {{t.line}}; background:{{t.panel}}"><div style="font-size:12.5px; color:{{t.muted}}">Por cobrar</div><div style="font:500 28px 'JetBrains Mono', monospace; margin-top:8px">$36.000</div><div style="font-size:12.5px; color:{{t.wTx}}; margin-top:6px">3 sesiones pendientes</div><a href="Cobros.dc.html" style="display:inline-block; margin-top:12px; font-size:12.5px; color:{{t.accTx}}">Ver cobros</a></div>
+</div>
+
+<div style="display:flex; flex-wrap:wrap; gap:14px">
+<section aria-labelledby="salas-t" style="flex:999 1 560px; min-width:0; padding:18px; border-radius:16px; border:1px solid {{t.line}}; background:{{t.panel}}; display:flex; flex-direction:column; gap:14px">
+<div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:10px"><h2 id="salas-t" style="margin:0; font-size:15px; font-weight:600">Salas en tiempo real</h2><span style="display:flex; flex-wrap:wrap; gap:14px; font-size:11.5px; color:{{t.muted}}"><span style="display:flex; align-items:center; gap:6px"><span style="width:9px; height:9px; border-radius:3px; background:{{t.psiBd}}"></span>Psicología</span><span style="display:flex; align-items:center; gap:6px"><span style="width:9px; height:9px; border-radius:3px; background:{{t.toBd}}"></span>T. Ocupacional</span><span style="display:flex; align-items:center; gap:6px"><span style="width:9px; height:9px; border-radius:3px; background:{{t.foBd}}"></span>Fonoaudiología</span></span></div>
+<div style="overflow-x:auto">
+<div style="min-width:600px; display:flex; flex-direction:column; gap:10px; padding-bottom:4px">
+<div style="display:flex; padding-left:72px; font:400 11px 'JetBrains Mono', monospace; color:{{t.muted}}"><span style="flex:1">08</span><span style="flex:1">09</span><span style="flex:1">10</span><span style="flex:1">11</span><span style="flex:1">12</span><span style="flex:1">13</span></div>
+<div style="display:flex; flex-direction:column; gap:10px; position:relative">
+<sc-for list="{{salas}}" as="s" hint-placeholder-count="3">
+<div style="display:flex; align-items:center"><span style="width:72px; flex-shrink:0; font-size:12.5px; color:{{t.soft}}">{{s.nombre}}</span><div style="flex:1; height:46px; position:relative; border-radius:10px; background:repeating-linear-gradient(90deg, {{t.line2}} 0 1px, transparent 1px 16.666%), {{t.lane}}">
+<sc-for list="{{s.eventos}}" as="e" hint-placeholder-count="2"><span title="{{e.titulo}}" style="position:absolute; top:4px; bottom:4px; box-sizing:border-box; border-radius:8px; padding:5px 8px; font-size:11.5px; overflow:hidden; white-space:nowrap; {{e.st}}">{{e.txt}}</span></sc-for>
+</div></div>
+</sc-for>
+<span aria-hidden="true" style="position:absolute; left:calc(72px + (100% - 72px) * .467); top:-10px; bottom:-6px; width:2px; border-radius:2px; background:{{t.acc}}; box-shadow:0 0 12px 2px rgba(34,211,238,.6)"></span>
+</div>
+</div>
+</div>
+</section>
+
+<section aria-labelledby="prox-t" style="flex:1 1 280px; min-width:0; padding:18px; border-radius:16px; border:1px solid {{t.accBd}}; background:linear-gradient(160deg, {{t.accBg}}, transparent 70%), {{t.panel}}; display:flex; flex-direction:column; gap:12px">
+<h2 id="prox-t" style="margin:0; font:500 11px 'JetBrains Mono', monospace; letter-spacing:.1em; color:{{t.accSoft}}">PRÓXIMO · EN 12 MIN</h2>
+<div style="display:flex; align-items:center; gap:12px"><span style="width:46px; height:46px; border-radius:14px; background:{{t.foBg}}; color:{{t.foTx}}; border:1px solid {{t.foBd}}; display:flex; align-items:center; justify-content:center; font-weight:600">LP</span><div><div style="font-size:17px; font-weight:600">Lucía Pereyra</div><div style="font-size:12.5px; color:{{t.muted}}">Fonoaudiología · Sala 2</div></div></div>
+<div style="font:400 12.5px 'JetBrains Mono', monospace; color:{{t.soft}}; display:flex; justify-content:space-between; padding:10px 12px; border-radius:10px; border:1px solid {{t.line}}; background:{{t.input}}"><span>11:00 → 11:45</span><span>Sesión 6/12</span></div>
+<div style="flex:1"></div>
+<a href="Asistencia.dc.html" class="btn" style="height:46px; border-radius:12px; background:#22D3EE; color:#04121A; font:600 14px Sora, sans-serif; display:flex; align-items:center; justify-content:center; text-decoration:none">Registrar llegada</a>
+<a href="Ficha.dc.html" style="height:46px; border-radius:12px; border:1px solid {{t.line}}; color:{{t.text}}; font:500 14px Sora, sans-serif; display:flex; align-items:center; justify-content:center; text-decoration:none">Ver ficha</a>
+</section>
+</div>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:14px">
+<section aria-labelledby="pend-t" style="padding:18px; border-radius:16px; border:1px solid {{t.line}}; background:{{t.panel}}; display:flex; flex-direction:column; gap:6px">
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px"><h2 id="pend-t" style="margin:0; font-size:15px; font-weight:600">Pendientes de cobro</h2><a href="Cobros.dc.html" style="font-size:12.5px; color:{{t.accTx}}">Ver todo</a></div>
+<sc-for list="{{pendientes}}" as="p" hint-placeholder-count="3">
+<div class="fila" style="display:flex; align-items:center; gap:12px; padding:10px; border-radius:12px"><div style="flex:1; min-width:0"><div style="font-size:13.5px; font-weight:500">{{p.n}}</div><div style="font-size:12px; color:{{t.muted}}">{{p.d}}</div></div><span style="font:500 13px 'JetBrains Mono', monospace">{{p.m}}</span><a href="Cobros.dc.html" style="height:36px; padding:0 12px; display:flex; align-items:center; border-radius:10px; border:1px solid {{t.accBd}}; background:{{t.accBg}}; color:{{t.accSoft}}; font-size:12.5px; font-weight:500; text-decoration:none">Cobrar</a></div>
+</sc-for>
+</section>
+<section aria-labelledby="prof-t" style="padding:18px; border-radius:16px; border:1px solid {{t.line}}; background:{{t.panel}}; display:flex; flex-direction:column; gap:14px">
+<h2 id="prof-t" style="margin:0; font-size:15px; font-weight:600">Asistencia por profesional</h2>
+<sc-for list="{{profes}}" as="r" hint-placeholder-count="4">
+<div style="display:flex; flex-direction:column; gap:6px"><div style="display:flex; justify-content:space-between; font-size:12.5px"><span>{{r.n}}</span><span style="font-family:'JetBrains Mono', monospace; color:{{t.muted}}">{{r.v}}</span></div><div style="height:6px; border-radius:6px; background:{{t.track}}; overflow:hidden"><div style="height:100%; border-radius:6px; {{r.st}}"></div></div></div>
+</sc-for>
+</section>
+<section aria-labelledby="av-t" style="padding:18px; border-radius:16px; border:1px solid {{t.line}}; background:{{t.panel}}; display:flex; flex-direction:column; gap:10px">
+<h2 id="av-t" style="margin:0 0 4px; font-size:15px; font-weight:600">Avisos</h2>
+<div style="display:flex; gap:10px; padding:12px; border-radius:12px; border:1px solid {{t.accBd}}; background:{{t.accBg}}; color:{{t.accSoft}}; font-size:13px; line-height:1.45"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-top:1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4M12 16h.01"></path></svg>La Sala 2 queda libre de 11:45 a 13:00.</div>
+<div style="display:flex; gap:10px; padding:12px; border-radius:12px; border:1px solid {{t.wBd}}; background:{{t.wBg}}; color:{{t.wTx}}; font-size:13px; line-height:1.45"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-top:1px"><path d="M12 3 2 20h20z"></path><path d="M12 10v4M12 17h.01"></path></svg>A Lucía Pereyra le quedan 6 sesiones autorizadas. Conviene pedir la renovación de la orden.</div>
+</section>
+</div>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"oscuro":{"editor":"boolean","default":true},"$preview":{"width":1440,"height":1080}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { dark: props.oscuro ?? true };
+  }
+  tokens(dark) {
+    if (dark) return {bg:'#05080F',grid:'rgba(148,197,255,.045)',glow:'rgba(34,211,238,.14)',glow2:'rgba(91,141,239,.12)',side:'rgba(255,255,255,.02)',panel:'rgba(255,255,255,.035)',line:'rgba(148,197,255,.12)',line2:'rgba(148,197,255,.07)',text:'#E8F1FF',muted:'#8FA3BF',soft:'#C9D6EA',acc:'#22D3EE',accTx:'#67E8F9',accBg:'rgba(34,211,238,.10)',accBd:'rgba(34,211,238,.32)',accSoft:'#A5F3FC',input:'rgba(5,8,15,.55)',track:'rgba(148,197,255,.15)',lane:'rgba(148,197,255,.03)',okTx:'#6EE7B7',w:'#FBBF24',wTx:'#FCD34D',wBg:'rgba(251,191,36,.10)',wBd:'rgba(251,191,36,.35)',bTx:'#FCA5A5',bBg:'rgba(248,113,113,.10)',bBd:'rgba(248,113,113,.55)',blue:'#5B8DEF',ring1:'#FFFFFF',ring2:'#67E8F9',sat:'#E8F1FF',psiBg:'rgba(34,211,238,.14)',psiBd:'rgba(34,211,238,.5)',psiTx:'#E8F1FF',toBg:'rgba(91,141,239,.16)',toBd:'rgba(91,141,239,.55)',toTx:'#E8F1FF',foBg:'rgba(167,139,250,.16)',foBd:'rgba(167,139,250,.55)',foTx:'#E8F1FF'};
+    return {bg:'#F3F7FC',grid:'rgba(14,116,144,.055)',glow:'rgba(34,211,238,.20)',glow2:'rgba(91,141,239,.12)',side:'rgba(255,255,255,.7)',panel:'#FFFFFF',line:'#DCE6F2',line2:'#E3ECF6',text:'#0B1726',muted:'#4A5B73',soft:'#2A3B52',acc:'#06B6D4',accTx:'#0E7490',accBg:'#E3F6FA',accBd:'#A5E3EF',accSoft:'#0B5566',input:'#F7FAFD',track:'#E3ECF6',lane:'#F7FAFD',okTx:'#046C4E',w:'#F59E0B',wTx:'#8A4F04',wBg:'#FEF4DF',wBd:'#F6D58E',bTx:'#B42318',bBg:'#FDECEA',bBd:'#EE8E86',blue:'#2F5FD0',ring1:'#0B1726',ring2:'#0E7490',sat:'#0B1726',psiBg:'#DDF6FB',psiBd:'#67CFE3',psiTx:'#0B4655',toBg:'#E4ECFB',toBd:'#93AEEA',toTx:'#1E3F8F',foBg:'#ECE7FB',foBd:'#B3A1EE',foTx:'#46309A'};
+  }
+  renderVals() {
+    const dark = this.state.dark;
+    const t = this.tokens(dark);
+    const on = 'background:' + t.accBg + '; border:1px solid ' + t.accBd + '; color:' + t.accSoft + '; font-weight:500';
+    const off = 'border:1px solid transparent; color:' + t.muted;
+    const nav = { panel: on, agenda: off, asistencia: off, pacientes: off, cobros: off };
+    const tipo = (k) => k === 'psi' ? [t.psiBg, t.psiBd, t.psiTx] : k === 'to' ? [t.toBg, t.toBd, t.toTx] : [t.foBg, t.foBd, t.foTx];
+    const ev = (desde, dur, txt, k, extra) => {
+      const left = ((desde - 8) / 6 * 100).toFixed(2) + '%';
+      const width = (dur / 6 * 100).toFixed(2) + '%';
+      if (k === 'aus') return { txt: txt, titulo: txt, st: 'left:' + left + '; width:' + width + '; color:' + t.bTx + '; border:1px dashed ' + t.bBd + '; background:repeating-linear-gradient(135deg, ' + t.bBg + ' 0 6px, transparent 6px 12px)' };
+      const c = tipo(k);
+      return { txt: txt, titulo: txt, st: 'left:' + left + '; width:' + width + '; background:' + c[0] + '; border:1px solid ' + c[1] + '; color:' + c[2] + (extra ? '; box-shadow:0 0 18px ' + c[1] : '') };
+    };
+    return {
+      t: t, dark: dark, light: !dark, nav: nav,
+      temaLabel: dark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro',
+      toggle: () => this.setState({ dark: !this.state.dark }),
+      salas: [
+        { nombre: 'Sala 1', eventos: [ev(8.5, 0.75, 'M. Gómez', 'psi'), ev(10.5, 1, 'T. Ruiz · en curso', 'to', true), ev(12, 0.75, 'L. Bravo', 'psi')] },
+        { nombre: 'Sala 2', eventos: [ev(9, 1, 'B. Acosta', 'fo'), ev(10, 0.75, 'V. Sosa', 'fo'), ev(11, 0.75, 'L. Pereyra', 'fo'), ev(13, 0.75, 'J. Medina', 'psi')] },
+        { nombre: 'Sala 3', eventos: [ev(9.5, 0.75, 'M. López', 'to'), ev(11.25, 0.75, 'S. Díaz · ausente', 'aus')] }
+      ],
+      pendientes: [
+        { n: 'Tomás Ruiz', d: 'T. Ocupacional · hoy 10:30', m: '$12.000' },
+        { n: 'Valentina Sosa', d: 'Fonoaudiología · hoy 10:00', m: '$12.000' },
+        { n: 'Mateo López', d: 'T. Ocupacional · vie 6', m: '$12.000' }
+      ],
+      profes: [
+        { n: 'Lic. Ana Paz', v: '3/3', st: 'width:100%; background:' + t.psiBd },
+        { n: 'Lic. Carlos Ferreyra', v: '2/3', st: 'width:67%; background:' + t.toBd },
+        { n: 'Flga. Gabriela Molina', v: '2/2', st: 'width:100%; background:' + t.foBd },
+        { n: 'Lic. Rocío Herrera', v: '0/1', st: 'width:3%; background:' + t.bBd }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

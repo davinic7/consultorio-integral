@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Asistencia · Centro Integral</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:inherit}
+@keyframes pulso{0%,100%{box-shadow:0 0 0 0 rgba(34,211,238,.6)}50%{box-shadow:0 0 0 6px rgba(34,211,238,0)}}
+.vivo{animation:pulso 2s ease-in-out infinite}
+.nav{transition:background-color .15s ease}
+.nav:hover{background:rgba(34,211,238,.08)}
+.fila{transition:border-color .2s ease,box-shadow .2s ease}
+.fila:hover{border-color:rgba(34,211,238,.4)!important;box-shadow:0 10px 30px rgba(34,211,238,.08)}
+.acc{transition:transform .12s ease,background-color .15s ease,box-shadow .15s ease;cursor:pointer}
+.acc:hover{transform:translateY(-1px)}
+.acc:active{transform:scale(.97)}
+.globo{transition:transform .2s ease,box-shadow .2s ease}
+.globo:hover{transform:scale(1.1);box-shadow:0 0 0 1px rgba(255,255,255,.7),0 0 18px rgba(34,211,238,.45)}
+</style>
+</helmet>
+<div style="min-height:100vh; box-sizing:border-box; display:flex; flex-wrap:wrap; font-family:Sora, system-ui, sans-serif; color:{{t.text}}; background-color:{{t.bg}}; background-image:radial-gradient(900px 520px at 20% -10%, {{t.glow}}, transparent 62%), radial-gradient(800px 480px at 100% 0%, {{t.glow2}}, transparent 60%), linear-gradient({{t.grid}} 1px, transparent 1px), linear-gradient(90deg, {{t.grid}} 1px, transparent 1px); background-size:auto, auto, 48px 48px, 48px 48px">
+
+<nav aria-label="Navegación principal" style="flex:1 1 232px; max-width:100%; box-sizing:border-box; padding:22px 14px 16px; display:flex; flex-direction:column; gap:16px; border-right:1px solid {{t.line}}; background:{{t.side}}; font-size:13.5px">
+<a href="Panel.dc.html" style="display:flex; align-items:center; gap:10px; padding:0 8px; text-decoration:none; color:{{t.text}}; font-size:15px; letter-spacing:-0.01em"><svg aria-hidden="true" width="32" height="32" viewBox="0 0 48 48" style="flex-shrink:0; filter:drop-shadow(0 0 8px rgba(34,211,238,.4))"><defs><linearGradient id="ciAs" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="{{t.ring1}}"></stop><stop offset="1" stop-color="{{t.ring2}}"></stop></linearGradient></defs><path d="M37.79 12.43 A18 18 0 1 0 37.79 35.57" fill="none" stroke="url(#ciAs)" stroke-width="4" stroke-linecap="round"></path><path d="M24 24 H40" stroke="{{t.acc}}" stroke-width="2" stroke-linecap="round" opacity=".7"></path><circle cx="24" cy="24" r="5" fill="{{t.acc}}"></circle><circle cx="42" cy="24" r="3" fill="{{t.sat}}"></circle></svg><span><span style="font-weight:600">Centro</span> <span style="font-weight:300">Integral</span></span></a>
+<div style="display:flex; flex-wrap:wrap; gap:4px">
+<a href="Panel.dc.html" class="nav" style="flex:1 1 160px; display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; text-decoration:none; {{nav.panel}}"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="2"></rect><rect x="14" y="3" width="7" height="5" rx="2"></rect><rect x="14" y="12" width="7" height="9" rx="2"></rect><rect x="3" y="16" width="7" height="5" rx="2"></rect></svg>Panel</a>
+<a href="Agenda.dc.html" class="nav" style="flex:1 1 160px; display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; text-decoration:none; {{nav.agenda}}"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg>Agenda</a>
+<a href="Asistencia.dc.html" class="nav" aria-current="page" style="flex:1 1 160px; display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; text-decoration:none; {{nav.asistencia}}"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"></rect><path d="m8 12 3 3 5-6"></path></svg>Asistencia</a>
+<a href="Ficha.dc.html" class="nav" style="flex:1 1 160px; display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; text-decoration:none; {{nav.pacientes}}"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c1.8.7 3 2.5 3.5 5.2"></path></svg>Pacientes</a>
+<a href="Cobros.dc.html" class="nav" style="flex:1 1 160px; display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; text-decoration:none; {{nav.cobros}}"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="3"></rect><path d="M3 10h18M16 15h2"></path></svg>Cobros y liquidación</a>
+</div>
+<div style="flex:1"></div>
+<div style="display:flex; align-items:center; justify-content:space-between; padding:0 8px"><span style="font:400 11px 'JetBrains Mono', monospace; color:{{t.muted}}">v2.0</span><a href="#" class="globo" title="Desarrollado por DaviNic Developer" aria-label="Desarrollado por DaviNic Developer" style="width:36px; height:36px; border-radius:999px; display:flex; align-items:center; justify-content:center; background:radial-gradient(circle at 35% 30%, #FFFFFF, #D7DEE8 75%); box-shadow:0 0 0 1px rgba(255,255,255,.45), 0 6px 18px rgba(0,0,0,.3)"><span style="width:23px; height:22px; overflow:hidden; display:block"><img src="/_blob/562a25969fa561da310a6e1995bba8bc" alt="" style="width:23px; display:block; mix-blend-mode:multiply"></span></a></div>
+</nav>
+
+<div style="flex:999 1 560px; min-width:0; display:flex; flex-direction:column">
+<header style="display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:14px clamp(16px, 3vw, 28px); border-bottom:1px solid {{t.line}}">
+<label for="buscar" style="flex:1 1 260px; max-width:440px; display:flex; align-items:center; gap:10px; height:42px; padding:0 14px; box-sizing:border-box; border-radius:12px; border:1px solid {{t.line}}; background:{{t.panel}}; color:{{t.muted}}; font-size:13px"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg><input id="buscar" placeholder="Buscar paciente, turno o profesional" style="flex:1; min-width:0; border:0; background:transparent; font:400 13px Sora, sans-serif; color:{{t.text}}; outline:none"><span style="font:500 11px 'JetBrains Mono', monospace; padding:2px 6px; border-radius:6px; border:1px solid {{t.line}}">Ctrl K</span></label>
+<span style="margin-left:auto; display:inline-flex; align-items:center; gap:8px; font:500 12px 'JetBrains Mono', monospace; color:{{t.accSoft}}"><span class="vivo" style="width:7px; height:7px; border-radius:999px; background:#22D3EE"></span>EN VIVO · 10:48</span>
+<button onClick="{{toggle}}" aria-label="{{temaLabel}}" title="{{temaLabel}}" style="width:42px; height:42px; border-radius:12px; border:1px solid {{t.line}}; background:{{t.panel}}; color:{{t.soft}}; display:flex; align-items:center; justify-content:center; cursor:pointer"><sc-if value="{{dark}}" hint-placeholder-val="{{true}}"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg></sc-if><sc-if value="{{light}}" hint-placeholder-val="{{false}}"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"></path></svg></sc-if></button>
+<span title="Laura Méndez · Recepción" style="width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg, #22D3EE, #5B8DEF); color:#04121A; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center">LM</span>
+</header>
+
+<main style="padding:clamp(16px, 3vw, 28px); display:flex; flex-wrap:wrap; gap:18px; align-items:flex-start">
+<div style="flex:999 1 560px; min-width:0; display:flex; flex-direction:column; gap:16px">
+<div style="display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:12px">
+<div><div style="font:500 11px 'JetBrains Mono', monospace; letter-spacing:.1em; color:{{t.muted}}">LUNES 09 · NOVIEMBRE</div><h1 style="margin:6px 0 0; font-size:clamp(24px, 2.4vw, 30px); font-weight:600; letter-spacing:-0.02em">Registro de asistencia</h1></div>
+<p style="margin:0; font-size:13px; color:{{t.muted}}; max-width:340px">Tocá <strong style="color:{{t.text}}">Llegó</strong> cuando el paciente entra. Si no vino, marcá <strong style="color:{{t.text}}">Ausente</strong> o <strong style="color:{{t.text}}">Justificada</strong>.</p>
+</div>
+
+<div role="tablist" aria-label="Filtrar turnos" style="display:flex; flex-wrap:wrap; gap:6px; padding:4px; border-radius:14px; border:1px solid {{t.line}}; background:{{t.input}}; align-self:flex-start">
+<sc-for list="{{tabs}}" as="f" hint-placeholder-count="4">
+<button role="tab" aria-selected="{{f.activo}}" onClick="{{f.elegir}}" style="height:38px; padding:0 14px; border:0; border-radius:10px; display:flex; align-items:center; gap:8px; font:500 13px Sora, sans-serif; cursor:pointer; {{f.st}}">{{f.n}}<span style="font:500 11px 'JetBrains Mono', monospace; padding:1px 7px; border-radius:999px; {{f.cnt}}">{{f.c}}</span></button>
+</sc-for>
+</div>
+
+<div style="display:flex; flex-direction:column; gap:10px">
+<sc-for list="{{filas}}" as="r" hint-placeholder-count="6">
+<div class="fila" style="display:flex; flex-wrap:wrap; align-items:center; gap:14px; padding:14px 16px; border-radius:16px; border:1px solid {{t.line}}; background:{{t.panel}}; {{r.filaSt}}">
+<span style="font:500 17px 'JetBrains Mono', monospace; width:58px">{{r.hora}}</span>
+<div style="flex:1 1 220px; min-width:0; display:flex; align-items:center; gap:12px">
+<span style="width:42px; height:42px; flex-shrink:0; border-radius:13px; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:600; {{r.avSt}}">{{r.ini}}</span>
+<div style="min-width:0"><a href="Ficha.dc.html" style="display:block; font-size:15px; font-weight:600; text-decoration:none">{{r.pac}}</a><div style="font-size:12.5px; color:{{t.muted}}">{{r.det}}</div></div>
+</div>
+<span style="display:inline-flex; align-items:center; gap:7px; font-size:12px; padding:5px 11px; border-radius:999px; {{r.badgeSt}}"><span style="width:6px; height:6px; border-radius:999px; {{r.dotSt}}"></span>{{r.estadoTxt}}</span>
+<div role="group" aria-label="Marcar asistencia de {{r.pac}}" style="display:flex; gap:6px; flex-wrap:wrap">
+<button class="acc" onClick="{{r.presente}}" aria-pressed="{{r.esPres}}" style="height:44px; padding:0 14px; border-radius:12px; display:flex; align-items:center; gap:7px; font:600 13px Sora, sans-serif; {{r.bPres}}"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"></path></svg>Llegó</button>
+<button class="acc" onClick="{{r.ausente}}" aria-pressed="{{r.esAus}}" style="height:44px; padding:0 14px; border-radius:12px; display:flex; align-items:center; gap:7px; font:500 13px Sora, sans-serif; {{r.bAus}}"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 7l10 10M17 7 7 17"></path></svg>Ausente</button>
+<button class="acc" onClick="{{r.justif}}" aria-pressed="{{r.esJus}}" style="height:44px; padding:0 14px; border-radius:12px; display:flex; align-items:center; gap:7px; font:500 13px Sora, sans-serif; {{r.bJus}}"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path><path d="M14 3v5h5M9 13h6M9 17h4"></path></svg>Justificada</button>
+</div>
+</div>
+</sc-for>
+<sc-if value="{{vacio}}" hint-placeholder-val="{{false}}"><div style="padding:32px; text-align:center; border-radius:16px; border:1px dashed {{t.line}}; color:{{t.muted}}; font-size:14px">No hay turnos en este filtro.</div></sc-if>
+</div>
+</div>
+
+<aside style="flex:1 1 280px; min-width:0; display:flex; flex-direction:column; gap:14px">
+<section aria-labelledby="res-t" style="padding:18px; border-radius:18px; border:1px solid {{t.line}}; background:{{t.panel}}; display:flex; flex-direction:column; gap:16px">
+<h2 id="res-t" style="margin:0; font-size:15px; font-weight:600">Resumen de hoy</h2>
+<div style="display:flex; align-items:center; gap:18px">
+<svg role="img" aria-label="{{anilloLabel}}" width="104" height="104" viewBox="0 0 48 48" style="flex-shrink:0"><circle cx="24" cy="24" r="18" fill="none" stroke="{{t.track}}" stroke-width="4"></circle><circle cx="24" cy="24" r="18" fill="none" stroke="{{t.acc}}" stroke-width="4" stroke-linecap="round" stroke-dasharray="{{dash}}" transform="rotate(-90 24 24)" style="filter:drop-shadow(0 0 4px rgba(34,211,238,.7))"></circle><text x="24" y="26" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="{{t.text}}">{{pct}}</text><text x="24" y="33" text-anchor="middle" font-family="Sora, sans-serif" font-size="3.6" fill="{{t.muted}}">asistencia</text></svg>
+<div style="display:flex; flex-direction:column; gap:8px; font-size:13px; flex:1">
+<div style="display:flex; justify-content:space-between"><span style="display:flex; align-items:center; gap:8px"><span style="width:8px; height:8px; border-radius:999px; background:{{t.ok}}"></span>Llegaron</span><span style="font-family:'JetBrains Mono', monospace">{{nPres}}</span></div>
+<div style="display:flex; justify-content:space-between"><span style="display:flex; align-items:center; gap:8px"><span style="width:8px; height:8px; border-radius:999px; background:{{t.b}}"></span>Ausentes</span><span style="font-family:'JetBrains Mono', monospace">{{nAus}}</span></div>
+<div style="display:flex; justify-content:space-between"><span style="display:flex; align-items:center; gap:8px"><span style="width:8px; height:8px; border-radius:999px; background:{{t.blue}}"></span>Justificadas</span><span style="font-family:'JetBrains Mono', monospace">{{nJus}}</span></div>
+<div style="display:flex; justify-content:space-between"><span style="display:flex; align-items:center; gap:8px"><span style="width:8px; height:8px; border-radius:999px; background:{{t.track}}"></span>Por llegar</span><span style="font-family:'JetBrains Mono', monospace">{{nPen}}</span></div>
+</div>
+</div>
+</section>
+<section aria-labelledby="sem-t" style="padding:18px; border-radius:18px; border:1px solid {{t.line}}; background:{{t.panel}}; display:flex; flex-direction:column; gap:14px">
+<div style="display:flex; justify-content:space-between; align-items:baseline"><h2 id="sem-t" style="margin:0; font-size:15px; font-weight:600">Ausencias de la semana</h2><span style="font:400 11px 'JetBrains Mono', monospace; color:{{t.muted}}">8 en total</span></div>
+<div style="display:flex; align-items:flex-end; gap:12px; height:120px; padding-top:8px; border-bottom:1px solid {{t.line}}">
+<sc-for list="{{semana}}" as="b" hint-placeholder-count="5"><div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:6px; height:100%; justify-content:flex-end"><span style="font:500 11px 'JetBrains Mono', monospace; color:{{t.muted}}">{{b.v}}</span><span style="width:100%; max-width:30px; border-radius:8px 8px 3px 3px; {{b.st}}"></span></div></sc-for>
+</div>
+<div style="display:flex; gap:12px; font:400 11px 'JetBrains Mono', monospace; color:{{t.muted}}"><sc-for list="{{semana}}" as="b" hint-placeholder-count="5"><span style="flex:1; text-align:center">{{b.d}}</span></sc-for></div>
+</section>
+<section style="padding:14px 16px; border-radius:18px; border:1px solid {{t.wBd}}; background:{{t.wBg}}; color:{{t.wTx}}; font-size:13px; line-height:1.5; display:flex; gap:10px"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-top:2px"><path d="M12 3 2 20h20z"></path><path d="M12 10v4M12 17h.01"></path></svg><span>Sofía Díaz faltó 2 veces seguidas. Te sugiero llamarla para reprogramar.</span></section>
+</aside>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"oscuro":{"editor":"boolean","default":true},"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      dark: props.oscuro ?? true,
+      filtro: 'todos',
+      est: { 1: 'pres', 2: 'pres', 3: 'pres', 4: 'pres', 5: 'pres', 6: 'pres', 7: 'pen', 8: 'aus', 9: 'pen', 10: 'pen', 11: 'pen' }
+    };
+  }
+  tokens(dark) {
+    if (dark) return {bg:'#05080F',grid:'rgba(148,197,255,.045)',glow:'rgba(34,211,238,.14)',glow2:'rgba(91,141,239,.12)',side:'rgba(255,255,255,.02)',panel:'rgba(255,255,255,.035)',line:'rgba(148,197,255,.12)',text:'#E8F1FF',muted:'#8FA3BF',soft:'#C9D6EA',acc:'#22D3EE',accBg:'rgba(34,211,238,.10)',accBd:'rgba(34,211,238,.32)',accSoft:'#A5F3FC',input:'rgba(5,8,15,.55)',track:'rgba(148,197,255,.18)',ok:'#34D399',okTx:'#6EE7B7',okBg:'rgba(52,211,153,.12)',okBd:'rgba(52,211,153,.45)',b:'#F87171',bTx:'#FCA5A5',bBg:'rgba(248,113,113,.12)',bBd:'rgba(248,113,113,.45)',blue:'#5B8DEF',jTx:'#B9CDFB',jBg:'rgba(91,141,239,.14)',jBd:'rgba(91,141,239,.5)',wTx:'#FCD34D',wBg:'rgba(251,191,36,.10)',wBd:'rgba(251,191,36,.35)',ghost:'border:1px solid rgba(148,197,255,.18); background:transparent; color:#C9D6EA',ring1:'#FFFFFF',ring2:'#67E8F9',sat:'#E8F1FF',segOn:'background:rgba(34,211,238,.16); box-shadow:inset 0 0 0 1px rgba(34,211,238,.45); color:#A5F3FC',segOff:'background:transparent; color:#8FA3BF',av:{psi:'background:rgba(34,211,238,.14); color:#A5F3FC; border:1px solid rgba(34,211,238,.4)',to:'background:rgba(91,141,239,.16); color:#C7D6FB; border:1px solid rgba(91,141,239,.45)',fo:'background:rgba(167,139,250,.16); color:#DDD6FE; border:1px solid rgba(167,139,250,.45)',pd:'background:rgba(251,191,36,.12); color:#FDE68A; border:1px solid rgba(251,191,36,.4)'}};
+    return {bg:'#F3F7FC',grid:'rgba(14,116,144,.055)',glow:'rgba(34,211,238,.20)',glow2:'rgba(91,141,239,.12)',side:'rgba(255,255,255,.7)',panel:'#FFFFFF',line:'#DCE6F2',text:'#0B1726',muted:'#4A5B73',soft:'#2A3B52',acc:'#06B6D4',accBg:'#E3F6FA',accBd:'#A5E3EF',accSoft:'#0B5566',input:'#F3F7FC',track:'#E3ECF6',ok:'#10B981',okTx:'#046C4E',okBg:'#E6F7EF',okBd:'#A7E3C8',b:'#EF4444',bTx:'#B42318',bBg:'#FDECEA',bBd:'#F5B9B3',blue:'#2F5FD0',jTx:'#1E3F8F',jBg:'#E4ECFB',jBd:'#93AEEA',wTx:'#8A4F04',wBg:'#FEF4DF',wBd:'#F6D58E',ghost:'border:1px solid #DCE6F2; background:#FFFFFF; color:#2A3B52',ring1:'#0B1726',ring2:'#0E7490',sat:'#0B1726',segOn:'background:#FFFFFF; box-shadow:0 0 0 1px #A5E3EF, 0 2px 8px rgba(6,182,212,.18); color:#0B5566',segOff:'background:transparent; color:#4A5B73',av:{psi:'background:#DDF6FB; color:#0B4655; border:1px solid #67CFE3',to:'background:#E4ECFB; color:#1E3F8F; border:1px solid #93AEEA',fo:'background:#ECE7FB; color:#46309A; border:1px solid #B3A1EE',pd:'background:#FEF4DF; color:#6E3F03; border:1px solid #F6D58E'}};
+  }
+  renderVals() {
+    const s = this.state, dark = s.dark, t = this.tokens(dark);
+    const on = 'background:' + t.accBg + '; border:1px solid ' + t.accBd + '; color:' + t.accSoft + '; font-weight:500';
+    const off = 'border:1px solid transparent; color:' + t.muted;
+    const turnos = [
+      [1, '08:00', 'Pedro Vega', 'Lic. Ferreyra · Consultorio 4', 'to'],
+      [2, '08:30', 'Martina Gómez', 'Lic. Paz · Sala 1', 'psi'],
+      [3, '09:00', 'Benjamín Acosta', 'Flga. Molina · Sala 2', 'fo'],
+      [4, '09:30', 'Mateo López', 'Lic. Ferreyra · Sala 3', 'to'],
+      [5, '10:00', 'Valentina Sosa', 'Flga. Molina · Sala 2', 'fo'],
+      [6, '10:30', 'Tomás Ruiz', 'Lic. Ferreyra · Sala 1', 'to'],
+      [7, '11:00', 'Lucía Pereyra', 'Flga. Molina · Sala 2', 'fo'],
+      [8, '11:15', 'Sofía Díaz', 'Lic. Herrera · Sala 3', 'pd'],
+      [9, '12:00', 'Lucas Bravo', 'Lic. Paz · Sala 1', 'psi'],
+      [10, '12:30', 'Emma Ríos', 'Lic. Herrera · Consultorio 4', 'pd'],
+      [11, '13:00', 'Joaquín Medina', 'Lic. Paz · Sala 2', 'psi']
+    ];
+    const cuenta = { pres: 0, aus: 0, jus: 0, pen: 0 };
+    turnos.forEach((x) => { cuenta[s.est[x[0]]]++; });
+    const fijar = (id, v) => () => { const e = Object.assign({}, this.state.est); e[id] = e[id] === v ? 'pen' : v; this.setState({ est: e }); };
+    const info = {
+      pres: ['Llegó', 'background:' + t.okBg + '; border:1px solid ' + t.okBd + '; color:' + t.okTx, 'background:' + t.ok],
+      aus: ['Ausente', 'background:' + t.bBg + '; border:1px solid ' + t.bBd + '; color:' + t.bTx, 'background:' + t.b],
+      jus: ['Justificada', 'background:' + t.jBg + '; border:1px solid ' + t.jBd + '; color:' + t.jTx, 'background:' + t.blue],
+      pen: ['Por llegar', 'border:1px solid ' + t.line + '; color:' + t.muted, 'background:' + t.track]
+    };
+    const visibles = turnos.filter((x) => {
+      const e = s.est[x[0]];
+      if (s.filtro === 'todos') return true;
+      if (s.filtro === 'pen') return e === 'pen';
+      if (s.filtro === 'pres') return e === 'pres';
+      return e === 'aus' || e === 'jus';
+    });
+    const filas = visibles.map((x) => {
+      const e = s.est[x[0]];
+      const ini = x[2].split(' ').map((w) => w[0]).join('');
+      return {
+        hora: x[1], pac: x[2], det: x[3], ini: ini, avSt: t.av[x[4]],
+        estadoTxt: info[e][0], badgeSt: info[e][1], dotSt: info[e][2],
+        filaSt: e === 'pen' ? '' : 'opacity:.92',
+        esPres: e === 'pres', esAus: e === 'aus', esJus: e === 'jus',
+        bPres: e === 'pres' ? 'border:1px solid #22D3EE; background:#22D3EE; color:#04121A; box-shadow:0 6px 18px rgba(34,211,238,.35)' : t.ghost,
+        bAus: e === 'aus' ? 'border:1px solid ' + t.bBd + '; background:' + t.bBg + '; color:' + t.bTx : t.ghost,
+        bJus: e === 'jus' ? 'border:1px solid ' + t.jBd + '; background:' + t.jBg + '; color:' + t.jTx : t.ghost,
+        presente: fijar(x[0], 'pres'), ausente: fijar(x[0], 'aus'), justif: fijar(x[0], 'jus')
+      };
+    });
+    const tab = (k, n, c) => ({ n: n, c: c + '', activo: s.filtro === k, st: s.filtro === k ? t.segOn : t.segOff, cnt: s.filtro === k ? 'background:#22D3EE; color:#04121A' : 'background:' + t.track + '; color:' + t.muted, elegir: () => this.setState({ filtro: k }) });
+    const base = cuenta.pres + cuenta.aus + cuenta.jus;
+    const pct = base ? Math.round(cuenta.pres / base * 100) : 0;
+    const dash = (113.1 * pct / 100).toFixed(1) + ' 113.1';
+    const sem = [['L', 3, true], ['M', 1], ['M', 2], ['J', 0], ['V', 2]];
+    return {
+      t: t, dark: dark, light: !dark,
+      nav: { panel: off, agenda: off, asistencia: on, pacientes: off, cobros: off },
+      temaLabel: dark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro',
+      toggle: () => this.setState({ dark: !this.state.dark }),
+      tabs: [tab('todos', 'Todos', turnos.length), tab('pen', 'Por llegar', cuenta.pen), tab('pres', 'Llegaron', cuenta.pres), tab('aus', 'Ausentes', cuenta.aus + cuenta.jus)],
+      filas: filas, vacio: filas.length === 0,
+      nPres: cuenta.pres + '', nAus: cuenta.aus + '', nJus: cuenta.jus + '', nPen: cuenta.pen + '',
+      pct: pct + '%', dash: dash, anilloLabel: 'Asistencia de hoy: ' + pct + '%',
+      semana: sem.map((b) => ({ d: b[0], v: b[1] + '', st: 'height:' + Math.max(4, b[1] * 26) + 'px; background:' + (b[2] ? t.acc : t.track) + (b[2] ? '; box-shadow:0 0 14px rgba(34,211,238,.5)' : '') }))
+    };
+  }
+}
+</script>
+</body>
+</html>
