@@ -11,7 +11,11 @@
 import 'dotenv/config';
 import { adaptadorPg } from '../src/prisma/adaptador.js';
 import { hashPassword } from '../src/auth/password.js';
-import { PrismaClient, Rol } from '../src/generated/prisma/client.js';
+import {
+  PrismaClient,
+  Rol,
+  TipoFinanciador,
+} from '../src/generated/prisma/client.js';
 
 // En un servidor (NODE_ENV=production) solo se cargan si se pide explícitamente
 // con CARGAR_DEMO=true, por ejemplo en un ambiente de demostración.
@@ -60,6 +64,26 @@ async function miembro(centroId: string, usuarioId: string, rol: Rol) {
   });
 }
 
+/** Obras sociales de ejemplo; no pisa cambios hechos desde la app. */
+async function financiador(
+  centroId: string,
+  nombre: string,
+  tipo: TipoFinanciador,
+  reglas: {
+    codigoPrestacion?: string;
+    requiereOrden?: boolean;
+    requiereToken?: boolean;
+    maxSesionesSemana?: number;
+    diasValidezOrden?: number;
+  } = {},
+) {
+  await prisma.financiador.upsert({
+    where: { centroId_nombre: { centroId, nombre } },
+    update: {},
+    create: { centroId, nombre, tipo, ...reglas },
+  });
+}
+
 try {
   const demo = await centro('demo', 'Centro Demo', 'integral');
   const norte = await centro('demo-norte', 'Centro Demo Norte', 'basico');
@@ -76,6 +100,19 @@ try {
   await miembro(demo.id, recepcion.id, Rol.recepcion);
   await miembro(demo.id, profesional.id, Rol.profesional);
   await miembro(norte.id, profesional.id, Rol.recepcion);
+
+  await financiador(demo.id, 'OSEP', TipoFinanciador.obra_social, {
+    codigoPrestacion: '250101',
+    requiereOrden: true,
+    maxSesionesSemana: 3,
+    diasValidezOrden: 30,
+  });
+  await financiador(demo.id, 'Prepaga Salud', TipoFinanciador.prepaga, {
+    requiereToken: true,
+  });
+  await financiador(demo.id, 'CUD', TipoFinanciador.cud, {
+    requiereOrden: true,
+  });
 
   console.log(
     'Datos demo listos: Centro Demo y Centro Demo Norte (ver usuarios en prisma/demo.ts).',

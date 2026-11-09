@@ -81,6 +81,13 @@ export const routes: Routes = [
           import('./paginas/profesionales/profesionales').then((m) => m.Profesionales),
       },
       {
+        path: 'financiadores',
+        canActivate: [conCentro],
+        title: 'Obras sociales · Centro Integral',
+        loadComponent: () =>
+          import('./paginas/financiadores/financiadores').then((m) => m.Financiadores),
+      },
+      {
         path: 'salas',
         canActivate: [conCentro],
         title: 'Salas · Centro Integral',

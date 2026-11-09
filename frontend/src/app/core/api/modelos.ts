@@ -33,6 +33,24 @@ export interface Profesional {
 
 export type ProfesionalResumen = Pick<Profesional, 'id' | 'nombre' | 'apellido' | 'disciplina'>;
 
+export type TipoFinanciador = 'particular' | 'obra_social' | 'prepaga' | 'cud';
+
+/** Obra social, prepaga o CUD con sus reglas. */
+export interface Financiador {
+  id: string;
+  nombre: string;
+  tipo: TipoFinanciador;
+  activo: boolean;
+  codigoPrestacion: string | null;
+  requiereOrden: boolean;
+  requiereToken: boolean;
+  maxSesionesSemana: number | null;
+  diasValidezOrden: number | null;
+  observaciones: string | null;
+}
+
+export type DatosFinanciador = Partial<Omit<Financiador, 'id'>>;
+
 export interface Paciente {
   id: string;
   nombre: string;
@@ -44,7 +62,14 @@ export interface Paciente {
   email: string | null;
   responsableNombre: string | null;
   responsableTelefono: string | null;
-  financiador: { id: string; nombre: string; tipo: string } | null;
+  financiador: {
+    id: string;
+    nombre: string;
+    tipo: TipoFinanciador;
+    maxSesionesSemana: number | null;
+    requiereOrden: boolean;
+    requiereToken: boolean;
+  } | null;
   nroAfiliado: string | null;
   tieneCud: boolean;
   /** AAAA-MM-DD */

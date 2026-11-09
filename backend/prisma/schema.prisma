@@ -259,12 +259,25 @@ model Sala {
 
 /// Quién paga la sesión: particular, obra social, prepaga o CUD.
 /// Las reglas propias de cada uno (token, orden, máximo semanal...) llegan en el paso 7.
+/// Obra social, prepaga, CUD o particular, con las reglas de cada una.
+/// Las órdenes y los tokens se cargan con el módulo de cobros (paso 8).
 model Financiador {
-  id       String          @id @default(uuid(7)) @db.Uuid
-  centroId String          @map("centro_id") @db.Uuid
-  nombre   String          @db.VarChar(120)
-  tipo     TipoFinanciador
-  activo   Boolean         @default(true)
+  id                String          @id @default(uuid(7)) @db.Uuid
+  centroId          String          @map("centro_id") @db.Uuid
+  nombre            String          @db.VarChar(120)
+  tipo              TipoFinanciador
+  activo            Boolean         @default(true)
+  /// Código de la prestación ante el financiador (ej. el código de OSEP).
+  codigoPrestacion  String?         @map("codigo_prestacion") @db.VarChar(40)
+  /// Cada sesión necesita una orden de autorización.
+  requiereOrden     Boolean         @default(false) @map("requiere_orden")
+  /// Cada sesión necesita un token (código que da el paciente).
+  requiereToken     Boolean         @default(false) @map("requiere_token")
+  /// Sesiones por semana que cubre (null: sin límite).
+  maxSesionesSemana Int?            @map("max_sesiones_semana") @db.SmallInt
+  /// Días de validez de una orden desde que se emite (null: no vence).
+  diasValidezOrden  Int?            @map("dias_validez_orden") @db.SmallInt
+  observaciones     String?         @db.VarChar(500)
 
   centro       Centro       @relation(fields: [centroId], references: [id], onDelete: Cascade)
   pacientes    Paciente[]

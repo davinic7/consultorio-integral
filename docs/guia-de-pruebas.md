@@ -1,6 +1,8 @@
 # Guía de pruebas — Centro Integral
 
-Estado al paso 5 del prototipo: login y roles por centro, ABM de salas, profesionales y pacientes, y agenda con avisos.
+Estado al paso 7 del prototipo, con el rediseño Órbita Cian: login y roles por centro, ABM de salas, profesionales y pacientes, agenda con avisos, asistencia, planilla mensual, notas de sesión cifradas y obras sociales con sus reglas.
+
+**Probar sin instalar nada:** la versión publicada está en https://centro-integral.onrender.com (mismos usuarios demo; la contraseña es la de `DEMO_PASSWORD` que se cargó en Render). Si nadie la usó en los últimos 15 minutos, la primera visita tarda cerca de un minuto en abrir.
 
 ---
 
@@ -73,6 +75,7 @@ Para volver a crear los usuarios demo (no borra nada): `cd backend && npm run db
 | Profesionales (porcentaje visible según rol) | [src/profesionales/profesionales.ts](../backend/src/profesionales/profesionales.ts) |
 | Pacientes: búsqueda, alcance por rol, asignación | [src/pacientes/pacientes.ts](../backend/src/pacientes/pacientes.ts) |
 | Marcar asistencia, registro de cambios, mes cerrado | [src/turnos/turnos.service.ts](../backend/src/turnos/turnos.service.ts) (`marcarAsistencia`) |
+| Obras sociales con sus reglas | [src/financiadores/financiadores.ts](../backend/src/financiadores/financiadores.ts) |
 | Historial y planilla mensual | [src/asistencia/asistencia.ts](../backend/src/asistencia/asistencia.ts) |
 | Notas de sesión y quién las ve | [src/notas/notas.ts](../backend/src/notas/notas.ts) |
 | **Cifrado de notas** (AES-256-GCM, clave por centro) | [src/notas/cifrado.ts](../backend/src/notas/cifrado.ts) |
@@ -89,8 +92,10 @@ Para volver a crear los usuarios demo (no borra nada): `cd backend && npm run db
 | Sesión: login, refresh, cambio de centro | [core/auth/auth.service.ts](../frontend/src/app/core/auth/auth.service.ts) |
 | Renovación automática del token ante un 401 | [core/auth/auth.interceptor.ts](../frontend/src/app/core/auth/auth.interceptor.ts) |
 | Llamadas a la API | [core/api/api.ts](../frontend/src/app/core/api/api.ts) |
-| Barra y menú por rol | [paginas/shell/](../frontend/src/app/paginas/shell) |
-| Pantallas | [paginas/](../frontend/src/app/paginas) (login, elegir-centro, inicio, salas, profesionales, pacientes, paciente-ficha con asistencia y notas, agenda, planilla, avisos) |
+| Menú lateral, barra superior y barra inferior del celular | [paginas/shell/](../frontend/src/app/paginas/shell) |
+| Sistema de diseño Órbita Cian (colores, clases `oc-*`, tema) | [styles/_orbita.scss](../frontend/src/styles/_orbita.scss) y [docs/diseno/orbita-cian.md](diseno/orbita-cian.md) |
+| Tema claro y oscuro | [core/tema.service.ts](../frontend/src/app/core/tema.service.ts) |
+| Pantallas | [paginas/](../frontend/src/app/paginas) (login, elegir-centro, inicio (panel), agenda, asistencia, pacientes, paciente-ficha, planilla, profesionales, salas, avisos) |
 | Estilos (modo claro y oscuro) | [styles.scss](../frontend/src/styles.scss) |
 
 ### Decisiones y alcance
@@ -114,6 +119,18 @@ Marcá cada caso a medida que lo probás. "Esperado" es lo que tiene que pasar.
 - [ ] **Cambiar de centro:** con `profesional@demo.local`, enlace "Cambiar de centro" → elegir el otro → la barra muestra el centro y el rol nuevos.
 - [ ] **Salir:** botón Salir → vuelve al login; al entrar a http://localhost:4200/ manda al login.
 - [ ] **Superadmin:** entrar con `superadmin@demo.local` → "Entraste como superadministrador", sin menú de centro.
+- [ ] **Mostrar contraseña:** el ícono del ojo muestra y oculta lo escrito.
+- [ ] **Recordarme:** sin tildar "Recordarme en este equipo", entrar, cerrar la pestaña y abrir la app de nuevo → pide ingresar. Tildado → la sesión sigue.
+- [ ] **Celular:** el formulario aparece completo sin bajar; el sello DaviNic queda debajo.
+
+### 4.1 bis Diseño, tema y menú
+
+- [ ] **Tema:** el botón de sol/luna (arriba a la derecha y en el login) cambia entre claro y oscuro; al recargar se mantiene. Sin elegir, sigue el tema del dispositivo.
+- [ ] **Menú lateral:** logo de Centro Integral, centro y rol, y las secciones Panel, Agenda, Asistencia, Pacientes, Profesionales y Salas; la activa se ve resaltada. Abajo, la versión y el sello DaviNic (al pasar el mouse crece; al tocarlo abre WhatsApp).
+- [ ] **Buscador:** escribir `gomez` y Enter (o Ctrl K para ir al buscador) → abre Pacientes con la búsqueda hecha.
+- [ ] **Avisos:** la campana (solo admin y recepción) muestra el número sin leer y abre Avisos.
+- [ ] **Cuenta:** el círculo con las iniciales abre nombre, email, centro y rol, "Cambiar de centro" (si tiene más de uno) y "Salir".
+- [ ] **Panel (inicio):** turnos de hoy, anillo de asistencias, turnos de los próximos 7 días, pacientes, "Salas en tiempo real" (cada turno con el color de la disciplina), el próximo turno y la asistencia por profesional.
 
 ### 4.2 Qué puede hacer cada rol
 
@@ -188,15 +205,34 @@ Marcá cada caso a medida que lo probás. "Esperado" es lo que tiene que pasar.
 
 ### 4.10 Asistencia (admin o recepción)
 
-- [ ] En la agenda, tocar un turno de hoy que ya empezó → sección **Asistencia** → "Presente". El turno se pinta de verde; "Ausente con aviso" lo pinta ámbar y "Ausente sin aviso", rojo.
+- [ ] En la agenda, tocar un turno de hoy que ya empezó → sección **Asistencia** → "Presente". El turno muestra "· Presente" y una marca verde a la izquierda; los ausentes se ven rayados y con borde punteado. El color de fondo de cada turno es el de la disciplina del profesional.
 - [ ] Un turno futuro → "Presente" y "Ausente sin aviso" están desactivados; "Ausente con aviso" sí se puede marcar.
 - [ ] Con la asistencia marcada, "Mover o editar" y "Cancelar" desaparecen → "Volver a pendiente" los habilita de nuevo.
-- [ ] "Ver ficha del paciente" → abajo, **Asistencia**: cantidad por estado, porcentaje y la lista de turnos.
-- [ ] En la ficha, elegir el mes → **Ver planilla** → fechas precargadas, obra social, n.º de afiliado y columna para firmar. "Imprimir" deja solo la planilla (sin menú). "Mes anterior" y "Mes siguiente" cambian el mes.
+- [ ] "Ver ficha del paciente" → encabezado con edad, disciplina, obra social y estado; indicadores de asistencia (una barrita por sesión), próximo turno y sesiones del mes. Pestaña **Sesiones**: la lista de turnos con su estado.
+- [ ] En la pestaña Sesiones, elegir el mes → **Ver planilla** → fechas precargadas, obra social, n.º de afiliado y columna para firmar. "Imprimir" deja solo la planilla (sin menú). "Mes anterior" y "Mes siguiente" cambian el mes.
+
+### 4.10 bis Registro de asistencia (pantalla Asistencia)
+
+- [ ] Menú **Asistencia** → los turnos del día, con "Llegó", "Ausente" y "Justificada".
+- [ ] Tocar "Llegó" → la fila se marca y suben "Llegaron" y el porcentaje del anillo. Tocar "Llegó" otra vez → vuelve a "Por llegar".
+- [ ] En un turno que todavía no empezó, "Llegó" y "Ausente" están desactivados; "Justificada" (avisó que no viene) sí se puede marcar.
+- [ ] Las pestañas Todos, Por llegar, Llegaron y Ausentes filtran la lista y muestran cuántos hay.
+- [ ] Las flechas cambian de día; "Hoy" vuelve al día actual.
+- [ ] Como profesional, solo aparecen sus turnos.
+
+### 4.10 ter Obras sociales (admin)
+
+- [ ] Menú **Obras sociales** (admin y recepción) → aparecen OSEP, Prepaga Salud y CUD (datos demo) con sus reglas como etiquetas.
+- [ ] Como admin, "Nueva obra social": nombre, tipo, código de prestación, sesiones por semana, validez de la orden, "necesita orden" o "necesita token" → "Agregar". Un nombre repetido → "Ya existe un registro con ese nombre".
+- [ ] "Editar" carga los datos en el formulario; "Dar de baja" la oculta (tildar "Ver dadas de baja" para verla).
+- [ ] Como recepción, se ve la lista pero no el formulario.
+- [ ] En la ficha de un paciente → "Editar datos" → **Obra social** → elegir OSEP y guardar → el encabezado muestra OSEP. "Particular (sin obra social)" la quita.
+- [ ] Con OSEP (hasta 3 por semana), agendar 4 turnos al paciente en la misma semana → la ficha avisa qué semana se pasa.
+- [ ] Con CUD que vence en menos de 30 días (o vencido), la ficha muestra el aviso para pedir la renovación.
 
 ### 4.11 Notas de sesión (profesional)
 
-- [ ] Entrar con `profesional@demo.local` → Pacientes → abrir uno → **Notas de sesión** → escribir una nota y "Agregar nota" → aparece como "Privada".
+- [ ] Entrar con `profesional@demo.local` → Pacientes → abrir uno → pestaña **Notas** → escribir una nota y "Agregar nota" → aparece como "Privada".
 - [ ] Escribir otra con "Compartir con el equipo" → aparece como "Compartida". "Editar" cambia el texto o si se comparte.
 - [ ] Con admin o recepción, la ficha del paciente **no** muestra notas.
 - [ ] En la base (sección 6), `SELECT texto FROM notas_sesion;` muestra solo texto cifrado (`v1:…`), nunca la nota.
@@ -204,8 +240,10 @@ Marcá cada caso a medida que lo probás. "Esperado" es lo que tiene que pasar.
 
 ### 4.12 Celular
 
-- [ ] En el navegador, abrir las herramientas de desarrollo (F12) → modo dispositivo (Ctrl+Shift+M) → iPhone o similar. La barra se acomoda en varias líneas y no hay scroll horizontal.
-- [ ] Probar el modo oscuro del sistema: la app cambia de colores.
+- [ ] En el navegador, abrir las herramientas de desarrollo (F12) → modo dispositivo (Ctrl+Shift+M) → iPhone o similar. El menú lateral pasa a una barra inferior (Panel, Agenda, Asistencia, Pacientes y "Más") y no hay scroll horizontal.
+- [ ] "Más" abre Profesionales, Salas, "Salir" y el sello DaviNic.
+- [ ] En la agenda aparece el botón flotante "+" para un turno nuevo.
+- [ ] En Asistencia, los botones ocupan todo el ancho y se tocan fácil.
 
 ---
 
@@ -283,8 +321,8 @@ cd frontend && npx ng test --watch=false
 | Suite | Cantidad | Qué cubre |
 | --- | --- | --- |
 | Backend unitarios | 29 | variables de entorno, contraseñas, filtro por centro, búsqueda sin tildes, fechas y zonas horarias, cifrado de notas |
-| Backend e2e | 86 | auth y roles, ABM, agenda (superposición, pedidos simultáneos, semanales), avisos, asistencia (permisos, mes cerrado, registro de cambios), historial, planilla, notas cifradas y quién las ve, aislamiento entre centros, contra PostgreSQL real |
-| Frontend | 20 | sesión, renovación de token, login, fechas, ubicación de turnos en el calendario y cuándo se puede marcar asistencia |
+| Backend e2e | 92 | auth y roles, ABM, agenda (superposición, pedidos simultáneos, semanales), avisos, asistencia (permisos, mes cerrado, registro de cambios), historial, planilla, notas cifradas y quién las ve, obras sociales y sus reglas, aislamiento entre centros, contra PostgreSQL real |
+| Frontend | 32 | sesión, "Recordarme", renovación de token, login, tema claro/oscuro, fechas, ubicación de turnos en el calendario, cuándo se puede marcar asistencia, colores por disciplina, enlaces de WhatsApp y edad |
 
 Los e2e usan la base `centro_integral_test` (`TEST_DATABASE_URL`), que se vacía en cada corrida: nunca tocan los datos de desarrollo.
 
@@ -294,7 +332,9 @@ Lint: `npm run lint` en cada carpeta. En esta PC, Windows (Control de aplicacion
 
 ## 8. Limitaciones conocidas (todavía no hechas)
 
-- Obras sociales y financiadores: paso 7 (el paciente ya tiene el campo, sin pantalla).
+- Órdenes de autorización y tokens de cada sesión: se cargan con el módulo de cobros (paso 8); hoy la obra social solo guarda las reglas.
+- Cobros y liquidación (pantalla y backend): paso 8. Por eso el panel y la ficha todavía no muestran montos ni la orden de la obra social.
+- Recuperar la contraseña desde el login: no existe todavía; la cambia quien administra el centro.
 - Pantallas para el superadmin (centros y planes) y para administrar usuarios del centro: hoy solo por API.
 - Cambio de rol o baja de un usuario: se aplica en como mucho 15 minutos (vida del access token).
 - En la web el refresh token queda en `localStorage`: antes de producción, pasarlo a cookie httpOnly.

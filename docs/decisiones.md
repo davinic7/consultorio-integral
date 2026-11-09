@@ -142,3 +142,11 @@ Limitaciones conocidas:
   - Cada texto se cifra atado a su centro, paciente y autor: copiado a otra fila, no se descifra.
   - **Si se pierde o se cambia `DATOS_CLAVE_MAESTRA`, las notas guardadas quedan ilegibles.** Hay que guardarla aparte (en Render la genera el Blueprint).
   - Diferencia con la referencia PHP: allá la clave era por profesional; acá es por centro, porque las notas se comparten entre profesionales del mismo centro.
+
+## 13. Obras sociales y financiadores (paso 7)
+
+- **Una tabla genérica** (`financiadores`) en lugar de casos fijos como OSEP: cada centro carga las suyas, de tipo obra social, prepaga, CUD o particular. Un paciente sin financiador se atiende como particular.
+- **Reglas en columnas** (como pide el prototipo): código de prestación, si cada sesión necesita orden, si necesita token, cuántas sesiones por semana cubre y cuántos días vale una orden. Se usan en el paso 8 (órdenes, tokens y facturación); por ahora la ficha avisa cuando una semana tiene más sesiones de las cubiertas.
+- **No bloquea la agenda:** pasarse del máximo semanal es un aviso, no un error, porque el centro puede atender igual (como particular o con otra orden).
+- **Baja lógica:** una obra social dada de baja no se puede asignar a pacientes nuevos, pero los que ya la tienen la siguen mostrando.
+- **CUD:** sigue siendo un dato del paciente (sí/no y vencimiento). La ficha avisa 30 días antes de que venza y cuando está vencido.

@@ -8,9 +8,16 @@ import {
   Validators,
 } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { AsistenciaApi, mensajeDeError, PacientesApi, ProfesionalesApi } from '../../core/api/api';
+import {
+  AsistenciaApi,
+  FinanciadoresApi,
+  mensajeDeError,
+  PacientesApi,
+  ProfesionalesApi,
+} from '../../core/api/api';
 import type {
   DatosPaciente,
+  Financiador,
   HistorialAsistencia,
   Paciente,
   Profesional,
@@ -18,7 +25,7 @@ import type {
 import { NOMBRE_ESTADO } from '../../core/asistencia';
 import { edad, enlaceWhatsApp } from '../../core/contacto';
 import { colorDisciplina, iniciales } from '../../core/disciplina';
-import { ahoraEn, fechaLarga, minutos } from '../../core/fechas';
+import { ahoraEn, fechaLarga, lunesDe, minutos } from '../../core/fechas';
 import { AuthService } from '../../core/auth/auth.service';
 import { puede } from '../../core/auth/roles';
 import { AsistenciaPaciente } from './asistencia-paciente';
@@ -47,6 +54,8 @@ export class PacienteFicha implements OnInit {
   private readonly api = inject(PacientesApi);
   private readonly profesionalesApi = inject(ProfesionalesApi);
   private readonly asistenciaApi = inject(AsistenciaApi);
+  private readonly financiadoresApi = inject(FinanciadoresApi);
+  protected readonly financiadores = signal<Financiador[]>([]);
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
 
@@ -117,12 +126,48 @@ export class PacienteFicha implements OnInit {
       (t) => t.fecha.startsWith(mes) && t.estado !== 'cancelado_profesional',
     ).length;
   });
+  /** Aviso del CUD: vencido o por vencer en los próximos 30 días. */
+  protected readonly avisoCud = computed(() => {
+    const p = this.paciente();
+    if (!p?.tieneCud || !p.cudVencimiento) return null;
+    const hoy = ahoraEn(this.auth.sesion()?.centro?.zonaHoraria).fecha;
+    const dias = Math.round(
+      (Date.parse(`${p.cudVencimiento}T00:00:00Z`) - Date.parse(`${hoy}T00:00:00Z`)) / 86_400_000,
+    );
+    if (dias < 0) return { nivel: 'error', texto: `El CUD venció el ${this.fechaCorta(p.cudVencimiento)}.` };
+    if (dias <= 30)
+      return {
+        nivel: 'aviso',
+        texto: `El CUD vence el ${this.fechaCorta(p.cudVencimiento)} (en ${dias} días): conviene pedir la renovación.`,
+      };
+    return null;
+  });
+  /** Semanas con más sesiones de las que cubre la obra social. */
+  protected readonly semanasExcedidas = computed(() => {
+    const max = this.paciente()?.financiador?.maxSesionesSemana;
+    if (!max) return [];
+    const porSemana = new Map<string, number>();
+    for (const t of this.historial()?.turnos ?? []) {
+      if (t.estado === 'cancelado_profesional') continue;
+      const lunes = lunesDe(t.fecha);
+      porSemana.set(lunes, (porSemana.get(lunes) ?? 0) + 1);
+    }
+    return [...porSemana.entries()]
+      .filter(([, n]) => n > max)
+      .map(([lunes, n]) => ({ lunes, n }))
+      .sort((a, b) => a.lunes.localeCompare(b.lunes));
+  });
   protected readonly nombreEstado = NOMBRE_ESTADO;
   protected readonly fechaLarga = fechaLarga;
   protected readonly colorDe = colorDisciplina;
   protected readonly inicialesDe = iniciales;
   /** "2026-05-13" → "13/05/2026". */
   protected readonly fechaCorta = (f: string | null) => (f ? f.split('-').reverse().join('/') : '—');
+
+  /** El financiador actual sigue en la lista (si se dio de baja, igual se muestra). */
+  protected tieneFinanciador(id: string): boolean {
+    return this.financiadores().some((f) => f.id === id);
+  }
 
   protected elegirPestana(p: Pestana): void {
     this.pestana.set(p);
@@ -139,6 +184,7 @@ export class PacienteFicha implements OnInit {
       email: ['', [Validators.email, Validators.maxLength(160)]],
       responsableNombre: ['', Validators.maxLength(120)],
       responsableTelefono: ['', Validators.maxLength(30)],
+      financiadorId: [''],
       nroAfiliado: ['', Validators.maxLength(40)],
       tieneCud: [false],
       cudVencimiento: [''],
@@ -149,11 +195,13 @@ export class PacienteFicha implements OnInit {
   async ngOnInit(): Promise<void> {
     if (!this.puedeEditar()) this.form.disable();
     try {
-      const [profesionales, paciente] = await Promise.all([
+      const [profesionales, paciente, financiadores] = await Promise.all([
         this.puedeEditar() ? this.profesionalesApi.listar() : Promise.resolve([]),
         this.id() ? this.api.obtener(this.id()!) : Promise.resolve(null),
+        this.puedeEditar() ? this.financiadoresApi.listar() : Promise.resolve([]),
       ]);
       this.profesionales.set(profesionales);
+      this.financiadores.set(financiadores);
       if (paciente) {
         this.mostrar(paciente);
         void this.cargarHistorial(paciente.id);
@@ -193,6 +241,7 @@ export class PacienteFicha implements OnInit {
         email: vacioANull(v.email),
         responsableNombre: vacioANull(v.responsableNombre),
         responsableTelefono: vacioANull(v.responsableTelefono),
+        financiadorId: v.financiadorId || null,
         nroAfiliado: vacioANull(v.nroAfiliado),
         tieneCud: v.tieneCud,
         cudVencimiento: v.tieneCud ? vacioANull(v.cudVencimiento) : null,
@@ -245,6 +294,7 @@ export class PacienteFicha implements OnInit {
       email: p.email ?? '',
       responsableNombre: p.responsableNombre ?? '',
       responsableTelefono: p.responsableTelefono ?? '',
+      financiadorId: p.financiador?.id ?? '',
       nroAfiliado: p.nroAfiliado ?? '',
       tieneCud: p.tieneCud,
       cudVencimiento: p.cudVencimiento ?? '',

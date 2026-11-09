@@ -1,0 +1,126 @@
+<main class="oc-contenido">
+  <div class="encabezado">
+    <h1>Obras sociales</h1>
+    @if (esAdmin()) {
+      <label class="oc-check">
+        <input type="checkbox" [checked]="verInactivos()" (change)="alternarInactivos()" />
+        Ver dadas de baja
+      </label>
+    }
+  </div>
+  <p class="oc-suave">
+    Obras sociales, prepagas y CUD con las reglas de cada una. Un paciente sin obra social se
+    atiende como particular.
+  </p>
+
+  @if (esAdmin()) {
+    <form class="oc-tarjeta form" [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+      <h2>{{ editando() ? 'Editar ' + editando()!.nombre : 'Nueva obra social' }}</h2>
+      <div class="grilla-form">
+        <label class="oc-campo">
+          Nombre
+          <input formControlName="nombre" placeholder="Ej. OSEP" />
+          @if (form.controls.nombre.touched && form.controls.nombre.invalid) {
+            <small class="oc-campo__error">El nombre es obligatorio.</small>
+          }
+        </label>
+        <label class="oc-campo">
+          Tipo
+          <select formControlName="tipo">
+            @for (t of tipos; track t) {
+              <option [value]="t">{{ nombreTipo[t] }}</option>
+            }
+          </select>
+        </label>
+        <label class="oc-campo">
+          Código de prestación
+          <input formControlName="codigoPrestacion" placeholder="Opcional" />
+        </label>
+        <label class="oc-campo">
+          Sesiones por semana que cubre
+          <input type="number" formControlName="maxSesionesSemana" min="1" max="14" placeholder="Sin límite" />
+          @if (form.controls.maxSesionesSemana.invalid) {
+            <small class="oc-campo__error">Entre 1 y 14.</small>
+          }
+        </label>
+        <label class="oc-campo">
+          Validez de la orden (días)
+          <input type="number" formControlName="diasValidezOrden" min="1" max="365" placeholder="No vence" />
+          @if (form.controls.diasValidezOrden.invalid) {
+            <small class="oc-campo__error">Entre 1 y 365.</small>
+          }
+        </label>
+        <label class="oc-campo">
+          Observaciones
+          <input formControlName="observaciones" placeholder="Opcional" />
+        </label>
+      </div>
+      <div class="opciones">
+        <label class="oc-check">
+          <input type="checkbox" formControlName="requiereOrden" />
+          Cada sesión necesita orden
+        </label>
+        <label class="oc-check">
+          <input type="checkbox" formControlName="requiereToken" />
+          Cada sesión necesita token
+        </label>
+      </div>
+      <div class="acciones">
+        <button type="submit" class="oc-btn oc-btn--primario" [disabled]="guardando()">
+          {{ editando() ? 'Guardar cambios' : 'Agregar' }}
+        </button>
+        @if (editando()) {
+          <button type="button" class="oc-btn oc-btn--chico" (click)="cancelar()">Cancelar</button>
+        }
+      </div>
+    </form>
+  }
+
+  @if (error(); as mensaje) {
+    <p class="oc-alerta oc-alerta--error" role="alert">{{ mensaje }}</p>
+  }
+
+  <ul class="lista">
+    @for (f of financiadores(); track f.id) {
+      <li class="lista__item item" [class.inactivo]="!f.activo">
+        <div class="item__datos">
+          <span class="item__nombre">{{ f.nombre }}</span>
+          <span class="oc-suave"> · {{ nombreTipo[f.tipo] }}</span>
+          @if (!f.activo) {
+            <span class="oc-estado oc-estado--aviso">De baja</span>
+          }
+          <div class="reglas">
+            @if (f.codigoPrestacion) {
+              <span class="oc-estado">Código {{ f.codigoPrestacion }}</span>
+            }
+            @if (f.requiereOrden) {
+              <span class="oc-estado oc-estado--info">Orden por sesión</span>
+            }
+            @if (f.requiereToken) {
+              <span class="oc-estado oc-estado--info">Token por sesión</span>
+            }
+            @if (f.maxSesionesSemana) {
+              <span class="oc-estado">Hasta {{ f.maxSesionesSemana }} por semana</span>
+            }
+            @if (f.diasValidezOrden) {
+              <span class="oc-estado">Orden válida {{ f.diasValidezOrden }} días</span>
+            }
+          </div>
+          @if (f.observaciones) {
+            <div class="oc-suave">{{ f.observaciones }}</div>
+          }
+        </div>
+        @if (esAdmin()) {
+          <div class="lista__acciones">
+            <button type="button" class="enlace" (click)="editar(f)">Editar</button>
+            <button type="button" class="enlace" (click)="alternarActivo(f)">
+              {{ f.activo ? 'Dar de baja' : 'Reactivar' }}
+            </button>
+          </div>
+        }
+      </li>
+    } @empty {
+      <li class="lista__item oc-suave">Todavía no hay obras sociales cargadas.</li>
+    }
+  </ul>
+</main>

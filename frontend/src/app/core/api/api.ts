@@ -5,6 +5,8 @@ import { environment } from '../../../environments/environment';
 import type {
   Aviso,
   CambioAsistencia,
+  DatosFinanciador,
+  Financiador,
   EstadoMarcable,
   HistorialAsistencia,
   Nota,
@@ -76,6 +78,25 @@ export class ProfesionalesApi {
   }
   actualizar(id: string, datos: Partial<Profesional>) {
     return firstValueFrom(this.http.patch<Profesional>(`${API}/profesionales/${id}`, datos));
+  }
+}
+
+@Injectable({ providedIn: 'root' })
+export class FinanciadoresApi {
+  private readonly http = inject(HttpClient);
+
+  listar(incluirInactivos = false) {
+    return firstValueFrom(
+      this.http.get<Financiador[]>(`${API}/financiadores`, {
+        params: params({ incluirInactivos }),
+      }),
+    );
+  }
+  crear(datos: DatosFinanciador) {
+    return firstValueFrom(this.http.post<Financiador>(`${API}/financiadores`, datos));
+  }
+  actualizar(id: string, datos: DatosFinanciador) {
+    return firstValueFrom(this.http.patch<Financiador>(`${API}/financiadores/${id}`, datos));
   }
 }
 

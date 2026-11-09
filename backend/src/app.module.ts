@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module.js';
 import { AvisosModule } from './avisos/avisos.js';
 import { CentrosModule } from './centros/centros.module.js';
 import { validateEnv } from './config/env.js';
+import { FinanciadoresModule } from './financiadores/financiadores.js';
 import { HealthModule } from './health/health.module.js';
 import { NotasModule } from './notas/notas.js';
 import { PacientesModule } from './pacientes/pacientes.js';
@@ -28,6 +29,7 @@ import { UsuariosModule } from './usuarios/usuarios.module.js';
     CentrosModule,
     SalasModule,
     ProfesionalesModule,
+    FinanciadoresModule,
     PacientesModule,
     AvisosModule,
     TurnosModule,

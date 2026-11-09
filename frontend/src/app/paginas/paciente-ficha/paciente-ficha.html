@@ -48,6 +48,21 @@
       </div>
     </section>
 
+    @if (avisoCud(); as a) {
+      <p class="oc-alerta" [class]="a.nivel === 'error' ? 'oc-alerta--error' : 'oc-alerta--aviso'" role="status">
+        {{ a.texto }}
+      </p>
+    }
+    @if (semanasExcedidas().length) {
+      <p class="oc-alerta oc-alerta--aviso" role="status">
+        {{ p.financiador?.nombre }} cubre hasta {{ p.financiador?.maxSesionesSemana }} sesiones por semana.
+        Se pasan:
+        @for (s of semanasExcedidas(); track s.lunes; let ultimo = $last) {
+          semana del {{ fechaCorta(s.lunes).slice(0, 5) }} ({{ s.n }}){{ ultimo ? '.' : ',' }}
+        }
+      </p>
+    }
+
     <!-- Indicadores -->
     <div class="ficha__indicadores">
       <div class="oc-tarjeta oc-tarjeta--interactiva">
@@ -225,6 +240,20 @@
     <h2>Cobertura</h2>
     <div class="ficha__campos">
       <label class="oc-campo">
+        Obra social
+        <select formControlName="financiadorId">
+          <option value="">Particular (sin obra social)</option>
+          @for (f of financiadores(); track f.id) {
+            <option [value]="f.id">{{ f.nombre }}</option>
+          }
+          @if (paciente()?.financiador; as actual) {
+            @if (!financiadores().length || !tieneFinanciador(actual.id)) {
+              <option [value]="actual.id">{{ actual.nombre }}</option>
+            }
+          }
+        </select>
+      </label>
+      <label class="oc-campo">
         N.º de afiliado
         <input formControlName="nroAfiliado" placeholder="Opcional" />
       </label>
@@ -241,7 +270,6 @@
         }
       </div>
     </div>
-    <p class="oc-suave ficha__nota">Las obras sociales y prepagas se cargan en un paso próximo.</p>
 
     @if (puedeEditar()) {
       <h2>Profesionales que lo atienden</h2>

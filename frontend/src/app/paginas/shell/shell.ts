@@ -44,6 +44,13 @@ const MENU: ItemMenu[] = [
     abajo: false,
   },
   { ruta: '/salas', texto: 'Salas', icono: 'salas', roles: TODOS, abajo: false },
+  {
+    ruta: '/financiadores',
+    texto: 'Obras sociales',
+    icono: 'financiadores',
+    roles: ['admin', 'recepcion'],
+    abajo: false,
+  },
 ];
 
 /**

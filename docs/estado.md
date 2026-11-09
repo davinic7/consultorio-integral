@@ -15,13 +15,16 @@ Actualizado: 9 de noviembre de 2026. Orden de pasos según [prototipo.md](protot
 
 Cómo probar todo: [guia-de-pruebas.md](guia-de-pruebas.md).
 
-## Próximo: paso 7 — Financiadores
+## Paso 7 — Financiadores (hecho)
 
-Obras sociales, prepagas y CUD con sus reglas; selector en la ficha del paciente (hoy el campo existe pero no tiene pantalla). La planilla de asistencia ya muestra el financiador cuando está cargado.
+Obras sociales, prepagas y CUD por centro con sus reglas (código de prestación, orden por sesión, token por sesión, máximo semanal y validez de la orden); pantalla "Obras sociales"; selector en la ficha; avisos de CUD por vencer y de semanas con más sesiones de las que cubre la obra social. Datos demo: OSEP, Prepaga Salud y CUD.
 
-## Después (pasos 8 a 10)
+## Próximo: paso 8 — Conciliación y liquidación
 
-8. Conciliación de asistencia contra lo facturado y liquidación por porcentaje.
+Prestaciones por cada turno presente con su financiador, órdenes y tokens, pagos, conciliación contra lo facturado y liquidación por porcentaje. Con eso se hace la pantalla **Cobros y liquidación** del rediseño y los indicadores de cobros del panel y la ficha.
+
+## Después (pasos 9 y 10)
+
 9. Planes y habilitación de módulos.
 10. Portar ARCA (Factura C) y OSEP desde `referencia-php/`.
 

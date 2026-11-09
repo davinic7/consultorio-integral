@@ -97,7 +97,16 @@ export const listarPacientesSchema = listadoSchema.extend({
 export type ListarPacientesDto = z.infer<typeof listarPacientesSchema>;
 
 const INCLUDE = {
-  financiador: { select: { id: true, nombre: true, tipo: true } },
+  financiador: {
+    select: {
+      id: true,
+      nombre: true,
+      tipo: true,
+      maxSesionesSemana: true,
+      requiereOrden: true,
+      requiereToken: true,
+    },
+  },
   profesionales: {
     select: {
       profesional: {
@@ -197,6 +206,7 @@ export class PacientesService {
     const { profesionalIds = [], ...datos } = dto;
     const db = this.prisma.paraCentro(centroId);
     await this.validarProfesionales(db, profesionalIds);
+    await this.validarFinanciador(db, datos.financiadorId);
     const p = await db.$transaction(async (tx) => {
       const creado = await tx.paciente.create({
         data: sinCentro<Prisma.PacienteUncheckedCreateInput>({
@@ -226,6 +236,9 @@ export class PacientesService {
     const db = this.prisma.paraCentro(centroId);
     const actual = await db.paciente.findUnique({ where: { id } });
     if (!actual) throw new NotFoundException('Paciente no encontrado');
+    if (dto.financiadorId && dto.financiadorId !== actual.financiadorId) {
+      await this.validarFinanciador(db, dto.financiadorId);
+    }
 
     const datos: Prisma.PacienteUncheckedUpdateInput = {
       ...dto,
@@ -293,6 +306,18 @@ export class PacientesService {
     });
     if (!yo) return { id: { in: [] } };
     return { profesionales: { some: { profesionalId: yo.id } } };
+  }
+
+  private async validarFinanciador(
+    db: ClienteDeCentro,
+    id: string | null | undefined,
+  ) {
+    if (!id) return;
+    if (!(await db.financiador.count({ where: { id, activo: true } }))) {
+      throw new BadRequestException(
+        'financiadorId: no existe o está dado de baja',
+      );
+    }
   }
 
   private async validarProfesionales(db: ClienteDeCentro, ids: string[]) {
