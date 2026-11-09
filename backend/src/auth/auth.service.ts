@@ -32,7 +32,12 @@ export interface RespuestaSesion {
   refreshToken: string;
   usuario: { id: string; email: string; nombre: string; esSuperadmin: boolean };
   /** Centro de esta sesión (null si todavía no eligió o es superadmin sin centro). */
-  centro: { id: string; nombre: string; slug: string } | null;
+  centro: {
+    id: string;
+    nombre: string;
+    slug: string;
+    zonaHoraria: string;
+  } | null;
   rol: Rol | null;
   /** Centros a los que puede entrar. */
   centros: CentroDeUsuario[];
@@ -235,7 +240,12 @@ export class AuthService {
   }
 
   private datosCentro(c: Centro) {
-    return { id: c.id, nombre: c.nombre, slug: c.slug };
+    return {
+      id: c.id,
+      nombre: c.nombre,
+      slug: c.slug,
+      zonaHoraria: c.zonaHoraria,
+    };
   }
 
   private centroDeUsuario(m: MiembroConCentro): CentroDeUsuario {

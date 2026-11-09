@@ -4,6 +4,8 @@ export interface CentroResumen {
   id: string;
   nombre: string;
   slug: string;
+  /** Zona horaria IANA del centro (ej. America/Argentina/Catamarca). */
+  zonaHoraria?: string;
 }
 
 export interface CentroDeUsuario extends CentroResumen {

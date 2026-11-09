@@ -12,6 +12,19 @@
       }
     </nav>
     <div class="barra__acciones">
+      @if (recibeAvisos()) {
+        <a
+          routerLink="/avisos"
+          routerLinkActive="activo"
+          class="campana"
+          [attr.aria-label]="'Avisos: ' + avisos.noLeidos() + ' sin leer'"
+        >
+          Avisos
+          @if (avisos.noLeidos() > 0) {
+            <span class="campana__contador">{{ avisos.noLeidos() }}</span>
+          }
+        </a>
+      }
       @if (variosCentros()) {
         <a routerLink="/elegir-centro">Cambiar de centro</a>
       }

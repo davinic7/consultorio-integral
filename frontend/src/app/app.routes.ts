@@ -30,6 +30,18 @@ export const routes: Routes = [
         loadComponent: () => import('./paginas/inicio/inicio').then((m) => m.Inicio),
       },
       {
+        path: 'agenda',
+        canActivate: [conCentro],
+        title: 'Agenda · Centro Integral',
+        loadComponent: () => import('./paginas/agenda/agenda').then((m) => m.Agenda),
+      },
+      {
+        path: 'avisos',
+        canActivate: [rolGuard('admin', 'recepcion')],
+        title: 'Avisos · Centro Integral',
+        loadComponent: () => import('./paginas/avisos/avisos').then((m) => m.Avisos),
+      },
+      {
         path: 'pacientes',
         canActivate: [conCentro],
         title: 'Pacientes · Centro Integral',

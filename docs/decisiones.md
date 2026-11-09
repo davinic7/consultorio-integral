@@ -102,3 +102,23 @@ Limitaciones conocidas:
   - Se eligió así porque `unaccent` de PostgreSQL no se puede usar en índices sin funciones envoltorio y no se integra con Prisma.
 - **Errores de base:** un filtro global traduce los errores de Prisma a HTTP: único repetido → 409 con el campo, no encontrado → 404, referencia inválida → 409.
 - **Financiadores:** el paciente ya tiene `financiadorId`, pero las obras sociales se gestionan en el paso 7.
+
+## 11. Agenda
+
+- **Superposición en la base:** dos restricciones `EXCLUDE USING gist` (con `btree_gist`) sobre `(centro_id, sala_id, tstzrange(inicio, fin))` y `(centro_id, profesional_id, …)`.
+  - Los turnos cancelados no cuentan.
+  - Los rangos son `[inicio, fin)`: un turno que termina 10:00 no choca con otro que empieza 10:00.
+  - Antes de guardar, la app busca los choques para dar un mensaje claro ("La sala Sala 1 está ocupada de 10:00 a 10:45"). La base frena los pedidos simultáneos que pasen ese control (probado en los tests e2e).
+- **Zona horaria:** la base guarda instantes en UTC. La API recibe y devuelve fecha (`AAAA-MM-DD`) y hora (`HH:MM`) en la zona del centro (`centros.zona_horaria`), así ningún cliente (web o móvil) tiene que convertir. Las conversiones usan `Temporal`, que viene con Node 26 y respeta los cambios de horario.
+- **Turnos semanales:**
+  - `POST /recurrencias` crea los turnos libres y devuelve las fechas que chocan, en vez de rechazar todo. Sin fecha de fin, genera 26 semanas.
+  - `POST /recurrencias/:id/finalizar` cancela los pendientes desde una fecha.
+- **Permisos:**
+  - Admin y recepción gestionan todos los turnos.
+  - El profesional ve y gestiona solo los suyos, y solo con pacientes que tiene asignados. No puede pasar un turno a otro profesional.
+  - Para elegir sala, cualquier rol ve la ocupación sin datos de pacientes (`GET /turnos/ocupacion`).
+- **Avisos:**
+  - Cada alta, cambio o cancelación hecha por un profesional crea un aviso para cada admin y recepcionista activo del centro (tabla `avisos`, uno por destinatario, con su propio estado de lectura).
+  - Los cambios de admin y recepción no avisan.
+  - El frontend consulta el contador cada minuto. Más adelante: notificaciones push en la app móvil.
+- **Estados:** solo se pueden mover y cancelar turnos pendientes. Marcar la asistencia es el paso 6.

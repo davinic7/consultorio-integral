@@ -139,6 +139,7 @@ model Centro {
   liquidaciones Liquidacion[]
   notasSesion   NotaSesion[]
   sesiones      Sesion[]
+  avisos        Aviso[]
 
   @@map("centros")
 }
@@ -156,9 +157,12 @@ model Usuario {
   creadoEn      DateTime @default(now()) @map("creado_en") @db.Timestamptz(3)
   actualizadoEn DateTime @updatedAt @map("actualizado_en") @db.Timestamptz(3)
 
-  miembros      Miembro[]
-  profesionales Profesional[]
-  sesiones      Sesion[]
+  miembros        Miembro[]
+  profesionales   Profesional[]
+  sesiones        Sesion[]
+  turnosCreados   Turno[]       @relation("TurnosCreados")
+  avisosRecibidos Aviso[]       @relation("AvisosRecibidos")
+  avisosEnviados  Aviso[]       @relation("AvisosEnviados")
 
   @@map("usuarios")
 }
@@ -353,8 +357,13 @@ model Turno {
   estadoAsistencia EstadoAsistencia @default(pendiente) @map("estado_asistencia")
   observaciones    String?          @db.VarChar(500)
   creadoEn         DateTime         @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn    DateTime         @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+  /// Usuario que creó el turno.
+  creadoPorId      String?          @map("creado_por_id") @db.Uuid
 
   centro      Centro       @relation(fields: [centroId], references: [id], onDelete: Cascade)
+  creadoPor   Usuario?     @relation("TurnosCreados", fields: [creadoPorId], references: [id], onDelete: SetNull)
+  avisos      Aviso[]
   paciente    Paciente     @relation(fields: [centroId, pacienteId], references: [centroId, id], onDelete: Restrict)
   profesional Profesional  @relation(fields: [centroId, profesionalId], references: [centroId, id], onDelete: Restrict)
   sala        Sala?        @relation(fields: [centroId, salaId], references: [centroId, id], onDelete: Restrict)
@@ -367,7 +376,40 @@ model Turno {
   @@index([centroId, profesionalId, inicio])
   @@index([centroId, salaId, inicio])
   @@index([centroId, pacienteId, inicio])
+  // Además (en la migración, Prisma no los expresa): EXCLUDE de superposición por sala
+  // y por profesional, sin contar turnos cancelados.
   @@map("turnos")
+}
+
+enum TipoAviso {
+  turno_creado
+  turno_movido
+  turno_cancelado
+
+  @@map("tipo_aviso")
+}
+
+/// Aviso para una persona del centro (hoy: cambios de agenda hechos por un profesional,
+/// dirigidos a admin y recepción). Uno por destinatario, para saber quién lo leyó.
+model Aviso {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  centroId       String    @map("centro_id") @db.Uuid
+  destinatarioId String    @map("destinatario_id") @db.Uuid
+  autorId        String?   @map("autor_id") @db.Uuid
+  tipo           TipoAviso
+  mensaje        String    @db.VarChar(400)
+  turnoId        String?   @map("turno_id") @db.Uuid
+  creadoEn       DateTime  @default(now()) @map("creado_en") @db.Timestamptz(3)
+  leidoEn        DateTime? @map("leido_en") @db.Timestamptz(3)
+
+  centro       Centro   @relation(fields: [centroId], references: [id], onDelete: Cascade)
+  destinatario Usuario  @relation("AvisosRecibidos", fields: [destinatarioId], references: [id], onDelete: Cascade)
+  autor        Usuario? @relation("AvisosEnviados", fields: [autorId], references: [id], onDelete: SetNull)
+  turno        Turno?   @relation(fields: [centroId, turnoId], references: [centroId, id], onDelete: Restrict)
+
+  @@unique([centroId, id])
+  @@index([centroId, destinatarioId, leidoEn, creadoEn])
+  @@map("avisos")
 }
 
 /// Sesión asistida que se cobra o factura. Una por turno presente.

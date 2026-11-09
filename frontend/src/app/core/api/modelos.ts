@@ -59,3 +59,72 @@ export type DatosPaciente = Partial<
     profesionalIds: string[];
   }
 >;
+
+export type EstadoTurno =
+  'pendiente' | 'presente' | 'ausente_con_aviso' | 'ausente_sin_aviso' | 'cancelado_profesional';
+
+/** Turno de la agenda. fecha/hora en la zona horaria del centro. */
+export interface Turno {
+  id: string;
+  /** AAAA-MM-DD */
+  fecha: string;
+  /** HH:MM */
+  hora: string;
+  horaFin: string;
+  duracionMin: number;
+  inicio: string;
+  fin: string;
+  estado: EstadoTurno;
+  observaciones: string | null;
+  recurrenciaId: string | null;
+  paciente: { id: string; nombre: string; apellido: string };
+  profesional: { id: string; nombre: string; apellido: string };
+  sala: { id: string; nombre: string } | null;
+}
+
+/** Ocupación sin datos de pacientes. */
+export interface Ocupacion {
+  salaId: string | null;
+  profesionalId: string;
+  fecha: string;
+  hora: string;
+  horaFin: string;
+}
+
+export interface DatosTurno {
+  pacienteId: string;
+  profesionalId: string;
+  salaId: string | null;
+  fecha: string;
+  hora: string;
+  duracionMin: number;
+  observaciones?: string | null;
+}
+
+export interface DatosRecurrencia {
+  pacienteId: string;
+  profesionalId: string;
+  salaId: string | null;
+  diaSemana: number;
+  hora: string;
+  duracionMin: number;
+  fechaDesde: string;
+  fechaHasta?: string;
+  observaciones?: string | null;
+}
+
+export interface ResultadoRecurrencia {
+  recurrenciaId: string;
+  creados: Turno[];
+  conflictos: { fecha: string; motivo: string }[];
+}
+
+export interface Aviso {
+  id: string;
+  tipo: 'turno_creado' | 'turno_movido' | 'turno_cancelado';
+  mensaje: string;
+  turnoId: string | null;
+  creadoEn: string;
+  leidoEn: string | null;
+  autor: { id: string; nombre: string } | null;
+}

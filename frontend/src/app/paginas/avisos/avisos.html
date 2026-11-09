@@ -1,0 +1,36 @@
+<main class="pagina">
+  <div class="encabezado">
+    <h1>Avisos</h1>
+    @if (noLeidos() > 0) {
+      <button type="button" class="boton boton--secundario-chico" (click)="marcarTodos()">
+        Marcar todos como leídos
+      </button>
+    }
+  </div>
+  <p class="sutil">Cambios de agenda que hicieron los profesionales en sus propios turnos.</p>
+
+  @if (error(); as mensaje) {
+    <p class="aviso aviso--error" role="alert">{{ mensaje }}</p>
+  }
+
+  @if (cargando() && avisos().length === 0) {
+    <p class="sutil">Cargando…</p>
+  } @else if (avisos().length === 0) {
+    <p class="sutil">No hay avisos.</p>
+  } @else {
+    <ul class="lista">
+      @for (a of avisos(); track a.id) {
+        <li class="lista__item aviso-item" [class.aviso-item--nuevo]="!a.leidoEn">
+          <span class="aviso-item__icono" aria-hidden="true">{{ icono[a.tipo] }}</span>
+          <div class="aviso-item__texto">
+            <div>{{ a.mensaje }}</div>
+            <small class="sutil">{{ cuando(a.creadoEn) }}</small>
+          </div>
+          @if (!a.leidoEn) {
+            <button type="button" class="enlace" (click)="marcar(a)">Marcar leído</button>
+          }
+        </li>
+      }
+    </ul>
+  }
+</main>

@@ -1,0 +1,359 @@
+<main class="pagina pagina--ancha">
+  <div class="encabezado">
+    <h1>Agenda</h1>
+    @if (puedeCrear()) {
+      <button type="button" class="boton" (click)="abrirNuevo()">Nuevo turno</button>
+    }
+  </div>
+
+  <div class="agenda-controles">
+    <div class="segmentado" role="group" aria-label="Vista">
+      <button type="button" [class.activo]="vista() === 'dia'" (click)="cambiarVista('dia')">
+        Día
+      </button>
+      <button type="button" [class.activo]="vista() === 'semana'" (click)="cambiarVista('semana')">
+        Semana
+      </button>
+      <button type="button" [class.activo]="vista() === 'salas'" (click)="cambiarVista('salas')">
+        Salas
+      </button>
+    </div>
+
+    <div class="agenda-nav">
+      <button
+        type="button"
+        class="boton boton--secundario-chico"
+        (click)="mover(-1)"
+        aria-label="Anterior"
+      >
+        ‹
+      </button>
+      <button type="button" class="boton boton--secundario-chico" (click)="irAHoy()">Hoy</button>
+      <button
+        type="button"
+        class="boton boton--secundario-chico"
+        (click)="mover(1)"
+        aria-label="Siguiente"
+      >
+        ›
+      </button>
+      <input
+        type="date"
+        class="agenda-fecha"
+        [ngModel]="fecha()"
+        (ngModelChange)="irAFecha($event)"
+        aria-label="Ir a fecha"
+      />
+    </div>
+
+    @if (vista() !== 'salas') {
+      <div class="agenda-filtros">
+        @if (!esProfesional()) {
+          <select
+            [ngModel]="filtroProfesional()"
+            (ngModelChange)="filtroProfesional.set($event); filtrar()"
+            aria-label="Filtrar por profesional"
+          >
+            <option value="">Todos los profesionales</option>
+            @for (p of profesionales(); track p.id) {
+              <option [value]="p.id">{{ p.apellido }}, {{ p.nombre }}</option>
+            }
+          </select>
+        }
+        <select
+          [ngModel]="filtroSala()"
+          (ngModelChange)="filtroSala.set($event); filtrar()"
+          aria-label="Filtrar por sala"
+        >
+          <option value="">Todas las salas</option>
+          @for (s of salas(); track s.id) {
+            <option [value]="s.id">{{ s.nombre }}</option>
+          }
+        </select>
+      </div>
+    }
+  </div>
+
+  <h2 class="agenda-titulo">
+    {{ titulo() }}
+    @if (cargando()) {
+      <span class="sutil"> · cargando…</span>
+    }
+  </h2>
+
+  @if (esProfesional() && !miProfesional()) {
+    <p class="aviso">
+      Tu cuenta no está vinculada a una ficha de profesional: pedile al admin que la vincule.
+    </p>
+  }
+  @if (vista() === 'salas' && salas().length === 0) {
+    <p class="aviso">No hay salas cargadas.</p>
+  }
+  @if (error(); as mensaje) {
+    <p class="aviso aviso--error" role="alert">{{ mensaje }}</p>
+  }
+  @if (aviso(); as mensaje) {
+    <p class="aviso aviso--ok" role="status">
+      {{ mensaje }}
+      <button type="button" class="enlace" (click)="aviso.set(null)">Cerrar</button>
+    </p>
+  }
+
+  <div class="agenda-cuerpo">
+    <div class="calendario" [style.--columnas]="columnas().length">
+      <div class="calendario__cabecera">
+        <div class="calendario__esquina"></div>
+        @for (col of columnas(); track col.clave) {
+          <div class="calendario__titulo" [class.hoy]="col.esHoy">{{ col.titulo }}</div>
+        }
+      </div>
+      <div class="calendario__grilla" [style.height.px]="altoGrilla">
+        <div class="calendario__horas">
+          @for (h of horas; track h) {
+            <div class="calendario__hora">{{ h }}</div>
+          }
+        </div>
+        @for (col of columnas(); track col.clave) {
+          <div
+            class="calendario__columna"
+            [class.hoy]="col.esHoy"
+            [class.clickeable]="puedeCrear()"
+            (click)="tocarHueco(col, $event)"
+            (keydown.enter)="abrirNuevo(col.fecha, '09:00', col.salaId)"
+            [attr.tabindex]="puedeCrear() ? 0 : null"
+            [attr.role]="puedeCrear() ? 'button' : null"
+            [attr.aria-label]="'Agregar turno: ' + col.titulo"
+          >
+            @for (b of col.bloques; track $index) {
+              @let t = b.item.turno;
+              <button
+                type="button"
+                class="turno"
+                [class.turno--ocupado]="!t"
+                [class.turno--recurrente]="t?.recurrenciaId"
+                [style.top.px]="b.top"
+                [style.height.px]="b.alto"
+                [style.left.%]="b.izquierda"
+                [style.width.%]="b.ancho"
+                [disabled]="!t"
+                (click)="verTurno(t, $event)"
+              >
+                @if (t) {
+                  <strong>{{ t.hora }} {{ t.paciente.apellido }}</strong>
+                  <span>
+                    {{ t.profesional.apellido }}
+                    @if (t.sala && vista() !== 'salas') {
+                      · {{ t.sala.nombre }}
+                    }
+                  </span>
+                } @else {
+                  <span>Ocupada {{ b.item.hora }}–{{ b.item.horaFin }}</span>
+                }
+              </button>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    @if (panel()) {
+      <aside class="panel agenda-panel" aria-label="Turno">
+        <button type="button" class="enlace agenda-panel__cerrar" (click)="cerrarPanel()">
+          Cerrar
+        </button>
+
+        @switch (panel()) {
+          @case ('detalle') {
+            @if (seleccionado(); as t) {
+              <h2>{{ t.paciente.apellido }}, {{ t.paciente.nombre }}</h2>
+              <dl class="datos">
+                <dt>Cuándo</dt>
+                <dd>
+                  {{ fechaLarga(t.fecha) }}, {{ t.hora }} a {{ t.horaFin }} ({{
+                    t.duracionMin
+                  }}
+                  min)
+                </dd>
+                <dt>Profesional</dt>
+                <dd>{{ t.profesional.apellido }}, {{ t.profesional.nombre }}</dd>
+                <dt>Sala</dt>
+                <dd>{{ t.sala?.nombre ?? 'Sin sala' }}</dd>
+                @if (t.recurrenciaId) {
+                  <dt>Repetición</dt>
+                  <dd>Todos los {{ diaSemanaDe(t.fecha) }}</dd>
+                }
+                @if (t.observaciones) {
+                  <dt>Observaciones</dt>
+                  <dd>{{ t.observaciones }}</dd>
+                }
+              </dl>
+
+              @if (puedeGestionar(t)) {
+                <div class="acciones">
+                  <button type="button" class="boton" (click)="editar()">Mover o editar</button>
+                </div>
+                <label class="campo">
+                  <span>Motivo de cancelación (opcional)</span>
+                  <input [(ngModel)]="motivoCancelacion" maxlength="300" />
+                </label>
+                <div class="acciones">
+                  <button
+                    type="button"
+                    class="boton boton--peligro"
+                    [disabled]="guardando()"
+                    (click)="cancelar()"
+                  >
+                    Cancelar turno
+                  </button>
+                  @if (t.recurrenciaId) {
+                    <button
+                      type="button"
+                      class="enlace"
+                      [disabled]="guardando()"
+                      (click)="terminarSemanales()"
+                    >
+                      Terminar los semanales desde esta fecha
+                    </button>
+                  }
+                </div>
+                @if (esProfesional()) {
+                  <p class="sutil">Los cambios que hagas se avisan a administración y recepción.</p>
+                }
+              }
+            }
+          }
+
+          @default {
+            <h2>{{ panel() === 'nuevo' ? 'Nuevo turno' : 'Mover o editar turno' }}</h2>
+            <form
+              class="form-panel"
+              (ngSubmit)="panel() === 'nuevo' ? guardarNuevo() : guardarCambios()"
+            >
+              @if (panel() === 'nuevo') {
+                <label class="campo">
+                  <span>Buscar paciente</span>
+                  <input
+                    type="search"
+                    name="busqueda"
+                    [(ngModel)]="busquedaPaciente"
+                    (ngModelChange)="buscarPacientes()"
+                    placeholder="Nombre, DNI o teléfono"
+                  />
+                </label>
+                <label class="campo">
+                  <span>Paciente</span>
+                  <select name="pacienteId" [(ngModel)]="form.pacienteId" required>
+                    <option value="">Elegí un paciente</option>
+                    @for (p of pacientesFiltrados(); track p.id) {
+                      <option [value]="p.id">{{ p.apellido }}, {{ p.nombre }}</option>
+                    }
+                  </select>
+                  @if (esProfesional()) {
+                    <small class="sutil">Aparecen los pacientes que tenés asignados.</small>
+                  }
+                </label>
+              } @else if (seleccionado(); as t) {
+                <p>
+                  <strong>{{ t.paciente.apellido }}, {{ t.paciente.nombre }}</strong>
+                </p>
+              }
+
+              @if (!esProfesional()) {
+                <label class="campo">
+                  <span>Profesional</span>
+                  <select name="profesionalId" [(ngModel)]="form.profesionalId" required>
+                    <option value="">Elegí un profesional</option>
+                    @for (p of profesionales(); track p.id) {
+                      <option [value]="p.id">
+                        {{ p.apellido }}, {{ p.nombre }} · {{ p.disciplina }}
+                      </option>
+                    }
+                  </select>
+                </label>
+              }
+
+              <label class="campo">
+                <span>Sala</span>
+                <select name="salaId" [(ngModel)]="form.salaId">
+                  <option value="">Sin sala</option>
+                  @for (s of salas(); track s.id) {
+                    <option [value]="s.id">{{ s.nombre }}</option>
+                  }
+                </select>
+              </label>
+
+              <div class="fila-campos">
+                <label class="campo">
+                  <span>Fecha</span>
+                  <input type="date" name="fecha" [(ngModel)]="form.fecha" required />
+                </label>
+                <label class="campo">
+                  <span>Hora</span>
+                  <input type="time" name="hora" [(ngModel)]="form.hora" step="300" required />
+                </label>
+                <label class="campo">
+                  <span>Duración (min)</span>
+                  <input
+                    type="number"
+                    name="duracionMin"
+                    [(ngModel)]="form.duracionMin"
+                    min="5"
+                    max="480"
+                    step="5"
+                    required
+                  />
+                </label>
+              </div>
+
+              @if (panel() === 'nuevo') {
+                <label class="check">
+                  <input type="checkbox" name="repetir" [(ngModel)]="form.repetir" />
+                  Repetir todas las semanas
+                  @if (form.fecha) {
+                    ({{ diaSemanaDe(form.fecha) }})
+                  }
+                </label>
+                @if (form.repetir) {
+                  <label class="campo">
+                    <span>Hasta (opcional; sin fecha, 6 meses)</span>
+                    <input
+                      type="date"
+                      name="repetirHasta"
+                      [(ngModel)]="form.repetirHasta"
+                      [min]="form.fecha"
+                    />
+                  </label>
+                }
+              }
+
+              <label class="campo">
+                <span>Observaciones</span>
+                <input name="observaciones" [(ngModel)]="form.observaciones" maxlength="500" />
+              </label>
+
+              @if (errorPanel(); as mensaje) {
+                <p class="aviso aviso--error" role="alert">{{ mensaje }}</p>
+              }
+              @if (esProfesional()) {
+                <p class="sutil">Administración y recepción reciben un aviso de este cambio.</p>
+              }
+
+              <div class="acciones">
+                <button type="submit" class="boton" [disabled]="guardando()">
+                  {{
+                    guardando() ? 'Guardando…' : panel() === 'nuevo' ? 'Agendar' : 'Guardar cambios'
+                  }}
+                </button>
+                @if (panel() === 'editar') {
+                  <button type="button" class="enlace" (click)="panel.set('detalle')">
+                    Volver
+                  </button>
+                }
+              </div>
+            </form>
+          }
+        }
+      </aside>
+    }
+  </div>
+</main>

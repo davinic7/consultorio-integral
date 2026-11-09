@@ -2,7 +2,20 @@ import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http'
 import { inject, Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import type { DatosPaciente, Miembro, Pagina, Paciente, Profesional, Sala } from './modelos';
+import type {
+  Aviso,
+  DatosPaciente,
+  DatosRecurrencia,
+  DatosTurno,
+  Miembro,
+  Ocupacion,
+  Pagina,
+  Paciente,
+  Profesional,
+  ResultadoRecurrencia,
+  Sala,
+  Turno,
+} from './modelos';
 
 const API = environment.apiUrl;
 
@@ -83,6 +96,63 @@ export class PacientesApi {
     return firstValueFrom(
       this.http.put<void>(`${API}/pacientes/${id}/profesionales`, { profesionalIds }),
     );
+  }
+}
+
+@Injectable({ providedIn: 'root' })
+export class TurnosApi {
+  private readonly http = inject(HttpClient);
+
+  listar(filtro: {
+    desde: string;
+    hasta: string;
+    profesionalId?: string;
+    salaId?: string;
+    pacienteId?: string;
+  }) {
+    return firstValueFrom(this.http.get<Turno[]>(`${API}/turnos`, { params: params(filtro) }));
+  }
+  ocupacion(desde: string, hasta: string) {
+    return firstValueFrom(
+      this.http.get<Ocupacion[]>(`${API}/turnos/ocupacion`, { params: params({ desde, hasta }) }),
+    );
+  }
+  crear(datos: DatosTurno) {
+    return firstValueFrom(this.http.post<Turno>(`${API}/turnos`, datos));
+  }
+  mover(id: string, datos: Partial<DatosTurno>) {
+    return firstValueFrom(this.http.patch<Turno>(`${API}/turnos/${id}`, datos));
+  }
+  cancelar(id: string, motivo?: string) {
+    return firstValueFrom(
+      this.http.post<Turno>(`${API}/turnos/${id}/cancelar`, { motivo: motivo || undefined }),
+    );
+  }
+  crearRecurrencia(datos: DatosRecurrencia) {
+    return firstValueFrom(this.http.post<ResultadoRecurrencia>(`${API}/recurrencias`, datos));
+  }
+  finalizarRecurrencia(id: string, desde: string) {
+    return firstValueFrom(
+      this.http.post<{ cancelados: number }>(`${API}/recurrencias/${id}/finalizar`, { desde }),
+    );
+  }
+}
+
+@Injectable({ providedIn: 'root' })
+export class AvisosApi {
+  private readonly http = inject(HttpClient);
+
+  listar() {
+    return firstValueFrom(this.http.get<{ items: Aviso[]; noLeidos: number }>(`${API}/avisos`));
+  }
+  noLeidos() {
+    return firstValueFrom(this.http.get<{ noLeidos: number }>(`${API}/avisos/no-leidos`));
+  }
+  marcarLeido(id: string) {
+    return firstValueFrom(this.http.post<void>(`${API}/avisos/${id}/leido`, {}));
+  }
+  marcarTodos() {
+    return firstValueFrom(this.http.post<{ marcados: number }>(`${API}/avisos/leer-todos`, {}));
   }
 }
 

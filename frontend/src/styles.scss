@@ -428,3 +428,59 @@ input:disabled {
   opacity: 0.8;
   cursor: default;
 }
+
+// ───────── Agenda y avisos ─────────
+
+.pagina--ancha {
+  max-width: 90rem;
+}
+
+.boton--peligro {
+  background: var(--error-texto);
+  color: var(--superficie);
+}
+
+.campana {
+  position: relative;
+  text-decoration: none;
+
+  &.activo {
+    font-weight: 600;
+  }
+
+  &__contador {
+    display: inline-block;
+    min-width: 1.3rem;
+    margin-left: 0.25rem;
+    padding: 0 0.35rem;
+    border-radius: 999px;
+    background: var(--error-texto);
+    color: var(--superficie);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-align: center;
+  }
+}
+
+.aviso-item {
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+
+  &__icono {
+    flex: 0 0 1.5rem;
+    text-align: center;
+    color: var(--sutil);
+  }
+
+  &__texto {
+    flex: 1;
+  }
+
+  &--nuevo {
+    background: color-mix(in srgb, var(--primario) 7%, transparent);
+
+    .aviso-item__texto > div {
+      font-weight: 600;
+    }
+  }
+}

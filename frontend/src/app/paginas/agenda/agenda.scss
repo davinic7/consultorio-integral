@@ -1,0 +1,256 @@
+:host {
+  --px-hora: 60px;
+}
+
+.agenda-controles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+
+  select,
+  .agenda-fecha {
+    font: inherit;
+    padding: 0.35rem 0.5rem;
+    border: 1px solid var(--borde);
+    border-radius: 0.5rem;
+    background: var(--superficie);
+    color: var(--texto);
+  }
+}
+
+.agenda-nav,
+.agenda-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.segmentado {
+  display: inline-flex;
+  border: 1px solid var(--borde);
+  border-radius: 0.5rem;
+  overflow: hidden;
+
+  button {
+    font: inherit;
+    padding: 0.35rem 0.85rem;
+    border: 0;
+    background: var(--superficie);
+    color: var(--texto);
+    cursor: pointer;
+
+    & + button {
+      border-left: 1px solid var(--borde);
+    }
+
+    &.activo {
+      background: var(--primario);
+      color: var(--primario-texto);
+    }
+  }
+}
+
+.agenda-titulo {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+}
+
+.agenda-cuerpo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+
+  &:has(.agenda-panel) {
+    grid-template-columns: minmax(0, 1fr) 22rem;
+  }
+}
+
+@media (max-width: 960px) {
+  .agenda-cuerpo:has(.agenda-panel) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  // En pantallas chicas el panel queda arriba del calendario.
+  .agenda-panel {
+    order: -1;
+  }
+}
+
+// ───────── Calendario ─────────
+
+.calendario {
+  border: 1px solid var(--borde);
+  border-radius: 0.75rem;
+  background: var(--superficie);
+  overflow-x: auto;
+
+  &__cabecera,
+  &__grilla {
+    display: grid;
+    grid-template-columns: 3.5rem repeat(var(--columnas), minmax(7rem, 1fr));
+  }
+
+  &__cabecera {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--superficie);
+    border-bottom: 1px solid var(--borde);
+  }
+
+  &__titulo {
+    padding: 0.5rem;
+    text-align: center;
+    font-weight: 600;
+    text-transform: capitalize;
+    border-left: 1px solid var(--borde);
+
+    &.hoy {
+      color: var(--primario);
+    }
+  }
+
+  &__horas {
+    display: grid;
+    grid-auto-rows: var(--px-hora);
+  }
+
+  &__hora {
+    padding: 0 0.4rem;
+    font-size: 0.75rem;
+    color: var(--sutil);
+    text-align: right;
+    transform: translateY(-0.5em);
+  }
+
+  &__columna {
+    position: relative;
+    border-left: 1px solid var(--borde);
+    // Líneas de cada hora y media hora.
+    background-image:
+      linear-gradient(to bottom, var(--borde) 1px, transparent 1px),
+      linear-gradient(
+        to bottom,
+        color-mix(in srgb, var(--borde) 45%, transparent) 1px,
+        transparent 1px
+      );
+    background-size:
+      100% var(--px-hora),
+      100% calc(var(--px-hora) / 2);
+
+    &.hoy {
+      background-color: color-mix(in srgb, var(--primario) 5%, transparent);
+    }
+
+    &.clickeable {
+      cursor: copy;
+    }
+  }
+}
+
+.turno {
+  position: absolute;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.2rem 0.35rem;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--primario) 55%, transparent);
+  border-left: 4px solid var(--primario);
+  border-radius: 0.35rem;
+  background: color-mix(in srgb, var(--primario) 14%, var(--superficie));
+  color: var(--texto);
+  font: inherit;
+  font-size: 0.78rem;
+  line-height: 1.2;
+  text-align: left;
+  cursor: pointer;
+
+  strong,
+  span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--primario) 24%, var(--superficie));
+  }
+
+  &--recurrente {
+    border-left-style: double;
+  }
+
+  &--ocupado {
+    cursor: default;
+    border-color: var(--borde);
+    border-left-color: var(--sutil);
+    background: repeating-linear-gradient(
+      45deg,
+      var(--fondo),
+      var(--fondo) 6px,
+      var(--superficie) 6px,
+      var(--superficie) 12px
+    );
+    color: var(--sutil);
+  }
+}
+
+// ───────── Panel ─────────
+
+.agenda-panel {
+  position: sticky;
+  top: 1rem;
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+
+  &__cerrar {
+    justify-self: end;
+  }
+
+  h2 {
+    margin: 0;
+  }
+}
+
+.form-panel {
+  display: grid;
+  gap: 0.75rem;
+
+  select,
+  input {
+    font: inherit;
+    padding: 0.5rem 0.6rem;
+    border: 1px solid var(--borde);
+    border-radius: 0.5rem;
+    background: var(--fondo);
+    color: var(--texto);
+  }
+}
+
+.fila-campos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
+  gap: 0.5rem;
+}
+
+.datos {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.25rem 0.75rem;
+  margin: 0;
+
+  dt {
+    color: var(--sutil);
+  }
+
+  dd {
+    margin: 0;
+  }
+}

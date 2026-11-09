@@ -18,6 +18,7 @@ export const MODELOS_DE_CENTRO: ReadonlySet<Prisma.ModelName> =
     'Pago',
     'Liquidacion',
     'NotaSesion',
+    'Aviso',
   ]);
 
 /** Intento de leer o escribir datos de otro centro. */
