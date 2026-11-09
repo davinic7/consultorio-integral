@@ -78,7 +78,7 @@ export interface Turno {
   observaciones: string | null;
   recurrenciaId: string | null;
   paciente: { id: string; nombre: string; apellido: string };
-  profesional: { id: string; nombre: string; apellido: string };
+  profesional: { id: string; nombre: string; apellido: string; disciplina: string };
   sala: { id: string; nombre: string } | null;
 }
 

@@ -36,7 +36,9 @@ import {
 
 const INCLUDE = {
   paciente: { select: { id: true, nombre: true, apellido: true } },
-  profesional: { select: { id: true, nombre: true, apellido: true } },
+  profesional: {
+    select: { id: true, nombre: true, apellido: true, disciplina: true },
+  },
   sala: { select: { id: true, nombre: true } },
 } satisfies Prisma.TurnoInclude;
 

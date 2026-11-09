@@ -87,3 +87,21 @@ export function minutos(hora: string): number {
   const [h, m] = hora.split(':').map(Number);
   return h * 60 + m;
 }
+
+/** Fecha y minutos desde las 00:00 de ahora, en una zona horaria. */
+export function ahoraEn(zona = 'America/Argentina/Catamarca'): { fecha: string; minutos: number } {
+  const partes = new Intl.DateTimeFormat('en-CA', {
+    timeZone: zona,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(new Date());
+  const v = (t: string) => partes.find((p) => p.type === t)?.value ?? '00';
+  return {
+    fecha: `${v('year')}-${v('month')}-${v('day')}`,
+    minutos: Number(v('hour')) * 60 + Number(v('minute')),
+  };
+}

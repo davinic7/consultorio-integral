@@ -1,35 +1,240 @@
 @if (auth.sesion(); as sesion) {
-  <main class="pagina">
-    <h1>Hola, {{ sesion.usuario.nombre }}</h1>
+  <main class="oc-contenido panel-inicio">
+    <div class="panel-inicio__cabecera">
+      <div>
+        <div class="oc-etiqueta">{{ fechaTitulo() }}</div>
+        <h1 class="panel-inicio__titulo">{{ saludo() }}</h1>
+      </div>
+      @if (sesion.centro) {
+        <div class="panel-inicio__acciones">
+          <a routerLink="/asistencia" class="oc-btn">
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="4" />
+              <path d="m8 12 3 3 5-6" />
+            </svg>
+            Tomar asistencia
+          </a>
+          <a routerLink="/agenda" class="oc-btn oc-btn--primario">
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            Nuevo turno
+          </a>
+        </div>
+      }
+    </div>
 
     @if (sesion.usuario.esSuperadmin && !sesion.centro) {
-      <p>Entraste como superadministrador. La gestión de centros y planes llega con su pantalla.</p>
+      <p class="oc-alerta">
+        Entraste como superadministrador. La gestión de centros y planes llega con su pantalla.
+      </p>
     } @else if (!sesion.centro) {
-      <p class="aviso">Tu cuenta todavía no pertenece a ningún centro activo.</p>
+      <p class="oc-alerta oc-alerta--aviso">Tu cuenta todavía no pertenece a ningún centro activo.</p>
     } @else {
-      <ul class="accesos">
-        <li><a routerLink="/agenda" class="tarjeta-acceso">Agenda</a></li>
-        <li><a routerLink="/pacientes" class="tarjeta-acceso">Pacientes</a></li>
-        <li><a routerLink="/profesionales" class="tarjeta-acceso">Profesionales</a></li>
-        <li><a routerLink="/salas" class="tarjeta-acceso">Salas</a></li>
-      </ul>
-    }
-
-    <p class="estado" [attr.data-estado]="estadoApi()">
-      @switch (estadoApi()) {
-        @case ('cargando') {
-          Conectando con la API…
-        }
-        @case ('ok') {
-          API y base de datos funcionando.
-        }
-        @case ('sin-base') {
-          La API responde, pero no hay conexión con la base de datos.
-        }
-        @case ('sin-api') {
-          No se pudo conectar con la API.
-        }
+      @if (error()) {
+        <p class="oc-alerta oc-alerta--error" role="alert">
+          No se pudieron cargar los datos del día. Revisá la conexión y recargá la página.
+        </p>
       }
-    </p>
+
+      <!-- Indicadores -->
+      <div class="oc-indicadores">
+        <div class="oc-tarjeta oc-tarjeta--interactiva">
+          <div class="oc-kpi__titulo">Turnos hoy</div>
+          <div class="panel-inicio__kpi">
+            <span class="oc-kpi__valor">{{ cargando() ? '—' : conteo().total }}</span>
+            @if (conteo().presentes) {
+              <span class="panel-inicio__ok">{{ conteo().presentes }} atendidos</span>
+            }
+          </div>
+          <div class="panel-inicio__segmentos" aria-hidden="true">
+            <span class="seg seg--ok" [style.flex]="conteo().presentes"></span>
+            <span class="seg seg--pend" [style.flex]="conteo().pendientes"></span>
+            <span class="seg seg--aus" [style.flex]="conteo().ausentes"></span>
+            @if (!conteo().total) {
+              <span class="seg" style="flex: 1"></span>
+            }
+          </div>
+          <div class="panel-inicio__leyenda">
+            <span>{{ conteo().presentes }} presentes</span>
+            <span>{{ conteo().pendientes }} por llegar</span>
+            <span>{{ conteo().ausentes }} ausentes</span>
+          </div>
+        </div>
+
+        <div class="oc-tarjeta oc-tarjeta--interactiva panel-inicio__anillo">
+          <svg aria-hidden="true" width="64" height="64" viewBox="0 0 48 48">
+            <circle cx="24" cy="24" r="18" fill="none" stroke="var(--oc-pista)" stroke-width="4" />
+            <circle
+              cx="24"
+              cy="24"
+              r="18"
+              fill="none"
+              stroke="var(--oc-acento)"
+              stroke-width="4"
+              stroke-linecap="round"
+              [attr.stroke-dasharray]="arco() + ' 113.1'"
+              transform="rotate(-90 24 24)"
+              class="panel-inicio__arco"
+            />
+            <text x="24" y="27.5" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="var(--oc-texto)">
+              {{ porcentaje() === null ? '—' : porcentaje() + '%' }}
+            </text>
+          </svg>
+          <div>
+            <div class="oc-kpi__titulo">Asistencias</div>
+            <div class="oc-kpi__valor panel-inicio__valor-chico">
+              {{ conteo().presentes }}/{{ conteo().presentes + conteo().ausentes }}
+            </div>
+            <div [class]="conteo().ausentes ? 'panel-inicio__error' : 'oc-suave panel-inicio__nota'">
+              {{ conteo().ausentes === 1 ? '1 ausente' : conteo().ausentes + ' ausentes' }}
+            </div>
+          </div>
+        </div>
+
+        <div class="oc-tarjeta oc-tarjeta--interactiva">
+          <div class="oc-kpi__titulo">Próximos 7 días</div>
+          <div class="oc-kpi__valor">{{ semana() ?? '—' }}</div>
+          <div class="oc-suave panel-inicio__nota">turnos agendados</div>
+          <a routerLink="/agenda" class="panel-inicio__enlace">Ver agenda</a>
+        </div>
+
+        <div class="oc-tarjeta oc-tarjeta--interactiva">
+          <div class="oc-kpi__titulo">Pacientes</div>
+          <div class="oc-kpi__valor">{{ pacientes() ?? '—' }}</div>
+          <div class="oc-suave panel-inicio__nota">activos</div>
+          <a routerLink="/pacientes" class="panel-inicio__enlace">Ver pacientes</a>
+        </div>
+      </div>
+
+      <div class="panel-inicio__fila">
+        <!-- Salas en tiempo real -->
+        <section class="oc-tarjeta panel-inicio__salas" aria-labelledby="salas-t">
+          <div class="panel-inicio__titulo-seccion">
+            <h2 id="salas-t">Salas en tiempo real</h2>
+            <span class="panel-inicio__referencias">
+              <span><i class="ref ref--psi"></i>Psicología</span>
+              <span><i class="ref ref--to"></i>T. Ocupacional</span>
+              <span><i class="ref ref--fono"></i>Fonoaudiología</span>
+              <span><i class="ref ref--psicoped"></i>Psicopedagogía</span>
+            </span>
+          </div>
+          <div class="panel-inicio__scroll">
+            <div class="linea-tiempo">
+              <div class="linea-tiempo__horas">
+                @for (h of horas; track h) {
+                  <span>{{ h }}</span>
+                }
+              </div>
+              <div class="linea-tiempo__filas">
+                @for (f of filas(); track f.id) {
+                  <div class="linea-tiempo__fila">
+                    <span class="linea-tiempo__sala">{{ f.nombre }}</span>
+                    <div class="linea-tiempo__carril" [style.--horas]="horas.length">
+                      @for (b of f.bloques; track b.turno.id) {
+                        <a
+                          class="oc-turno linea-tiempo__bloque"
+                          [class]="b.clase"
+                          [style.left.%]="b.izquierda"
+                          [style.width.%]="b.ancho"
+                          [title]="b.turno.hora + '–' + b.turno.horaFin + ' · ' + b.turno.paciente.nombre + ' ' + b.turno.paciente.apellido + ' · ' + b.turno.profesional.apellido"
+                          [routerLink]="['/pacientes', b.turno.paciente.id]"
+                        >
+                          {{ b.texto }}
+                        </a>
+                      }
+                    </div>
+                  </div>
+                } @empty {
+                  <p class="oc-suave">No hay salas cargadas.</p>
+                }
+                @if (lineaAhora() !== null && filas().length) {
+                  <span class="oc-ahora linea-tiempo__ahora" [style.left]="'calc(72px + (100% - 72px) * ' + lineaAhora()! / 100 + ')'" aria-hidden="true"></span>
+                }
+              </div>
+            </div>
+          </div>
+          @if (!cargando() && !conteo().total) {
+            <p class="oc-suave panel-inicio__nota">No hay turnos agendados para hoy.</p>
+          }
+        </section>
+
+        <!-- Próximo turno -->
+        <section class="oc-tarjeta oc-tarjeta--destacada panel-inicio__proximo" aria-labelledby="prox-t">
+          @if (proximo(); as p) {
+            <h2 id="prox-t" class="oc-etiqueta panel-inicio__proximo-etiqueta">PRÓXIMO · {{ p.cuando }}</h2>
+            <div class="panel-inicio__paciente">
+              <span class="panel-inicio__avatar" [attr.data-color]="p.color">{{ p.iniciales }}</span>
+              <div>
+                <div class="panel-inicio__nombre">
+                  {{ p.turno.paciente.nombre }} {{ p.turno.paciente.apellido }}
+                </div>
+                <div class="oc-suave panel-inicio__nota">
+                  {{ p.turno.profesional.disciplina }}{{ p.turno.sala ? ' · ' + p.turno.sala.nombre : '' }}
+                </div>
+              </div>
+            </div>
+            <div class="panel-inicio__horario oc-mono">
+              <span>{{ p.turno.hora }} → {{ p.turno.horaFin }}</span>
+              <span>{{ p.turno.profesional.apellido }}</span>
+            </div>
+            <div class="panel-inicio__relleno"></div>
+            <a routerLink="/asistencia" class="oc-btn oc-btn--primario">Registrar llegada</a>
+            <a [routerLink]="['/pacientes', p.turno.paciente.id]" class="oc-btn">Ver ficha</a>
+          } @else {
+            <h2 id="prox-t" class="oc-etiqueta panel-inicio__proximo-etiqueta">PRÓXIMO TURNO</h2>
+            <p class="oc-suave">{{ cargando() ? 'Cargando…' : 'No quedan turnos por hoy.' }}</p>
+          }
+        </section>
+      </div>
+
+      <div class="panel-inicio__grilla">
+        <section class="oc-tarjeta panel-inicio__lista" aria-labelledby="prof-t">
+          <h2 id="prof-t">Asistencia por profesional</h2>
+          @for (r of porProfesional(); track r.id) {
+            <div class="barra-prof">
+              <div class="barra-prof__texto">
+                <span>{{ r.nombre }}</span>
+                <span class="oc-mono oc-suave">{{ r.presentes }}/{{ r.total }}</span>
+              </div>
+              <div class="barra-prof__pista">
+                <div
+                  class="barra-prof__valor"
+                  [attr.data-color]="r.color"
+                  [style.width.%]="r.total ? (r.presentes * 100) / r.total : 0"
+                ></div>
+              </div>
+            </div>
+          } @empty {
+            <p class="oc-suave">Sin turnos hoy.</p>
+          }
+        </section>
+
+        @if (recibeAvisos()) {
+          <section class="oc-tarjeta panel-inicio__lista" aria-labelledby="av-t">
+            <div class="panel-inicio__titulo-seccion">
+              <h2 id="av-t">Avisos</h2>
+              <a routerLink="/avisos" class="panel-inicio__enlace">Ver todos</a>
+            </div>
+            @for (a of avisos(); track a.id) {
+              <div class="oc-alerta" [class.oc-alerta--aviso]="a.tipo === 'turno_cancelado'">
+                <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="panel-inicio__icono-aviso">
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M12 8v4M12 16h.01" />
+                </svg>
+                <span>
+                  {{ a.mensaje }}
+                  @if (!a.leidoEn) {
+                    <strong class="panel-inicio__nuevo">Nuevo</strong>
+                  }
+                </span>
+              </div>
+            } @empty {
+              <p class="oc-suave">No hay avisos.</p>
+            }
+          </section>
+        }
+      </div>
+    }
   </main>
 }
