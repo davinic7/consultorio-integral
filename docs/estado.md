@@ -36,6 +36,16 @@ Obras sociales, prepagas y CUD con sus reglas; selector en la ficha del paciente
 - Avisos: hoy se consultan cada minuto; más adelante, notificaciones push en la app móvil.
 - Arranque en Render: si falla un paso opcional (superadmin o datos demo, por ejemplo por una contraseña corta) el contenedor no arranca; evaluar que esos pasos solo avisen en el log.
 
+## Rediseño Órbita Cian
+
+Guía: [diseno/orbita-cian.md](diseno/orbita-cian.md). Migración hecha (pasos del "Orden sugerido"):
+
+- 1 a 3: fuentes, tema claro/oscuro, shell (menú lateral, barra superior, barra inferior en celular) y login.
+- 4 a 7: panel principal, agenda, ficha del paciente y registro de asistencia (`/asistencia`, nuevo).
+- 9: profesionales, salas, avisos, pacientes, planilla y elegir centro con las clases `oc-*`; `styles.scss` ya no tiene los estilos viejos.
+
+Falta el **paso 8, Cobros y liquidación**: necesita los endpoints de cobros del backend (pasos 7 y 8 del desarrollo). En el panel y en la ficha, los indicadores de cobros y de la orden de la obra social se agregan con ese módulo.
+
 ## Publicado
 
 Desde el 9 de noviembre de 2026 en **https://centro-integral.onrender.com** (Render, plan gratis, Blueprint de [render.yaml](../render.yaml); guía en [publicar.md](publicar.md)). Con datos demo y el superadmin del dueño. Se vuelve a publicar solo con cada push a `main`.

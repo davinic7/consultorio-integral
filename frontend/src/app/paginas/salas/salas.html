@@ -1,8 +1,8 @@
-<main class="pagina">
+<main class="oc-contenido">
   <div class="encabezado">
     <h1>Salas</h1>
     @if (esAdmin()) {
-      <label class="check">
+      <label class="oc-check">
         <input type="checkbox" [checked]="verInactivas()" (change)="alternarInactivas()" />
         Ver dadas de baja
       </label>
@@ -10,39 +10,39 @@
   </div>
 
   @if (esAdmin()) {
-    <form class="panel form-linea" [formGroup]="form" (ngSubmit)="guardar()" novalidate>
-      <label class="campo">
+    <form class="oc-tarjeta form-linea" [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+      <label class="oc-campo">
         <span>Nombre</span>
         <input formControlName="nombre" placeholder="Ej. Sala 3" />
       </label>
-      <label class="campo campo--ancho">
+      <label class="oc-campo campo--ancho">
         <span>Descripción</span>
         <input formControlName="descripcion" placeholder="Opcional" />
       </label>
       <div class="acciones">
-        <button type="submit" class="boton" [disabled]="guardando()">
+        <button type="submit" class="oc-btn oc-btn--primario" [disabled]="guardando()">
           {{ editando() ? 'Guardar cambios' : 'Agregar sala' }}
         </button>
         @if (editando()) {
-          <button type="button" class="boton boton--secundario-chico" (click)="cancelar()">
+          <button type="button" class="oc-btn oc-btn--chico" (click)="cancelar()">
             Cancelar
           </button>
         }
       </div>
       @if (form.controls.nombre.touched && form.controls.nombre.invalid) {
-        <small class="campo__error">El nombre es obligatorio.</small>
+        <small class="oc-campo__error">El nombre es obligatorio.</small>
       }
     </form>
   }
 
   @if (error(); as mensaje) {
-    <p class="aviso aviso--error" role="alert">{{ mensaje }}</p>
+    <p class="oc-alerta oc-alerta--error" role="alert">{{ mensaje }}</p>
   }
 
   @if (cargando()) {
-    <p class="sutil">Cargando…</p>
+    <p class="oc-suave">Cargando…</p>
   } @else if (salas().length === 0) {
-    <p class="sutil">Todavía no hay salas cargadas.</p>
+    <p class="oc-suave">Todavía no hay salas cargadas.</p>
   } @else {
     <ul class="lista">
       @for (sala of salas(); track sala.id) {
@@ -50,10 +50,10 @@
           <div>
             <strong>{{ sala.nombre }}</strong>
             @if (!sala.activa) {
-              <span class="etiqueta">De baja</span>
+              <span class="oc-estado oc-estado--aviso">De baja</span>
             }
             @if (sala.descripcion) {
-              <div class="sutil">{{ sala.descripcion }}</div>
+              <div class="oc-suave">{{ sala.descripcion }}</div>
             }
           </div>
           @if (esAdmin()) {

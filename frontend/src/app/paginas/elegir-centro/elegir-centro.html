@@ -1,26 +1,26 @@
-<main class="pagina pagina--centrada">
-  <section class="tarjeta">
+<main class="oc-contenido elegir">
+  <section class="oc-tarjeta">
     <h1>Elegí un centro</h1>
-    <p class="sutil">Trabajás en más de un centro. ¿Con cuál querés entrar?</p>
+    <p class="oc-suave">Trabajás en más de un centro. ¿Con cuál querés entrar?</p>
 
-    <ul class="lista-centros">
+    <ul class="elegir__lista">
       @for (centro of auth.sesion()?.centros ?? []; track centro.id) {
         <li>
           <button
             type="button"
-            class="boton boton--secundario"
+            class="oc-btn oc-tarjeta--interactiva elegir__centro"
             [disabled]="eligiendo() !== null"
             (click)="elegir(centro.id)"
           >
             <strong>{{ centro.nombre }}</strong>
-            <span class="sutil">{{ nombreRol[centro.rol] }}</span>
+            <span class="oc-suave">{{ nombreRol[centro.rol] }}</span>
           </button>
         </li>
       }
     </ul>
 
     @if (error()) {
-      <p class="aviso aviso--error" role="alert">No se pudo entrar a ese centro. Probá de nuevo.</p>
+      <p class="oc-alerta oc-alerta--error" role="alert">No se pudo entrar a ese centro. Probá de nuevo.</p>
     }
   </section>
 </main>

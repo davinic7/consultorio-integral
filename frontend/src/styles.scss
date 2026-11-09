@@ -1,22 +1,7 @@
 @use 'styles/orbita';
 
-// Estilos de las pantallas que todavía no pasaron a Órbita Cian (clases sin "oc-").
-// Mientras conviven, sus variables toman los colores del tema Órbita, así todo
-// cambia junto con el botón de tema. Se borran al terminar la migración.
-:root {
-  --fondo: var(--oc-fondo);
-  --superficie: var(--oc-panel);
-  --texto: var(--oc-texto);
-  --sutil: var(--oc-texto-suave);
-  --borde: var(--oc-borde);
-  // Acción principal: cian con texto oscuro en los dos temas (regla de marca).
-  --primario: #22d3ee;
-  --primario-texto: var(--oc-sobre-acento);
-  --ok: var(--oc-ok-fondo);
-  --alerta: var(--oc-aviso-fondo);
-  --error: var(--oc-error-fondo);
-  --error-texto: var(--oc-error-texto);
-}
+// Estilos globales de Centro Integral sobre Órbita Cian (styles/_orbita.scss).
+// Acá solo hay base y utilidades de la app; cada pantalla tiene sus estilos propios.
 
 * {
   box-sizing: border-box;
@@ -24,194 +9,62 @@
 
 body {
   margin: 0;
-  background: var(--fondo);
-  color: var(--texto);
-  font-family: var(--oc-fuente);
   line-height: 1.5;
 }
 
 h1 {
-  margin: 0 0 0.25rem;
-  font-size: 1.5rem;
+  margin: 0;
+  font: var(--oc-t-titulo);
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  margin: 0;
+  font: var(--oc-t-subtitulo);
 }
 
 a {
   color: var(--oc-acento-texto);
 }
 
-.sutil {
-  color: var(--sutil);
-}
+// ───────── Utilidades ─────────
 
-.pagina {
-  max-width: 60rem;
-  margin: 0 auto;
-  padding: 1.5rem 1rem;
-
-  &--centrada {
-    min-height: 100dvh;
-    display: grid;
-    place-items: center;
-  }
-}
-
-.tarjeta {
-  width: 100%;
-  max-width: 24rem;
-  padding: 1.5rem;
-  border: 1px solid var(--borde);
-  border-radius: 0.75rem;
-  background: var(--superficie);
-  display: grid;
-  gap: 1rem;
-}
-
-.campo {
-  display: grid;
-  gap: 0.25rem;
-
-  input,
-  select {
-    font: inherit;
-    padding: 0.6rem 0.75rem;
-    border: 1px solid var(--borde);
-    border-radius: 0.5rem;
-    background: var(--fondo);
-    color: var(--texto);
-  }
-
-  &__error {
-    color: var(--error-texto);
-  }
-}
-
-.boton {
+/** Botón con aspecto de enlace (acciones secundarias). */
+.enlace {
+  min-height: 2rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--oc-acento-texto);
   font: inherit;
-  padding: 0.6rem 1rem;
-  border: 1px solid transparent;
-  border-radius: 0.5rem;
-  background: var(--primario);
-  color: var(--primario-texto);
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 3px;
   cursor: pointer;
 
   &:disabled {
-    opacity: 0.6;
+    color: var(--oc-texto-suave);
     cursor: default;
   }
-
-  &--secundario {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    background: var(--superficie);
-    color: var(--texto);
-    border-color: var(--borde);
-    text-align: left;
-  }
-
-  &--chico {
-    padding: 0.3rem 0.75rem;
-  }
 }
 
-.aviso {
-  margin: 0;
-  padding: 0.75rem 1rem;
-  border-radius: 0.5rem;
-  background: var(--alerta);
-
-  &--error {
-    background: var(--error);
-    color: var(--error-texto);
-  }
-}
-
-.estado {
-  padding: 0.75rem 1rem;
-  border-radius: 0.5rem;
-  background: var(--superficie);
-  border: 1px solid var(--borde);
-
-  &[data-estado='ok'] {
-    background: var(--ok);
-  }
-  &[data-estado='sin-base'] {
-    background: var(--alerta);
-  }
-  &[data-estado='sin-api'] {
-    background: var(--error);
-  }
-}
-
-.barra {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem 1rem;
-  padding: 0.75rem 1rem;
-  background: var(--superficie);
-  border-bottom: 1px solid var(--borde);
-
-  &__acciones {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
-}
-
-.lista-centros {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 0.5rem;
-}
-
-// ───────── Pantallas de gestión ─────────
-
-h2 {
-  margin: 0.5rem 0 0;
-  font-size: 1.05rem;
-}
-
-a.boton {
-  display: inline-block;
+.volver {
+  align-self: flex-start;
+  font-size: 0.8125rem;
   text-decoration: none;
-}
 
-.barra {
-  &__marca {
-    color: inherit;
-    text-decoration: none;
-  }
-
-  &__menu {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.25rem 1rem;
-
-    a {
-      text-decoration: none;
-      padding: 0.25rem 0;
-      border-bottom: 2px solid transparent;
-
-      &.activo {
-        border-bottom-color: var(--primario);
-        font-weight: 600;
-      }
-    }
+  &:hover {
+    text-decoration: underline;
   }
 }
 
+/** Título de pantalla con su acción principal. */
 .encabezado {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  margin-bottom: 1rem;
 }
 
 .acciones {
@@ -221,81 +74,70 @@ a.boton {
   gap: 0.75rem;
 }
 
-.panel {
-  padding: 1rem;
-  margin-bottom: 1rem;
-  border: 1px solid var(--borde);
-  border-radius: 0.75rem;
-  background: var(--superficie);
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
 }
 
+/** Campo de búsqueda suelto (lista de pacientes). */
+.oc-buscador-campo {
+  flex: 1 1 260px;
+  max-width: 440px;
+  min-height: 2.75rem;
+  padding: 0 0.875rem;
+  border: 1px solid var(--oc-borde);
+  border-radius: var(--oc-radio);
+  background: var(--oc-campo);
+  color: var(--oc-texto);
+  font: 400 0.875rem var(--oc-fuente);
+
+  &:focus {
+    outline: none;
+    border-color: var(--oc-acento);
+    box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.18);
+  }
+}
+
+// Formularios en tarjeta: una línea que se acomoda, o una grilla.
 .form-linea {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 0.75rem;
+  gap: 0.75rem 1rem;
 
-  .campo {
-    flex: 1 1 10rem;
+  .oc-campo {
+    flex: 1 1 12rem;
   }
 
   .campo--ancho {
-    flex: 2 1 16rem;
+    flex: 3 1 18rem;
   }
 }
 
 .grilla-form {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
-  gap: 0.75rem 1rem;
+  gap: 0.875rem 1rem;
 }
 
 .campo--completo {
   grid-column: 1 / -1;
 }
 
-.check {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  cursor: pointer;
-}
-
-.opciones {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
-  gap: 0.5rem;
-}
-
-.filtros {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-}
-
-.buscador {
-  flex: 1 1 16rem;
-  font: inherit;
-  padding: 0.6rem 0.75rem;
-  border: 1px solid var(--borde);
-  border-radius: 0.5rem;
-  background: var(--superficie);
-  color: var(--texto);
-}
-
+/** Lista en tarjeta (profesionales, salas, pacientes, avisos). */
 .lista {
-  list-style: none;
   margin: 0;
   padding: 0;
-  border: 1px solid var(--borde);
-  border-radius: 0.75rem;
-  background: var(--superficie);
+  list-style: none;
+  border: 1px solid var(--oc-borde);
+  border-radius: var(--oc-radio-panel);
+  background: var(--oc-panel);
   overflow: hidden;
 
   > li + li {
-    border-top: 1px solid var(--borde);
+    border-top: 1px solid var(--oc-borde);
   }
 
   &__item {
@@ -304,14 +146,15 @@ a.boton {
     align-items: center;
     justify-content: space-between;
     gap: 0.5rem 1rem;
-    padding: 0.75rem 1rem;
+    padding: 0.875rem 1rem;
+    transition: background-color var(--oc-rapido);
 
     &--enlace {
       color: inherit;
       text-decoration: none;
 
       &:hover {
-        background: var(--fondo);
+        background: var(--oc-acento-fondo);
       }
     }
   }
@@ -330,121 +173,14 @@ a.boton {
   opacity: 0.6;
 }
 
-.etiqueta {
-  display: inline-block;
-  margin-left: 0.5rem;
-  padding: 0 0.4rem;
-  border-radius: 0.25rem;
-  font-size: 0.8rem;
-  background: var(--alerta);
-
-  &--info {
-    background: var(--ok);
-  }
-}
-
-.enlace {
-  font: inherit;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--oc-acento-texto);
-  cursor: pointer;
-  text-decoration: underline;
-
-  &:disabled {
-    color: var(--sutil);
-    cursor: default;
-    text-decoration: none;
-  }
-}
-
-.boton--secundario-chico {
-  background: var(--superficie);
-  color: var(--texto);
-  border-color: var(--borde);
-}
-
 .paginacion {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  margin-top: 1rem;
+  justify-content: center;
+  gap: 1rem;
 }
 
-.volver {
-  display: inline-block;
-  margin-bottom: 0.75rem;
-}
-
-.aviso--ok {
-  background: var(--ok);
-}
-
-.accesos {
-  list-style: none;
-  padding: 0;
-  margin: 1rem 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
-  gap: 0.75rem;
-}
-
-.tarjeta-acceso {
-  display: block;
-  padding: 1.25rem 1rem;
-  border: 1px solid var(--borde);
-  border-radius: 0.75rem;
-  background: var(--superficie);
-  color: inherit;
-  font-weight: 600;
-  text-decoration: none;
-
-  &:hover {
-    border-color: var(--primario);
-  }
-}
-
-input:disabled {
-  opacity: 0.8;
-  cursor: default;
-}
-
-// ───────── Agenda y avisos ─────────
-
-.pagina--ancha {
-  max-width: 90rem;
-}
-
-.boton--peligro {
-  background: var(--error-texto);
-  color: var(--superficie);
-}
-
-.campana {
-  position: relative;
-  text-decoration: none;
-
-  &.activo {
-    font-weight: 600;
-  }
-
-  &__contador {
-    display: inline-block;
-    min-width: 1.3rem;
-    margin-left: 0.25rem;
-    padding: 0 0.35rem;
-    border-radius: 999px;
-    background: var(--error-texto);
-    color: var(--superficie);
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-align: center;
-  }
-}
-
+/** Avisos de cambios de agenda. */
 .aviso-item {
   justify-content: flex-start;
   flex-wrap: nowrap;
@@ -452,7 +188,7 @@ input:disabled {
   &__icono {
     flex: 0 0 1.5rem;
     text-align: center;
-    color: var(--sutil);
+    color: var(--oc-texto-suave);
   }
 
   &__texto {
@@ -460,7 +196,7 @@ input:disabled {
   }
 
   &--nuevo {
-    background: color-mix(in srgb, var(--primario) 7%, transparent);
+    background: var(--oc-acento-fondo);
 
     .aviso-item__texto > div {
       font-weight: 600;
@@ -468,33 +204,66 @@ input:disabled {
   }
 }
 
-// ───────── Asistencia ─────────
-
-/** Estado de asistencia de un turno, como etiqueta. */
+/** Estado de asistencia de un turno, como etiqueta (panel de la agenda). */
 .estado-turno {
-  padding: 0.05rem 0.45rem;
-  border-radius: 0.25rem;
-  font-weight: normal;
-  background: var(--fondo);
+  padding: 0.125rem 0.5rem;
+  border: 1px solid var(--oc-borde);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--oc-texto-suave);
 
   &[data-estado='presente'] {
-    background: var(--ok);
+    border-color: var(--oc-ok-borde);
+    background: var(--oc-ok-fondo);
+    color: var(--oc-ok-texto);
   }
+
   &[data-estado='ausente_con_aviso'] {
-    background: var(--alerta);
+    border-color: var(--oc-azul-borde);
+    background: var(--oc-azul-fondo);
+    color: var(--oc-azul-texto);
   }
+
   &[data-estado='ausente_sin_aviso'],
   &[data-estado='cancelado_profesional'] {
-    background: var(--error);
-    color: var(--error-texto);
+    border-color: var(--oc-error-borde);
+    background: var(--oc-error-fondo);
+    color: var(--oc-error-texto);
   }
 }
 
-.resumen-asistencia {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 1rem;
-  margin: 0.5rem 0;
+/** Elegir centro (cuando la cuenta trabaja en más de uno). */
+.elegir {
+  align-items: center;
+
+  > .oc-tarjeta {
+    width: 100%;
+    max-width: 30rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: clamp(1rem, 8vh, 5rem);
+  }
+
+  p {
+    margin: 0;
+  }
+
+  &__lista {
+    display: grid;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__centro {
+    width: 100%;
+    justify-content: space-between;
+    min-height: 3.5rem;
+    text-align: left;
+  }
 }
 
 // ───────── Impresión ─────────
@@ -502,15 +271,18 @@ input:disabled {
 
 @media print {
   :root {
-    --fondo: #fff;
-    --superficie: #fff;
-    --texto: #000;
-    --borde: #999;
+    --oc-fondo: #fff;
+    --oc-panel: #fff;
+    --oc-texto: #000;
+    --oc-texto-suave: #333;
+    --oc-borde: #999;
   }
-  body {
+
+  .oc-app {
     background: #fff;
+    color: #000;
   }
-  .barra,
+
   .oc-nav,
   .oc-barra,
   .shell-abajo,

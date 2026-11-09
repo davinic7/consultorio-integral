@@ -65,11 +65,11 @@ function moverMes(mes: string, n: number): string {
     table {
       width: 100%;
       border-collapse: collapse;
-      background: var(--superficie);
+      background: var(--oc-panel);
     }
     th,
     td {
-      border: 1px solid var(--borde);
+      border: 1px solid var(--oc-borde);
       padding: 0.45rem 0.5rem;
       text-align: left;
       vertical-align: top;
@@ -86,7 +86,7 @@ function moverMes(mes: string, n: number): string {
     }
     .firmas div {
       flex: 1 1 14rem;
-      border-top: 1px solid var(--texto);
+      border-top: 1px solid var(--oc-texto);
       padding-top: 0.25rem;
       text-align: center;
     }
@@ -101,20 +101,20 @@ function moverMes(mes: string, n: number): string {
     }
   `,
   template: `
-    <main class="pagina pagina--ancha planilla">
+    <main class="oc-contenido planilla">
       <div class="no-imprimir acciones">
         <a [routerLink]="['/pacientes', id()]" class="volver">← Ficha del paciente</a>
         <button type="button" class="enlace" (click)="irA(-1)">← Mes anterior</button>
         <button type="button" class="enlace" (click)="irA(1)">Mes siguiente →</button>
-        <button type="button" class="boton" (click)="imprimir()" [disabled]="!datos()">
+        <button type="button" class="oc-btn oc-btn--primario" (click)="imprimir()" [disabled]="!datos()">
           Imprimir
         </button>
       </div>
 
       @if (cargando()) {
-        <p class="sutil">Cargando…</p>
+        <p class="oc-suave">Cargando…</p>
       } @else if (error(); as mensaje) {
-        <p class="aviso aviso--error" role="alert">{{ mensaje }}</p>
+        <p class="oc-alerta oc-alerta--error" role="alert">{{ mensaje }}</p>
       } @else if (datos(); as d) {
         <div class="planilla__cabecera">
           <div>
@@ -147,7 +147,7 @@ function moverMes(mes: string, n: number): string {
         </div>
 
         @if (d.filas.length) {
-          <div class="tabla-contenedor">
+          <div class="oc-tabla-caja">
             <table>
               <thead>
                 <tr>
@@ -180,7 +180,7 @@ function moverMes(mes: string, n: number): string {
             <div>Firma del paciente o responsable</div>
           </div>
         } @else {
-          <p class="aviso">No hay turnos agendados en {{ nombreMes() }}.</p>
+          <p class="oc-alerta oc-alerta--aviso">No hay turnos agendados en {{ nombreMes() }}.</p>
         }
       }
     </main>
