@@ -12,6 +12,7 @@
       class="buscador"
       placeholder="Buscar por nombre, DNI o teléfono"
       aria-label="Buscar pacientes"
+      [value]="filtro()"
       (input)="buscar($any($event.target).value)"
     />
     @if (puedeEditar()) {
@@ -34,7 +35,7 @@
     <p class="sutil">Cargando…</p>
   } @else if (pacientes().length === 0) {
     <p class="sutil">
-      {{ q() ? 'No hay pacientes que coincidan con la búsqueda.' : 'Todavía no hay pacientes.' }}
+      {{ filtro() ? 'No hay pacientes que coincidan con la búsqueda.' : 'Todavía no hay pacientes.' }}
     </p>
   } @else {
     <ul class="lista">

@@ -1,35 +1,72 @@
-import { Component, computed, DestroyRef, effect, inject } from '@angular/core';
+import {
+  Component,
+  computed,
+  DestroyRef,
+  effect,
+  ElementRef,
+  HostListener,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
+import { DomSanitizer, type SafeHtml } from '@angular/platform-browser';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { environment } from '../../../environments/environment';
 import type { Rol } from '../../core/auth/auth.models';
 import { AuthService } from '../../core/auth/auth.service';
 import { NOMBRE_ROL, puede } from '../../core/auth/roles';
 import { AvisosService } from '../../core/avisos.service';
+import { TemaService } from '../../core/tema.service';
+import { ICONOS, type Icono } from './iconos';
 
 interface ItemMenu {
   ruta: string;
   texto: string;
+  icono: Icono;
   roles: Rol[];
+  /** Va en la barra inferior del celular (las demás quedan en "Más"). */
+  abajo: boolean;
 }
 
 const TODOS: Rol[] = ['admin', 'recepcion', 'profesional'];
 
 const MENU: ItemMenu[] = [
-  { ruta: '/agenda', texto: 'Agenda', roles: TODOS },
-  { ruta: '/pacientes', texto: 'Pacientes', roles: TODOS },
-  { ruta: '/profesionales', texto: 'Profesionales', roles: TODOS },
-  { ruta: '/salas', texto: 'Salas', roles: TODOS },
+  { ruta: '/', texto: 'Panel', icono: 'panel', roles: TODOS, abajo: true },
+  { ruta: '/agenda', texto: 'Agenda', icono: 'agenda', roles: TODOS, abajo: true },
+  { ruta: '/pacientes', texto: 'Pacientes', icono: 'pacientes', roles: TODOS, abajo: true },
+  {
+    ruta: '/profesionales',
+    texto: 'Profesionales',
+    icono: 'profesionales',
+    roles: TODOS,
+    abajo: true,
+  },
+  { ruta: '/salas', texto: 'Salas', icono: 'salas', roles: TODOS, abajo: false },
 ];
 
-/** Marco de las pantallas con sesión: barra con centro, rol, menú, avisos y salir. */
+/**
+ * Marco de las pantallas con sesión (Órbita Cian): menú lateral con la marca y el
+ * sello DaviNic, barra superior con buscador, tema, avisos y cuenta, y en celular
+ * una barra inferior.
+ */
 @Component({
   selector: 'app-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, NgTemplateOutlet],
   templateUrl: './shell.html',
+  styleUrl: './shell.scss',
 })
 export class Shell {
   protected readonly auth = inject(AuthService);
   protected readonly avisos = inject(AvisosService);
+  protected readonly tema = inject(TemaService);
   private readonly router = inject(Router);
+  private readonly sanitizer = inject(DomSanitizer);
+
+  protected readonly version = environment.version;
+  /** WhatsApp de DaviNic (formato wa.me de celular argentino: 54 9 + área + número). */
+  protected readonly contactoDavinic = 'https://wa.me/5493834277003';
+  private readonly buscador = viewChild<ElementRef<HTMLInputElement>>('buscador');
 
   protected readonly rol = computed(() => {
     const rol = this.auth.sesion()?.rol;
@@ -39,11 +76,26 @@ export class Shell {
     const rol = this.auth.sesion()?.rol;
     return rol ? MENU.filter((m) => m.roles.includes(rol)) : [];
   });
+  protected readonly menuAbajo = computed(() => this.menu().filter((m) => m.abajo));
+  protected readonly menuMas = computed(() => this.menu().filter((m) => !m.abajo));
   protected readonly variosCentros = computed(() => (this.auth.sesion()?.centros.length ?? 0) > 1);
   /** Admin y recepción reciben avisos de cambios de agenda. */
   protected readonly recibeAvisos = computed(() =>
     puede(this.auth.sesion()?.rol, 'admin', 'recepcion'),
   );
+  protected readonly iniciales = computed(() =>
+    (this.auth.sesion()?.usuario.nombre ?? '?')
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((p) => p[0]!.toUpperCase())
+      .join(''),
+  );
+
+  /** Hora del centro para el indicador "en vivo"; se actualiza cada 20 s. */
+  protected readonly hora = signal('');
+
+  private readonly svgs = new Map<Icono, SafeHtml>();
 
   constructor() {
     // Seguir el centro de la sesión: al cambiar de centro o de rol, se reinicia el contador.
@@ -52,12 +104,58 @@ export class Shell {
       this.avisos.detener();
       if (this.recibeAvisos()) this.avisos.iniciar();
     });
-    inject(DestroyRef).onDestroy(() => this.avisos.detener());
+    this.actualizarHora();
+    const reloj = setInterval(() => this.actualizarHora(), 20_000);
+    inject(DestroyRef).onDestroy(() => {
+      clearInterval(reloj);
+      this.avisos.detener();
+    });
+  }
+
+  /** SVG interno de un ícono (texto fijo de iconos.ts, no viene del usuario). */
+  protected icono(nombre: Icono): SafeHtml {
+    let svg = this.svgs.get(nombre);
+    if (!svg) {
+      svg = this.sanitizer.bypassSecurityTrustHtml(ICONOS[nombre]);
+      this.svgs.set(nombre, svg);
+    }
+    return svg;
+  }
+
+  /** Busca pacientes por nombre, DNI o teléfono. */
+  protected buscar(texto: string): void {
+    const q = texto.trim();
+    void this.router.navigate(['/pacientes'], { queryParams: q ? { q } : {} });
+  }
+
+  /** Ctrl+K (o ⌘K) lleva al buscador. */
+  @HostListener('document:keydown', ['$event'])
+  protected atajo(e: KeyboardEvent): void {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      this.buscador()?.nativeElement.focus();
+    }
   }
 
   protected async salir(): Promise<void> {
     this.avisos.detener();
     await this.auth.logout();
     await this.router.navigateByUrl('/login');
+  }
+
+  private actualizarHora(): void {
+    const zona = this.auth.sesion()?.centro?.zonaHoraria;
+    try {
+      this.hora.set(
+        new Intl.DateTimeFormat('es-AR', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hourCycle: 'h23',
+          timeZone: zona,
+        }).format(new Date()),
+      );
+    } catch {
+      this.hora.set('');
+    }
   }
 }

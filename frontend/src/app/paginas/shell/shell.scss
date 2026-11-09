@@ -1,0 +1,266 @@
+// Shell Órbita Cian. Lo general está en styles/_orbita.scss (oc-shell, oc-nav,
+// oc-barra…); acá va lo propio del marco: menú fijo, barra inferior y menús.
+
+$celular: 767.98px;
+
+// ───────── Menú lateral ─────────
+
+.shell-lateral {
+  // Ancho fijo en PC: el menú no pasa arriba entre 768 y 800 px.
+  flex: 0 0 232px;
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  overflow-y: auto;
+}
+
+.shell-marca {
+  padding: 0 0.5rem;
+}
+
+.shell-centro {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--oc-borde-suave);
+  border-radius: var(--oc-radio);
+  background: var(--oc-panel);
+
+  &__nombre {
+    color: var(--oc-texto);
+    font-weight: 500;
+    overflow-wrap: anywhere;
+  }
+}
+
+.shell-version {
+  font-size: 0.6875rem;
+}
+
+// ───────── Barra superior ─────────
+
+.shell-barra {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  backdrop-filter: blur(14px);
+  background: color-mix(in srgb, var(--oc-fondo) 72%, transparent);
+}
+
+.shell-marca-chica {
+  display: none;
+}
+
+.shell-atajo {
+  padding: 2px 6px;
+  border: 1px solid var(--oc-borde);
+  border-radius: 6px;
+  font: 500 0.6875rem var(--oc-fuente-mono);
+  color: var(--oc-texto-suave);
+}
+
+.shell-acciones {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.shell-vivo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-right: 0.25rem;
+  font: 500 0.75rem var(--oc-fuente-mono);
+  color: var(--oc-acento-texto);
+  white-space: nowrap;
+}
+
+.oc-btn--icono {
+  color: var(--oc-texto-medio);
+}
+
+.shell-campana {
+  position: relative;
+
+  &.activo {
+    border-color: var(--oc-acento-borde);
+    color: var(--oc-acento-fuerte);
+  }
+
+  &__contador {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    min-width: 1.25rem;
+    height: 1.25rem;
+    padding: 0 0.3rem;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #22d3ee;
+    color: var(--oc-sobre-acento);
+    font: 600 0.6875rem var(--oc-fuente-mono);
+    box-shadow: 0 0 10px rgba(34, 211, 238, 0.6);
+  }
+}
+
+.shell-avatar {
+  width: 2.625rem;
+  height: 2.625rem;
+  border: 0;
+  border-radius: var(--oc-radio);
+  background: linear-gradient(135deg, #22d3ee, #5b8def);
+  color: var(--oc-sobre-acento);
+  font: 700 0.8125rem var(--oc-fuente);
+  cursor: pointer;
+}
+
+.shell-contenido {
+  flex: 1;
+  min-width: 0;
+}
+
+// ───────── Menús emergentes (cuenta y "Más") ─────────
+
+.shell-popover {
+  margin: 0;
+  padding: 0.5rem;
+  min-width: 15rem;
+  max-width: calc(100vw - 2rem);
+  border: 1px solid var(--oc-borde);
+  border-radius: var(--oc-radio-tarjeta);
+  background: var(--oc-fondo);
+  background-image: linear-gradient(var(--oc-panel), var(--oc-panel));
+  color: var(--oc-texto);
+  box-shadow: var(--oc-sombra);
+  font: var(--oc-t-chico);
+
+  &::backdrop {
+    background: rgba(2, 6, 12, 0.35);
+  }
+
+  &__item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    min-height: 44px;
+    padding: 0 0.75rem;
+    border: 0;
+    border-radius: var(--oc-radio);
+    background: none;
+    color: var(--oc-texto-medio);
+    font: 500 0.875rem var(--oc-fuente);
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--oc-acento-fondo);
+      color: var(--oc-texto);
+    }
+  }
+}
+
+.shell-cuenta {
+  position: fixed;
+  inset: 4.25rem 1rem auto auto;
+
+  &__quien {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    padding: 0.5rem 0.75rem 0.75rem;
+    margin-bottom: 0.25rem;
+    border-bottom: 1px solid var(--oc-borde);
+    overflow-wrap: anywhere;
+  }
+}
+
+.shell-mas {
+  position: fixed;
+  inset: auto 1rem 5.5rem auto;
+
+  &__pie {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 0.25rem;
+    padding: 0.75rem 0.75rem 0.25rem;
+    border-top: 1px solid var(--oc-borde);
+  }
+}
+
+// ───────── Barra inferior (celular) ─────────
+
+.shell-abajo {
+  display: none;
+}
+
+@media (max-width: $celular) {
+  .shell-lateral {
+    display: none;
+  }
+
+  .shell-marca-chica {
+    display: inline-flex;
+  }
+
+  .shell-vivo,
+  .shell-atajo {
+    display: none;
+  }
+
+  .shell-barra {
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+  }
+
+  // El buscador ocupa lo que sobra, sin empujar los botones a otra línea.
+  .oc-buscador {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .shell-contenido {
+    // Lugar para la barra inferior.
+    padding-bottom: 5rem;
+  }
+
+  .shell-abajo {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 10;
+    display: flex;
+    justify-content: space-around;
+    padding: 0.5rem 0.375rem calc(0.75rem + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--oc-borde);
+    background: color-mix(in srgb, var(--oc-fondo) 88%, transparent);
+    backdrop-filter: blur(14px);
+    color: var(--oc-texto-suave);
+
+    a,
+    button {
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 0;
+      border-radius: var(--oc-radio);
+      background: none;
+      color: inherit;
+      cursor: pointer;
+    }
+
+    .activo {
+      background: var(--oc-acento-fondo);
+      color: var(--oc-acento-fuerte);
+      box-shadow: inset 0 0 0 1px var(--oc-acento-borde);
+    }
+  }
+}

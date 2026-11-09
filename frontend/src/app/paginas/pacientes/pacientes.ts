@@ -1,4 +1,13 @@
-import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  DestroyRef,
+  effect,
+  inject,
+  input,
+  signal,
+  untracked,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 import { mensajeDeError, PacientesApi } from '../../core/api/api';
@@ -13,7 +22,10 @@ const POR_PAGINA = 20;
   imports: [RouterLink],
   templateUrl: './pacientes.html',
 })
-export class Pacientes implements OnInit {
+export class Pacientes {
+  /** Búsqueda que llega por la URL (?q=…), por ejemplo desde el buscador de la barra. */
+  readonly q = input<string>();
+
   private readonly api = inject(PacientesApi);
   private readonly auth = inject(AuthService);
 
@@ -24,7 +36,7 @@ export class Pacientes implements OnInit {
   protected readonly pacientes = signal<Paciente[]>([]);
   protected readonly total = signal(0);
   protected readonly pagina = signal(1);
-  protected readonly q = signal('');
+  protected readonly filtro = signal('');
   protected readonly verInactivos = signal(false);
   protected readonly cargando = signal(true);
   protected readonly error = signal<string | null>(null);
@@ -34,15 +46,20 @@ export class Pacientes implements OnInit {
 
   constructor() {
     const sub = this.busqueda.pipe(debounceTime(300), distinctUntilChanged()).subscribe((q) => {
-      this.q.set(q);
+      this.filtro.set(q);
       this.pagina.set(1);
       void this.cargar();
     });
     inject(DestroyRef).onDestroy(() => sub.unsubscribe());
-  }
-
-  ngOnInit(): void {
-    void this.cargar();
+    // Carga inicial y cada vez que cambia la búsqueda de la URL.
+    effect(() => {
+      const q = (this.q() ?? '').trim();
+      untracked(() => {
+        this.filtro.set(q);
+        this.pagina.set(1);
+        void this.cargar();
+      });
+    });
   }
 
   protected buscar(texto: string): void {
@@ -65,7 +82,7 @@ export class Pacientes implements OnInit {
     this.error.set(null);
     try {
       const r = await this.api.listar({
-        q: this.q(),
+        q: this.filtro(),
         pagina: this.pagina(),
         porPagina: POR_PAGINA,
         incluirInactivos: this.verInactivos() || undefined,
