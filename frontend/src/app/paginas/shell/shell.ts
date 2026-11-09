@@ -9,7 +9,6 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { NgTemplateOutlet } from '@angular/common';
 import { DomSanitizer, type SafeHtml } from '@angular/platform-browser';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { environment } from '../../../environments/environment';
@@ -17,6 +16,7 @@ import type { Rol } from '../../core/auth/auth.models';
 import { AuthService } from '../../core/auth/auth.service';
 import { NOMBRE_ROL, puede } from '../../core/auth/roles';
 import { AvisosService } from '../../core/avisos.service';
+import { Isotipo, SelloDavinic } from '../../core/marca/marca';
 import { TemaService } from '../../core/tema.service';
 import { ICONOS, type Icono } from './iconos';
 
@@ -52,7 +52,7 @@ const MENU: ItemMenu[] = [
  */
 @Component({
   selector: 'app-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, NgTemplateOutlet],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, Isotipo, SelloDavinic],
   templateUrl: './shell.html',
   styleUrl: './shell.scss',
 })
@@ -64,8 +64,6 @@ export class Shell {
   private readonly sanitizer = inject(DomSanitizer);
 
   protected readonly version = environment.version;
-  /** WhatsApp de DaviNic (formato wa.me de celular argentino: 54 9 + área + número). */
-  protected readonly contactoDavinic = 'https://wa.me/5493834277003';
   private readonly buscador = viewChild<ElementRef<HTMLInputElement>>('buscador');
 
   protected readonly rol = computed(() => {

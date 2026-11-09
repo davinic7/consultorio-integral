@@ -3,7 +3,7 @@
     <!-- Menú lateral (en celular se reemplaza por la barra inferior) -->
     <nav class="oc-nav shell-lateral" aria-label="Navegación principal">
       <a routerLink="/" class="oc-marca shell-marca" aria-label="Centro Integral: ir al panel">
-        <ng-container *ngTemplateOutlet="logo; context: { tam: 32, id: 'ci-anillo-lateral' }" />
+        <app-isotipo [tam]="32" />
         <span><b>Centro</b>&ngsp;<span>Integral</span></span>
       </a>
 
@@ -44,14 +44,14 @@
 
       <div class="oc-nav__pie">
         <span class="oc-mono oc-suave shell-version">v{{ version }}</span>
-        <ng-container *ngTemplateOutlet="sello" />
+        <app-sello-davinic />
       </div>
     </nav>
 
     <div class="oc-principal">
       <header class="oc-barra shell-barra">
         <a routerLink="/" class="shell-marca-chica" aria-label="Centro Integral: ir al panel">
-          <ng-container *ngTemplateOutlet="logo; context: { tam: 30, id: 'ci-anillo-barra' }" />
+          <app-isotipo [tam]="30" />
         </a>
 
         <form class="oc-buscador" role="search" (submit)="$event.preventDefault(); buscar(buscador.value)">
@@ -263,50 +263,8 @@
     </button>
     <div class="shell-mas__pie">
       <span class="oc-mono oc-suave shell-version">Centro Integral v{{ version }}</span>
-      <ng-container *ngTemplateOutlet="sello" />
+      <app-sello-davinic />
     </div>
   </div>
 }
 
-<!-- Logo de Centro Integral (cambia con el tema) -->
-<!-- Cada copia lleva su propio id de degradado: si una está oculta, la otra igual se ve. -->
-<ng-template #logo let-tam="tam" let-id="id">
-  <svg class="oc-marca__iso" [attr.width]="tam" [attr.height]="tam" viewBox="0 0 48 48" aria-hidden="true">
-    <defs>
-      <linearGradient [attr.id]="id" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" style="stop-color: var(--oc-marca-anillo-1)" />
-        <stop offset="1" style="stop-color: var(--oc-marca-anillo-2)" />
-      </linearGradient>
-    </defs>
-    <path
-      d="M37.79 12.43 A18 18 0 1 0 37.79 35.57"
-      fill="none"
-      [attr.stroke]="'url(#' + id + ')'"
-      stroke-width="4"
-      stroke-linecap="round"
-    />
-    <path
-      d="M24 24 H40"
-      stroke="var(--oc-acento)"
-      stroke-width="2"
-      stroke-linecap="round"
-      opacity=".7"
-    />
-    <circle cx="24" cy="24" r="5" fill="var(--oc-acento)" />
-    <circle cx="42" cy="24" r="3" fill="var(--oc-marca-satelite)" />
-  </svg>
-</ng-template>
-
-<!-- Sello DaviNic: globo con el logo original -->
-<ng-template #sello>
-  <a
-    class="oc-globo"
-    [href]="contactoDavinic"
-    target="_blank"
-    rel="noopener"
-    title="Desarrollado por DaviNic Developer"
-    aria-label="Desarrollado por DaviNic Developer (abre WhatsApp)"
-  >
-    <span class="oc-globo__recorte"><img src="marca/davinic-sello.png" alt="" /></span>
-  </a>
-</ng-template>
