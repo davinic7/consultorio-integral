@@ -1,0 +1,122 @@
+<main class="oc-contenido asistencia">
+  <div class="asistencia__principal">
+    <div class="asistencia__cabecera">
+      <div>
+        <div class="oc-etiqueta">{{ titulo() }}</div>
+        <h1 class="asistencia__titulo">Registro de asistencia</h1>
+      </div>
+      <p class="oc-suave asistencia__ayuda">
+        Tocá <strong>Llegó</strong> cuando el paciente entra. Si no vino, marcá
+        <strong>Ausente</strong> o <strong>Justificada</strong>. Tocar de nuevo el botón marcado lo
+        vuelve a "Por llegar".
+      </p>
+    </div>
+
+    <div class="asistencia__controles">
+      <div class="asistencia__dia" role="group" aria-label="Día">
+        <button type="button" class="oc-btn oc-btn--icono" (click)="moverDia(-1)" aria-label="Día anterior">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m15 6-6 6 6 6" />
+          </svg>
+        </button>
+        <button type="button" class="oc-btn oc-btn--chico" (click)="irAHoy()" [disabled]="esHoy()">Hoy</button>
+        <button type="button" class="oc-btn oc-btn--icono" (click)="moverDia(1)" aria-label="Día siguiente">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m9 6 6 6-6 6" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="oc-segmentado asistencia__filtros" role="tablist" aria-label="Filtrar turnos">
+        @for (f of pestanas(); track f.id) {
+          <button type="button" role="tab" [attr.aria-selected]="filtro() === f.id" (click)="filtro.set(f.id)">
+            {{ f.texto }}
+            <span class="asistencia__contador oc-mono">{{ f.n }}</span>
+          </button>
+        }
+      </div>
+    </div>
+
+    @if (error(); as mensaje) {
+      <p class="oc-alerta oc-alerta--error" role="alert">{{ mensaje }}</p>
+    }
+
+    <div class="asistencia__lista">
+      @for (r of filas(); track r.turno.id) {
+        @let t = r.turno;
+        <div class="asistencia__fila" [attr.data-estado]="t.estado">
+          <span class="asistencia__hora oc-mono">{{ t.hora }}</span>
+          <div class="asistencia__paciente">
+            <span class="asistencia__avatar" [attr.data-color]="r.color" aria-hidden="true">{{ r.iniciales }}</span>
+            <div class="asistencia__datos">
+              <a [routerLink]="['/pacientes', t.paciente.id]" class="asistencia__nombre">
+                {{ t.paciente.nombre }} {{ t.paciente.apellido }}
+              </a>
+              <div class="oc-suave asistencia__detalle">
+                {{ t.profesional.apellido }} · {{ t.profesional.disciplina }}{{ t.sala ? ' · ' + t.sala.nombre : '' }}
+              </div>
+            </div>
+          </div>
+          <span class="oc-estado" [class]="clase[t.estado]">
+            {{ t.estado === 'pendiente' ? 'Por llegar' : nombreEstado[t.estado] }}
+          </span>
+          <div class="asistencia__botones" role="group" [attr.aria-label]="'Marcar asistencia de ' + t.paciente.nombre + ' ' + t.paciente.apellido">
+            @for (b of botones; track b.estado) {
+              <button
+                type="button"
+                class="oc-btn asistencia__boton"
+                [attr.data-tipo]="b.estado"
+                [attr.aria-pressed]="t.estado === b.estado"
+                [disabled]="guardando() === t.id || (t.estado !== b.estado && !sePuedeMarcar(b.estado, t.inicio))"
+                [title]="!sePuedeMarcar(b.estado, t.inicio) ? 'Se marca cuando empieza el turno' : ''"
+                (click)="marcar(t, b.estado)"
+              >
+                @switch (b.estado) {
+                  @case ('presente') {
+                    <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10" /></svg>
+                  }
+                  @case ('ausente_sin_aviso') {
+                    <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18" /></svg>
+                  }
+                  @default {
+                    <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3h8l4 4v14H4V3h4z" /><path d="M8 12h8M8 16h5" /></svg>
+                  }
+                }
+                {{ b.texto }}
+              </button>
+            }
+          </div>
+        </div>
+      } @empty {
+        <div class="asistencia__vacio">
+          {{ cargando() ? 'Cargando…' : conteo().todos ? 'No hay turnos en este filtro.' : 'No hay turnos este día.' }}
+        </div>
+      }
+    </div>
+  </div>
+
+  <aside class="asistencia__lateral">
+    <section class="oc-tarjeta asistencia__resumen" aria-labelledby="res-t">
+      <h2 id="res-t">Resumen {{ esHoy() ? 'de hoy' : 'del día' }}</h2>
+      <div class="asistencia__resumen-cuerpo">
+        <svg aria-hidden="true" width="96" height="96" viewBox="0 0 48 48">
+          <circle cx="24" cy="24" r="18" fill="none" stroke="var(--oc-pista)" stroke-width="4" />
+          <circle cx="24" cy="24" r="18" fill="none" stroke="var(--oc-acento)" stroke-width="4" stroke-linecap="round" [attr.stroke-dasharray]="arco() + ' 113.1'" transform="rotate(-90 24 24)" class="asistencia__arco" />
+          <text x="24" y="27.5" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="var(--oc-texto)">
+            {{ porcentaje() === null ? '—' : porcentaje() + '%' }}
+          </text>
+        </svg>
+        <dl class="asistencia__totales">
+          <div><dt><i class="punto punto--ok"></i>Llegaron</dt><dd class="oc-mono">{{ conteo().presente }}</dd></div>
+          <div><dt><i class="punto punto--error"></i>Ausentes</dt><dd class="oc-mono">{{ conteo().sinAviso }}</dd></div>
+          <div><dt><i class="punto punto--azul"></i>Justificadas</dt><dd class="oc-mono">{{ conteo().justificadas }}</dd></div>
+          <div><dt><i class="punto"></i>Por llegar</dt><dd class="oc-mono">{{ conteo().pendiente }}</dd></div>
+        </dl>
+      </div>
+      <p class="oc-suave asistencia__nota">
+        El porcentaje cuenta los turnos ya marcados. La asistencia se puede corregir hasta que se
+        cierre la liquidación del mes.
+      </p>
+    </section>
+  </aside>
+</main>

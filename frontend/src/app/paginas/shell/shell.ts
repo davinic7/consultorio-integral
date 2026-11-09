@@ -34,13 +34,14 @@ const TODOS: Rol[] = ['admin', 'recepcion', 'profesional'];
 const MENU: ItemMenu[] = [
   { ruta: '/', texto: 'Panel', icono: 'panel', roles: TODOS, abajo: true },
   { ruta: '/agenda', texto: 'Agenda', icono: 'agenda', roles: TODOS, abajo: true },
+  { ruta: '/asistencia', texto: 'Asistencia', icono: 'asistencia', roles: TODOS, abajo: true },
   { ruta: '/pacientes', texto: 'Pacientes', icono: 'pacientes', roles: TODOS, abajo: true },
   {
     ruta: '/profesionales',
     texto: 'Profesionales',
     icono: 'profesionales',
     roles: TODOS,
-    abajo: true,
+    abajo: false,
   },
   { ruta: '/salas', texto: 'Salas', icono: 'salas', roles: TODOS, abajo: false },
 ];
