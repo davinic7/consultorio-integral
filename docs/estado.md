@@ -44,7 +44,14 @@ Decisiones abiertas para el paso 6:
 - `backend/AGENTS.md` (generado por NestJS, promociona su telemetría): decidir si se borra.
 - Agenda: arrastrar y soltar turnos para moverlos (hoy se mueven desde el panel) y horario visible configurable por centro (hoy 07:00 a 22:00).
 - Avisos: hoy se consultan cada minuto; más adelante, notificaciones push en la app móvil.
-- Publicación: ya está preparada para Render (Docker + `render.yaml`, ver [publicar.md](publicar.md)). Falta crear la cuenta y el Blueprint en render.com, y probar ahí el primer deploy.
+- Arranque en Render: si falla un paso opcional (superadmin o datos demo, por ejemplo por una contraseña corta) el contenedor no arranca; evaluar que esos pasos solo avisen en el log.
+
+## Publicado
+
+Desde el 9 de noviembre de 2026 en **https://centro-integral.onrender.com** (Render, plan gratis, Blueprint de [render.yaml](../render.yaml); guía en [publicar.md](publicar.md)). Con datos demo y el superadmin del dueño. Se vuelve a publicar solo con cada push a `main`.
+
+- El servicio se duerme tras 15 minutos sin uso; el primer arranque tardó unos 13 minutos en levantar el contenedor.
+- La base gratis vence a los 30 días de creada (alrededor del 9 de diciembre de 2026).
 
 ## Cómo retomar
 
