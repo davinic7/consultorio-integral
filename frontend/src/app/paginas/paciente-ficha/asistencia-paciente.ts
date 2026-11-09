@@ -1,107 +1,114 @@
-import { Component, computed, inject, input, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { AsistenciaApi, mensajeDeError } from '../../core/api/api';
-import type { HistorialAsistencia } from '../../core/api/modelos';
+import type { EstadoTurno, HistorialAsistencia } from '../../core/api/modelos';
 import { NOMBRE_ESTADO } from '../../core/asistencia';
 import { AuthService } from '../../core/auth/auth.service';
-import { fechaLarga, hoyEn } from '../../core/fechas';
+import { hoyEn } from '../../core/fechas';
 
-/** Historial de asistencia del paciente y acceso a la planilla mensual. */
+/** Clase de estado Órbita (siempre con texto, nunca solo color). */
+export const CLASE_ESTADO: Record<EstadoTurno, string> = {
+  pendiente: '',
+  presente: 'oc-estado--ok',
+  ausente_con_aviso: 'oc-estado--aviso',
+  ausente_sin_aviso: 'oc-estado--error',
+  cancelado_profesional: '',
+};
+
+/** Pestaña "Sesiones" de la ficha: turnos con su asistencia y la planilla mensual. */
 @Component({
   selector: 'app-asistencia-paciente',
   imports: [FormsModule, RouterLink],
+  styles: `
+    :host {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .planilla {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: 0.75rem;
+    }
+    .planilla h2 {
+      flex: 1 0 100%;
+      margin: 0;
+      font: var(--oc-t-subtitulo);
+    }
+  `,
   template: `
-    <section class="panel" aria-labelledby="titulo-asistencia">
-      <h2 id="titulo-asistencia">Asistencia</h2>
-
-      @if (cargando()) {
-        <p class="sutil">Cargando…</p>
-      } @else if (error(); as mensaje) {
-        <p class="aviso aviso--error" role="alert">{{ mensaje }}</p>
-      } @else if (historial(); as h) {
-        <div class="resumen-asistencia">
-          <span>
-            <span class="estado-turno" data-estado="presente">Presente</span>
-            {{ h.resumen.presente }}
-          </span>
-          <span>
-            <span class="estado-turno" data-estado="ausente_con_aviso">Ausente con aviso</span>
-            {{ h.resumen.ausente_con_aviso }}
-          </span>
-          <span>
-            <span class="estado-turno" data-estado="ausente_sin_aviso">Ausente sin aviso</span>
-            {{ h.resumen.ausente_sin_aviso }}
-          </span>
-          @if (h.resumen.porcentajeAsistencia !== null) {
-            <strong>Asistencia: {{ h.resumen.porcentajeAsistencia }}%</strong>
-          }
-        </div>
-        <p class="sutil">
-          Del {{ fechaCorta(h.desde) }} al {{ fechaCorta(h.hasta) }}. El porcentaje cuenta los
-          turnos ya marcados.
-        </p>
-
-        @if (h.turnos.length) {
-          <ul class="lista">
+    @if (historial(); as h) {
+      <div class="oc-tabla-caja">
+        <table class="oc-tabla">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Hora</th>
+              <th>Profesional</th>
+              <th>Sala</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
             @for (t of h.turnos; track t.id) {
-              <li class="lista__item">
-                <span>
-                  <strong>{{ fechaLarga(t.fecha) }}</strong> · {{ t.hora }}
-                  <span class="sutil">
-                    · {{ t.profesional.apellido }}, {{ t.profesional.nombre }}
-                  </span>
-                </span>
-                <span class="estado-turno" [attr.data-estado]="t.estado">
-                  {{ nombreEstado[t.estado] }}
-                </span>
-              </li>
+              <tr>
+                <td class="oc-mono">{{ fechaCorta(t.fecha) }}</td>
+                <td class="oc-mono">{{ t.hora }}</td>
+                <td>{{ t.profesional.apellido }}, {{ t.profesional.nombre }}</td>
+                <td class="oc-suave">{{ t.sala?.nombre ?? '—' }}</td>
+                <td>
+                  <span class="oc-estado" [class]="claseEstado[t.estado]">{{
+                    nombreEstado[t.estado]
+                  }}</span>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5" class="oc-suave">Sin turnos en este período.</td>
+              </tr>
             }
-          </ul>
-        } @else {
-          <p class="sutil">Sin turnos en este período.</p>
-        }
+          </tbody>
+        </table>
+      </div>
+      <p class="oc-suave">Del {{ fechaCorta(h.desde) }} al {{ fechaCorta(h.hasta) }}.</p>
 
-        <h3>Planilla mensual para firmar</h3>
-        <div class="form-linea">
-          <label class="campo">
-            <span>Mes</span>
-            <input type="month" [(ngModel)]="mes" />
+      <section class="oc-tarjeta planilla" aria-label="Planilla mensual">
+        <h2>Planilla mensual para firmar</h2>
+        <label class="oc-campo">
+          Mes
+          <input type="month" [(ngModel)]="mes" />
+        </label>
+        @if (profesionales().length > 1) {
+          <label class="oc-campo">
+            Profesional
+            <select [(ngModel)]="profesionalId">
+              <option value="">Todos</option>
+              @for (p of profesionales(); track p.id) {
+                <option [value]="p.id">{{ p.apellido }}, {{ p.nombre }}</option>
+              }
+            </select>
           </label>
-          @if (profesionales().length > 1) {
-            <label class="campo">
-              <span>Profesional</span>
-              <select [(ngModel)]="profesionalId">
-                <option value="">Todos</option>
-                @for (p of profesionales(); track p.id) {
-                  <option [value]="p.id">{{ p.apellido }}, {{ p.nombre }}</option>
-                }
-              </select>
-            </label>
-          }
-          <a
-            class="boton"
-            [routerLink]="['/pacientes', pacienteId(), 'planilla']"
-            [queryParams]="{ mes: mes || null, profesionalId: profesionalId || null }"
-          >
-            Ver planilla
-          </a>
-        </div>
-      }
-    </section>
+        }
+        <a
+          class="oc-btn"
+          [routerLink]="['/pacientes', pacienteId(), 'planilla']"
+          [queryParams]="{ mes: mes || null, profesionalId: profesionalId || null }"
+        >
+          Ver planilla
+        </a>
+      </section>
+    }
   `,
 })
-export class AsistenciaPaciente implements OnInit {
+export class AsistenciaPaciente {
   readonly pacienteId = input.required<string>();
+  readonly historial = input.required<HistorialAsistencia | null>();
 
-  private readonly api = inject(AsistenciaApi);
   private readonly auth = inject(AuthService);
 
-  protected readonly historial = signal<HistorialAsistencia | null>(null);
-  protected readonly cargando = signal(true);
-  protected readonly error = signal<string | null>(null);
   protected readonly nombreEstado = NOMBRE_ESTADO;
-  protected readonly fechaLarga = fechaLarga;
+  protected readonly claseEstado = CLASE_ESTADO;
   /** "2026-05-13" → "13/05/2026". */
   protected readonly fechaCorta = (f: string) => f.split('-').reverse().join('/');
 
@@ -114,14 +121,4 @@ export class AsistenciaPaciente implements OnInit {
     for (const t of this.historial()?.turnos ?? []) vistos.set(t.profesional.id, t.profesional);
     return [...vistos.values()];
   });
-
-  async ngOnInit(): Promise<void> {
-    try {
-      this.historial.set(await this.api.historial(this.pacienteId()));
-    } catch (e) {
-      this.error.set(mensajeDeError(e, 'No se pudo cargar la asistencia.'));
-    } finally {
-      this.cargando.set(false);
-    }
-  }
 }

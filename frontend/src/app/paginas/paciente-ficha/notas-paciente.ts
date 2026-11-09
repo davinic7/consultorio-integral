@@ -16,8 +16,51 @@ const FORMATO_FECHA = new Intl.DateTimeFormat('es-AR', {
   selector: 'app-notas-paciente',
   imports: [FormsModule],
   styles: `
+    .notas {
+      display: flex;
+      flex-direction: column;
+      gap: 0.875rem;
+    }
+    .notas h2 {
+      margin: 0;
+      font: var(--oc-t-subtitulo);
+    }
+    .notas p {
+      margin: 0;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .notas__acciones {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .notas__lista {
+      display: flex;
+      flex-direction: column;
+      gap: 0.625rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
     .nota {
       display: block;
+      padding: 0.875rem 1rem;
+      border: 1px solid var(--oc-borde);
+      border-radius: var(--oc-radio);
+      background: var(--oc-carril);
+    }
+    .nota strong {
+      font-family: var(--oc-fuente-mono);
+      font-weight: 500;
+      font-size: 0.8125rem;
+    }
+    .oc-estado {
+      margin-left: 0.5rem;
     }
     .nota__texto {
       margin: 0.5rem 0 0;
@@ -38,28 +81,28 @@ const FORMATO_FECHA = new Intl.DateTimeFormat('es-AR', {
     }
   `,
   template: `
-    <section class="panel" aria-labelledby="titulo-notas">
+    <section class="oc-tarjeta notas" aria-labelledby="titulo-notas">
       <h2 id="titulo-notas">Notas de sesión</h2>
-      <p class="sutil">
+      <p class="oc-suave">
         Solo vos ves tus notas. Si marcás "Compartir con el equipo", también las ven los demás
         profesionales que atienden al paciente. Administración y recepción no las ven. Se guardan
         cifradas.
       </p>
 
       <form (ngSubmit)="guardar()">
-        <label class="campo">
-          <span>{{ editando() ? 'Editar nota' : 'Nueva nota' }}</span>
+        <label class="oc-campo">
+          {{ editando() ? 'Editar nota' : 'Nueva nota' }}
           <textarea [(ngModel)]="texto" name="texto" maxlength="20000" required></textarea>
         </label>
-        <label class="check">
+        <label class="oc-check">
           <input type="checkbox" [(ngModel)]="compartida" name="compartida" />
           Compartir con el equipo
         </label>
         @if (error(); as mensaje) {
-          <p class="aviso aviso--error" role="alert">{{ mensaje }}</p>
+          <p class="oc-alerta oc-alerta--error" role="alert">{{ mensaje }}</p>
         }
-        <div class="acciones">
-          <button type="submit" class="boton" [disabled]="guardando() || !texto.trim()">
+        <div class="notas__acciones">
+          <button type="submit" class="oc-btn oc-btn--primario" [disabled]="guardando() || !texto.trim()">
             {{ guardando() ? 'Guardando…' : editando() ? 'Guardar cambios' : 'Agregar nota' }}
           </button>
           @if (editando()) {
@@ -69,22 +112,22 @@ const FORMATO_FECHA = new Intl.DateTimeFormat('es-AR', {
       </form>
 
       @if (cargando()) {
-        <p class="sutil">Cargando…</p>
+        <p class="oc-suave">Cargando…</p>
       } @else if (notas().length) {
-        <ul class="lista">
+        <ul class="notas__lista">
           @for (n of notas(); track n.id) {
-            <li class="lista__item nota">
+            <li class="nota">
               <div class="nota__pie">
                 <span>
                   <strong>{{ fecha(n.creadaEn) }}</strong>
-                  <span class="sutil">
+                  <span class="oc-suave">
                     · {{ n.propia ? 'Vos' : n.profesional.apellido + ', ' + n.profesional.nombre }}
                     ({{ n.profesional.disciplina }})
                   </span>
                   @if (n.compartida) {
-                    <span class="etiqueta etiqueta--info">Compartida</span>
+                    <span class="oc-estado oc-estado--info">Compartida</span>
                   } @else {
-                    <span class="etiqueta">Privada</span>
+                    <span class="oc-estado">Privada</span>
                   }
                 </span>
                 @if (n.propia) {
@@ -96,7 +139,7 @@ const FORMATO_FECHA = new Intl.DateTimeFormat('es-AR', {
           }
         </ul>
       } @else {
-        <p class="sutil">Todavía no hay notas.</p>
+        <p class="oc-suave">Todavía no hay notas.</p>
       }
     </section>
   `,

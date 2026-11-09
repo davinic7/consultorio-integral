@@ -1,0 +1,219 @@
+// Ficha del paciente (docs/diseno/referencia/Ficha.dc.html).
+
+h2 {
+  margin: 0;
+  font: var(--oc-t-subtitulo);
+}
+
+.ficha {
+  &__titulo {
+    margin: 0;
+    font: 600 clamp(1.625rem, 2.6vw, 2.125rem) / 1.15 var(--oc-fuente);
+    letter-spacing: -0.03em;
+  }
+
+  &__hero {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.25rem;
+    padding: clamp(1.125rem, 2.4vw, 1.625rem);
+    border: 1px solid var(--oc-borde);
+    border-radius: 1.375rem;
+    background: var(--oc-panel);
+
+    @each $d in (psi, to, fono, psicoped) {
+      &[data-color='#{$d}'] {
+        background:
+          radial-gradient(500px 220px at 0% 0%, var(--oc-#{$d}-fondo), transparent 70%),
+          var(--oc-panel);
+      }
+    }
+  }
+
+  &__avatar {
+    width: 84px;
+    height: 84px;
+    flex-shrink: 0;
+    border-radius: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    font-weight: 600;
+
+    &--chico {
+      width: 38px;
+      height: 38px;
+      border-radius: var(--oc-radio);
+      font-size: 0.75rem;
+    }
+  }
+
+  &__avatar,
+  &__chip {
+    @each $d in (psi, to, fono, psicoped) {
+      &[data-color='#{$d}'] {
+        border: 1px solid var(--oc-#{$d}-borde);
+        background: var(--oc-#{$d}-fondo);
+        color: var(--oc-#{$d}-texto);
+      }
+    }
+  }
+
+  &__avatar[data-color] {
+    box-shadow: 0 0 30px var(--oc-brillo);
+  }
+
+  &__avatar--chico[data-color] {
+    box-shadow: none;
+  }
+
+  &__quien {
+    flex: 1 1 300px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+  }
+
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-size: 0.78125rem;
+  }
+
+  &__chip {
+    padding: 0.3125rem 0.6875rem;
+    border: 1px solid var(--oc-borde);
+    border-radius: 999px;
+    color: var(--oc-texto-medio);
+  }
+
+  &__acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.625rem;
+  }
+
+  &__indicadores {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 0.875rem;
+  }
+
+  &__puntos {
+    display: flex;
+    gap: 4px;
+    margin-top: 0.625rem;
+  }
+
+  &__punto {
+    flex: 1;
+    max-width: 2rem;
+    height: 8px;
+    border-radius: 3px;
+    background: var(--oc-pista);
+
+    &[data-estado='presente'] {
+      background: var(--oc-acento);
+      box-shadow: 0 0 6px rgba(34, 211, 238, 0.5);
+    }
+
+    &[data-estado='ausente_con_aviso'] {
+      background: var(--oc-aviso);
+    }
+
+    &[data-estado='ausente_sin_aviso'] {
+      background: repeating-linear-gradient(135deg, var(--oc-error) 0 3px, transparent 3px 6px);
+      outline: 1px dashed var(--oc-error-borde);
+    }
+  }
+
+  &__proximo {
+    margin-top: 0.375rem;
+    font-size: 1.375rem;
+    font-weight: 500;
+    color: var(--oc-acento-texto);
+  }
+
+  &__nota {
+    margin: 0.25rem 0 0;
+    font-size: 0.75rem;
+  }
+
+  &__resumen {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: flex-start;
+
+    > * {
+      flex: 1 1 340px;
+      min-width: 0;
+    }
+  }
+
+  &__datos {
+    display: grid;
+    grid-template-columns: minmax(0, 150px) minmax(0, 1fr);
+    gap: 0.75rem 1rem;
+    margin: 0.875rem 0 0;
+    font-size: 0.84375rem;
+
+    dt {
+      color: var(--oc-texto-suave);
+    }
+
+    dd {
+      margin: 0;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  &__equipo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  &__miembro {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  &__nombre {
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  &__form-cabecera {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  &__campos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.875rem 1rem;
+  }
+
+  &__opciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 1.5rem;
+  }
+}

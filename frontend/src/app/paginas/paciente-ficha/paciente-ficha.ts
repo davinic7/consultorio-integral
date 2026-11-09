@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, inject, input, OnInit, signal } from '@angular/core';
 import {
   AbstractControl,
@@ -7,12 +8,23 @@ import {
   Validators,
 } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { mensajeDeError, PacientesApi, ProfesionalesApi } from '../../core/api/api';
-import type { DatosPaciente, Paciente, Profesional } from '../../core/api/modelos';
+import { AsistenciaApi, mensajeDeError, PacientesApi, ProfesionalesApi } from '../../core/api/api';
+import type {
+  DatosPaciente,
+  HistorialAsistencia,
+  Paciente,
+  Profesional,
+} from '../../core/api/modelos';
+import { NOMBRE_ESTADO } from '../../core/asistencia';
+import { edad, enlaceWhatsApp } from '../../core/contacto';
+import { colorDisciplina, iniciales } from '../../core/disciplina';
+import { ahoraEn, fechaLarga, minutos } from '../../core/fechas';
 import { AuthService } from '../../core/auth/auth.service';
 import { puede } from '../../core/auth/roles';
 import { AsistenciaPaciente } from './asistencia-paciente';
 import { NotasPaciente } from './notas-paciente';
+
+type Pestana = 'resumen' | 'sesiones' | 'notas' | 'datos';
 
 /** Vencimiento de CUD solo si tiene CUD. */
 function cudCoherente(g: AbstractControl): ValidationErrors | null {
@@ -24,8 +36,9 @@ const vacioANull = (s: string) => (s.trim() === '' ? null : s.trim());
 
 @Component({
   selector: 'app-paciente-ficha',
-  imports: [ReactiveFormsModule, RouterLink, AsistenciaPaciente, NotasPaciente],
+  imports: [ReactiveFormsModule, RouterLink, NgTemplateOutlet, AsistenciaPaciente, NotasPaciente],
   templateUrl: './paciente-ficha.html',
+  styleUrl: './paciente-ficha.scss',
 })
 export class PacienteFicha implements OnInit {
   /** Id de la ruta (/pacientes/:id); sin id es un alta. */
@@ -33,6 +46,7 @@ export class PacienteFicha implements OnInit {
 
   private readonly api = inject(PacientesApi);
   private readonly profesionalesApi = inject(ProfesionalesApi);
+  private readonly asistenciaApi = inject(AsistenciaApi);
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
 
@@ -48,6 +62,72 @@ export class PacienteFicha implements OnInit {
   protected readonly guardando = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly guardado = signal(false);
+  protected readonly historial = signal<HistorialAsistencia | null>(null);
+  protected readonly pestana = signal<Pestana>('resumen');
+  protected readonly pestanas = computed(() => {
+    const p: { id: Pestana; texto: string }[] = [
+      { id: 'resumen', texto: 'Resumen' },
+      { id: 'sesiones', texto: 'Sesiones' },
+    ];
+    if (this.esProfesional()) p.push({ id: 'notas', texto: 'Notas' });
+    p.push({ id: 'datos', texto: this.puedeEditar() ? 'Editar datos' : 'Datos' });
+    return p;
+  });
+
+  // ───────── Encabezado e indicadores ─────────
+
+  protected readonly color = computed(() =>
+    colorDisciplina(this.paciente()?.profesionales[0]?.disciplina),
+  );
+  protected readonly iniciales = computed(() => {
+    const p = this.paciente();
+    return p ? iniciales(p.nombre, p.apellido) : '';
+  });
+  protected readonly edad = computed(() => edad(this.paciente()?.fechaNacimiento));
+  protected readonly disciplinas = computed(() => [
+    ...new Set((this.paciente()?.profesionales ?? []).map((p) => p.disciplina)),
+  ]);
+  protected readonly whatsapp = computed(() => {
+    const p = this.paciente();
+    return enlaceWhatsApp(p?.telefono) ?? enlaceWhatsApp(p?.responsableTelefono);
+  });
+  /** Últimos 12 turnos con asistencia marcada, del más viejo al más nuevo. */
+  protected readonly puntos = computed(() =>
+    (this.historial()?.turnos ?? [])
+      .filter((t) => t.estado !== 'pendiente' && t.estado !== 'cancelado_profesional')
+      .slice(0, 12)
+      .reverse(),
+  );
+  protected readonly proximo = computed(() => {
+    const ahora = ahoraEn(this.auth.sesion()?.centro?.zonaHoraria);
+    const futuros = (this.historial()?.turnos ?? []).filter(
+      (t) =>
+        t.estado === 'pendiente' &&
+        (t.fecha > ahora.fecha || (t.fecha === ahora.fecha && minutos(t.horaFin) > ahora.minutos)),
+    );
+    return futuros.at(-1) ?? null; // el historial viene del más nuevo al más viejo
+  });
+  protected readonly porcentaje = computed(() => {
+    const p = this.historial()?.resumen.porcentajeAsistencia;
+    return p === null || p === undefined ? '—' : `${p}%`;
+  });
+  protected readonly sesionesDelMes = computed(() => {
+    const mes = ahoraEn(this.auth.sesion()?.centro?.zonaHoraria).fecha.slice(0, 7);
+    return (this.historial()?.turnos ?? []).filter(
+      (t) => t.fecha.startsWith(mes) && t.estado !== 'cancelado_profesional',
+    ).length;
+  });
+  protected readonly nombreEstado = NOMBRE_ESTADO;
+  protected readonly fechaLarga = fechaLarga;
+  protected readonly colorDe = colorDisciplina;
+  protected readonly inicialesDe = iniciales;
+  /** "2026-05-13" → "13/05/2026". */
+  protected readonly fechaCorta = (f: string | null) => (f ? f.split('-').reverse().join('/') : '—');
+
+  protected elegirPestana(p: Pestana): void {
+    this.pestana.set(p);
+    this.guardado.set(false);
+  }
 
   protected readonly form = inject(NonNullableFormBuilder).group(
     {
@@ -74,7 +154,10 @@ export class PacienteFicha implements OnInit {
         this.id() ? this.api.obtener(this.id()!) : Promise.resolve(null),
       ]);
       this.profesionales.set(profesionales);
-      if (paciente) this.mostrar(paciente);
+      if (paciente) {
+        this.mostrar(paciente);
+        void this.cargarHistorial(paciente.id);
+      }
     } catch (e) {
       this.error.set(mensajeDeError(e, 'No se pudo cargar el paciente.'));
     } finally {
@@ -139,6 +222,14 @@ export class PacienteFicha implements OnInit {
       this.mostrar(await this.api.actualizar(actual.id, { activo: !actual.activo }));
     } catch (e) {
       this.error.set(mensajeDeError(e));
+    }
+  }
+
+  private async cargarHistorial(id: string): Promise<void> {
+    try {
+      this.historial.set(await this.asistenciaApi.historial(id));
+    } catch {
+      this.historial.set(null);
     }
   }
 

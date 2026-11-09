@@ -1,141 +1,283 @@
-<main class="pagina">
+<main class="oc-contenido ficha">
   <a routerLink="/pacientes" class="volver">← Pacientes</a>
 
   @if (cargando()) {
-    <p class="sutil">Cargando…</p>
-  } @else {
-    <div class="encabezado">
-      <h1>
-        @if (paciente(); as p) {
-          {{ p.apellido }}, {{ p.nombre }}
-          @if (!p.activo) {
-            <span class="etiqueta">De baja</span>
+    <p class="oc-suave">Cargando…</p>
+  } @else if (esAlta()) {
+    <h1 class="ficha__titulo">Nuevo paciente</h1>
+    <ng-container *ngTemplateOutlet="formulario" />
+  } @else if (paciente(); as p) {
+    <!-- Encabezado -->
+    <section class="ficha__hero" [attr.data-color]="color()">
+      <span class="ficha__avatar" [attr.data-color]="color()" aria-hidden="true">{{ iniciales() }}</span>
+      <div class="ficha__quien">
+        <h1 class="ficha__titulo">{{ p.nombre }} {{ p.apellido }}</h1>
+        <div class="ficha__chips">
+          @if (edad() !== null) {
+            <span class="ficha__chip">{{ edad() }} {{ edad() === 1 ? 'año' : 'años' }}</span>
           }
-        } @else {
-          Nuevo paciente
+          @for (d of disciplinas(); track d) {
+            <span class="ficha__chip" [attr.data-color]="colorDe(d)">{{ d }}</span>
+          }
+          <span class="ficha__chip">
+            {{ p.financiador?.nombre ?? 'Particular' }}{{ p.nroAfiliado ? ' · ' + p.nroAfiliado : '' }}
+          </span>
+          @if (p.tieneCud) {
+            <span class="ficha__chip">CUD{{ p.cudVencimiento ? ' hasta ' + fechaCorta(p.cudVencimiento) : '' }}</span>
+          }
+          <span class="oc-estado" [class]="p.activo ? 'oc-estado--ok' : 'oc-estado--error'">
+            {{ p.activo ? 'En tratamiento' : 'De baja' }}
+          </span>
+        </div>
+      </div>
+      <div class="ficha__acciones">
+        @if (whatsapp(); as wa) {
+          <a class="oc-btn" [href]="wa" target="_blank" rel="noopener">
+            <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 11.5a8.5 8.5 0 0 1-12.6 7.4L3 20.5l1.6-5.2A8.5 8.5 0 1 1 21 11.5z" />
+            </svg>
+            WhatsApp
+          </a>
         }
-      </h1>
-      @if (paciente() && puedeEditar()) {
-        <button type="button" class="enlace" (click)="alternarActivo()">
-          {{ paciente()!.activo ? 'Dar de baja' : 'Reactivar' }}
+        <a routerLink="/agenda" class="oc-btn oc-btn--primario">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          Nuevo turno
+        </a>
+      </div>
+    </section>
+
+    <!-- Indicadores -->
+    <div class="ficha__indicadores">
+      <div class="oc-tarjeta oc-tarjeta--interactiva">
+        <div class="oc-kpi__titulo">Asistencia</div>
+        <div class="oc-kpi__valor">
+          {{ porcentaje() }}
+        </div>
+        <div class="ficha__puntos" aria-label="Últimas sesiones">
+          @for (t of puntos(); track t.id) {
+            <span
+              class="ficha__punto"
+              [attr.data-estado]="t.estado"
+              [title]="fechaCorta(t.fecha) + ': ' + nombreEstado[t.estado]"
+            ></span>
+          } @empty {
+            <span class="oc-suave ficha__nota">Todavía no hay sesiones marcadas.</span>
+          }
+        </div>
+      </div>
+      <div class="oc-tarjeta oc-tarjeta--destacada">
+        <div class="oc-kpi__titulo">Próximo turno</div>
+        @if (proximo(); as t) {
+          <div class="ficha__proximo oc-mono">{{ fechaCorta(t.fecha).slice(0, 5) }} {{ t.hora }}</div>
+          <div class="oc-suave ficha__nota">
+            {{ t.profesional.apellido }}{{ t.sala ? ' · ' + t.sala.nombre : '' }}
+          </div>
+        } @else {
+          <div class="ficha__proximo oc-mono">—</div>
+          <div class="oc-suave ficha__nota">Sin turnos agendados.</div>
+        }
+      </div>
+      <div class="oc-tarjeta oc-tarjeta--interactiva">
+        <div class="oc-kpi__titulo">Sesiones este mes</div>
+        <div class="oc-kpi__valor">{{ sesionesDelMes() }}</div>
+        <div class="oc-suave ficha__nota">sin contar las canceladas</div>
+      </div>
+    </div>
+
+    <!-- Pestañas -->
+    <div class="oc-pestanas" role="tablist" aria-label="Secciones de la ficha">
+      @for (x of pestanas(); track x.id) {
+        <button
+          type="button"
+          role="tab"
+          [attr.aria-selected]="pestana() === x.id"
+          (click)="elegirPestana(x.id)"
+        >
+          {{ x.texto }}
         </button>
       }
     </div>
 
-    <form class="panel grilla-form" [formGroup]="form" (ngSubmit)="guardar()" novalidate>
-      <h2 class="campo--completo">Datos personales</h2>
-      <label class="campo">
-        <span>Nombre</span>
+    @switch (pestana()) {
+      @case ('resumen') {
+        <div class="ficha__resumen">
+          <section class="oc-tarjeta" aria-labelledby="dat-t">
+            <h2 id="dat-t">Datos</h2>
+            <dl class="ficha__datos">
+              <dt>DNI</dt>
+              <dd class="oc-mono">{{ p.dni ?? '—' }}</dd>
+              <dt>Nacimiento</dt>
+              <dd>{{ fechaCorta(p.fechaNacimiento) }}</dd>
+              <dt>Teléfono</dt>
+              <dd>{{ p.telefono ?? '—' }}</dd>
+              <dt>Email</dt>
+              <dd>{{ p.email ?? '—' }}</dd>
+              @if (p.responsableNombre || p.responsableTelefono) {
+                <dt>Responsable</dt>
+                <dd>
+                  {{ p.responsableNombre ?? '' }}{{ p.responsableTelefono ? ' · ' + p.responsableTelefono : '' }}
+                </dd>
+              }
+              <dt>Cobertura</dt>
+              <dd>
+                {{ p.financiador?.nombre ?? 'Particular' }}{{ p.nroAfiliado ? ' · N.º ' + p.nroAfiliado : '' }}
+              </dd>
+              <dt>CUD</dt>
+              <dd>{{ p.tieneCud ? 'Sí' + (p.cudVencimiento ? ', vence ' + fechaCorta(p.cudVencimiento) : '') : 'No' }}</dd>
+            </dl>
+          </section>
+          <section class="oc-tarjeta ficha__equipo" aria-labelledby="eq-t">
+            <h2 id="eq-t">Equipo tratante</h2>
+            @for (prof of p.profesionales; track prof.id) {
+              <div class="ficha__miembro">
+                <span class="ficha__avatar ficha__avatar--chico" [attr.data-color]="colorDe(prof.disciplina)">
+                  {{ inicialesDe(prof.nombre, prof.apellido) }}
+                </span>
+                <div>
+                  <div class="ficha__nombre">{{ prof.nombre }} {{ prof.apellido }}</div>
+                  <div class="oc-suave ficha__nota">{{ prof.disciplina }}</div>
+                </div>
+              </div>
+            } @empty {
+              <p class="oc-suave">Todavía no tiene profesionales asignados.</p>
+            }
+          </section>
+        </div>
+      }
+      @case ('sesiones') {
+        <app-asistencia-paciente [pacienteId]="p.id" [historial]="historial()" />
+      }
+      @case ('notas') {
+        <app-notas-paciente [pacienteId]="p.id" />
+      }
+      @case ('datos') {
+        <ng-container *ngTemplateOutlet="formulario" />
+      }
+    }
+  } @else if (error(); as mensaje) {
+    <p class="oc-alerta oc-alerta--error" role="alert">{{ mensaje }}</p>
+  }
+</main>
+
+<ng-template #formulario>
+  <form class="oc-tarjeta ficha__form" [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+    @if (paciente(); as p) {
+      @if (puedeEditar()) {
+        <div class="ficha__form-cabecera">
+          <h2>Datos personales</h2>
+          <button type="button" class="oc-btn oc-btn--chico" [class.oc-btn--peligro]="p.activo" (click)="alternarActivo()">
+            {{ p.activo ? 'Dar de baja' : 'Reactivar' }}
+          </button>
+        </div>
+      } @else {
+        <h2>Datos personales</h2>
+      }
+    } @else {
+      <h2>Datos personales</h2>
+    }
+    <div class="ficha__campos">
+      <label class="oc-campo">
+        Nombre
         <input formControlName="nombre" autocomplete="off" />
       </label>
-      <label class="campo">
-        <span>Apellido</span>
+      <label class="oc-campo">
+        Apellido
         <input formControlName="apellido" autocomplete="off" />
       </label>
-      <label class="campo">
-        <span>DNI</span>
+      <label class="oc-campo">
+        DNI
         <input formControlName="dni" inputmode="numeric" placeholder="Opcional" />
         @if (form.controls.dni.touched && form.controls.dni.invalid) {
-          <small class="campo__error">Solo números (puede llevar puntos).</small>
+          <small class="oc-campo__error">Solo números (puede llevar puntos).</small>
         }
       </label>
-      <label class="campo">
-        <span>Fecha de nacimiento</span>
+      <label class="oc-campo">
+        Fecha de nacimiento
         <input type="date" formControlName="fechaNacimiento" />
       </label>
-      <label class="campo">
-        <span>Teléfono</span>
+      <label class="oc-campo">
+        Teléfono
         <input type="tel" formControlName="telefono" />
       </label>
-      <label class="campo">
-        <span>Email</span>
+      <label class="oc-campo">
+        Email
         <input type="email" formControlName="email" />
         @if (form.controls.email.touched && form.controls.email.invalid) {
-          <small class="campo__error">Email inválido.</small>
+          <small class="oc-campo__error">Email inválido.</small>
         }
       </label>
+    </div>
 
-      <h2 class="campo--completo">Responsable o tutor</h2>
-      <label class="campo">
-        <span>Nombre</span>
+    <h2>Responsable o tutor</h2>
+    <div class="ficha__campos">
+      <label class="oc-campo">
+        Nombre
         <input formControlName="responsableNombre" placeholder="Para pacientes menores" />
       </label>
-      <label class="campo">
-        <span>Teléfono</span>
+      <label class="oc-campo">
+        Teléfono
         <input type="tel" formControlName="responsableTelefono" />
       </label>
+    </div>
 
-      <h2 class="campo--completo">Cobertura</h2>
-      <label class="campo">
-        <span>N.º de afiliado</span>
+    <h2>Cobertura</h2>
+    <div class="ficha__campos">
+      <label class="oc-campo">
+        N.º de afiliado
         <input formControlName="nroAfiliado" placeholder="Opcional" />
       </label>
-      <div class="campo">
-        <label class="check">
+      <div class="oc-campo">
+        <label class="oc-check">
           <input type="checkbox" formControlName="tieneCud" />
           Tiene CUD
         </label>
         @if (form.controls.tieneCud.value) {
-          <label class="campo">
-            <span>Vencimiento del CUD</span>
+          <label class="oc-campo">
+            Vencimiento del CUD
             <input type="date" formControlName="cudVencimiento" />
           </label>
         }
       </div>
-      <p class="sutil campo--completo">
-        Las obras sociales y prepagas se cargan en un paso próximo.
-      </p>
+    </div>
+    <p class="oc-suave ficha__nota">Las obras sociales y prepagas se cargan en un paso próximo.</p>
 
-      @if (puedeEditar()) {
-        <h2 class="campo--completo">Profesionales que lo atienden</h2>
-        <div class="campo--completo opciones">
-          @for (prof of profesionales(); track prof.id) {
-            <label class="check">
-              <input
-                type="checkbox"
-                [checked]="asignados().has(prof.id)"
-                (change)="alternarProfesional(prof.id)"
-              />
-              {{ prof.apellido }}, {{ prof.nombre }}
-              <span class="sutil">· {{ prof.disciplina }}</span>
-            </label>
-          } @empty {
-            <p class="sutil">No hay profesionales cargados.</p>
-          }
-        </div>
-      } @else if (paciente(); as p) {
-        <h2 class="campo--completo">Profesionales que lo atienden</h2>
-        <p class="campo--completo">
-          @for (prof of p.profesionales; track prof.id; let ultimo = $last) {
-            {{ prof.apellido }}, {{ prof.nombre }}{{ ultimo ? '' : ' · ' }}
-          }
-        </p>
-      }
-
-      @if (form.touched && form.invalid) {
-        <small class="campo__error campo--completo">Revisá los datos marcados.</small>
-      }
-      @if (error(); as mensaje) {
-        <p class="aviso aviso--error campo--completo" role="alert">{{ mensaje }}</p>
-      }
-      @if (guardado()) {
-        <p class="aviso aviso--ok campo--completo" role="status">Cambios guardados.</p>
-      }
-
-      @if (puedeEditar()) {
-        <div class="acciones campo--completo">
-          <button type="submit" class="boton" [disabled]="guardando()">
-            {{ guardando() ? 'Guardando…' : esAlta() ? 'Crear paciente' : 'Guardar cambios' }}
-          </button>
-        </div>
-      }
-    </form>
-
-    @if (paciente(); as p) {
-      @if (esProfesional()) {
-        <app-notas-paciente [pacienteId]="p.id" />
-      }
-      <app-asistencia-paciente [pacienteId]="p.id" />
+    @if (puedeEditar()) {
+      <h2>Profesionales que lo atienden</h2>
+      <div class="ficha__opciones">
+        @for (prof of profesionales(); track prof.id) {
+          <label class="oc-check">
+            <input
+              type="checkbox"
+              [checked]="asignados().has(prof.id)"
+              (change)="alternarProfesional(prof.id)"
+            />
+            {{ prof.apellido }}, {{ prof.nombre }}
+            <span class="oc-suave">· {{ prof.disciplina }}</span>
+          </label>
+        } @empty {
+          <p class="oc-suave">No hay profesionales cargados.</p>
+        }
+      </div>
     }
-  }
-</main>
+
+    @if (form.touched && form.invalid) {
+      <small class="oc-campo__error">Revisá los datos marcados.</small>
+    }
+    @if (error(); as mensaje) {
+      <p class="oc-alerta oc-alerta--error" role="alert">{{ mensaje }}</p>
+    }
+    @if (guardado()) {
+      <p class="oc-alerta oc-alerta--ok" role="status">Cambios guardados.</p>
+    }
+
+    @if (puedeEditar()) {
+      <div>
+        <button type="submit" class="oc-btn oc-btn--primario" [disabled]="guardando()">
+          {{ guardando() ? 'Guardando…' : esAlta() ? 'Crear paciente' : 'Guardar cambios' }}
+        </button>
+      </div>
+    }
+  </form>
+</ng-template>
