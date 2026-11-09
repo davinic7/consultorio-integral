@@ -484,3 +484,52 @@ input:disabled {
     }
   }
 }
+
+// ───────── Asistencia ─────────
+
+/** Estado de asistencia de un turno, como etiqueta. */
+.estado-turno {
+  padding: 0.05rem 0.45rem;
+  border-radius: 0.25rem;
+  font-weight: normal;
+  background: var(--fondo);
+
+  &[data-estado='presente'] {
+    background: var(--ok);
+  }
+  &[data-estado='ausente_con_aviso'] {
+    background: var(--alerta);
+  }
+  &[data-estado='ausente_sin_aviso'],
+  &[data-estado='cancelado_profesional'] {
+    background: var(--error);
+    color: var(--error-texto);
+  }
+}
+
+.resumen-asistencia {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  margin: 0.5rem 0;
+}
+
+// ───────── Impresión ─────────
+// Al imprimir (planilla de asistencia) solo queda el contenido de la página.
+
+@media print {
+  :root {
+    --fondo: #fff;
+    --superficie: #fff;
+    --texto: #000;
+    --borde: #999;
+  }
+  body {
+    background: #fff;
+  }
+  .barra,
+  .volver,
+  .no-imprimir {
+    display: none !important;
+  }
+}

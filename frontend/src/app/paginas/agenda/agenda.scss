@@ -254,3 +254,64 @@
     margin: 0;
   }
 }
+
+// ───────── Asistencia ─────────
+// Colores por estado: verde presente, ámbar con aviso, rojo sin aviso.
+.turno {
+  &[data-estado='presente'] {
+    --estado-color: #2e8b57;
+  }
+  &[data-estado='ausente_con_aviso'] {
+    --estado-color: #c98a1b;
+  }
+  &[data-estado='ausente_sin_aviso'] {
+    --estado-color: #c0392b;
+  }
+  &[data-estado='presente'],
+  &[data-estado='ausente_con_aviso'],
+  &[data-estado='ausente_sin_aviso'] {
+    border-color: color-mix(in srgb, var(--estado-color) 55%, transparent);
+    border-left-color: var(--estado-color);
+    background: color-mix(in srgb, var(--estado-color) 16%, var(--superficie));
+  }
+  &[data-estado='ausente_con_aviso'],
+  &[data-estado='ausente_sin_aviso'] {
+    opacity: 0.8;
+  }
+}
+
+.turno__estado {
+  font-weight: normal;
+}
+
+.asistencia {
+  margin: 1rem 0;
+  padding: 0.75rem;
+  border: 1px solid var(--borde);
+  border-radius: 0.5rem;
+
+  h3 {
+    margin: 0 0 0.5rem;
+    font-size: 1rem;
+  }
+
+  &__botones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+}
+
+.boton--asistencia {
+  flex: 1 1 8rem;
+  background: var(--superficie);
+  color: var(--texto);
+  border: 1px solid var(--borde);
+
+  &.elegido {
+    background: var(--primario);
+    color: var(--primario-texto);
+    border-color: var(--primario);
+  }
+}

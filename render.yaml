@@ -22,6 +22,10 @@ services:
       # Firma de los tokens: Render genera un valor al azar.
       - key: JWT_SECRET
         generateValue: true
+      # Clave maestra de las notas clínicas cifradas. Render la genera una vez;
+      # no cambiarla: las notas guardadas quedarían ilegibles.
+      - key: DATOS_CLAVE_MAESTRA
+        generateValue: true
       # Primer superadmin: Render los pide al crear el Blueprint (no quedan en git).
       - key: SUPERADMIN_EMAIL
         sync: false

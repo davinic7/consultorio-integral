@@ -131,6 +131,7 @@
                 class="turno"
                 [class.turno--ocupado]="!t"
                 [class.turno--recurrente]="t?.recurrenciaId"
+                [attr.data-estado]="t?.estado"
                 [style.top.px]="b.top"
                 [style.height.px]="b.alto"
                 [style.left.%]="b.izquierda"
@@ -139,7 +140,12 @@
                 (click)="verTurno(t, $event)"
               >
                 @if (t) {
-                  <strong>{{ t.hora }} {{ t.paciente.apellido }}</strong>
+                  <strong>
+                    {{ t.hora }} {{ t.paciente.apellido }}
+                    @if (t.estado !== 'pendiente') {
+                      <span class="turno__estado">· {{ nombreEstado[t.estado] }}</span>
+                    }
+                  </strong>
                   <span>
                     {{ t.profesional.apellido }}
                     @if (t.sala && vista() !== 'salas') {
@@ -187,6 +193,53 @@
                   <dd>{{ t.observaciones }}</dd>
                 }
               </dl>
+
+              <a class="enlace" [routerLink]="['/pacientes', t.paciente.id]">
+                Ver ficha del paciente{{ esProfesional() ? ' y notas' : '' }}
+              </a>
+
+              <section class="asistencia" aria-label="Asistencia">
+                <h3>
+                  Asistencia:
+                  <span class="estado-turno" [attr.data-estado]="t.estado">
+                    {{ nombreEstado[t.estado] }}
+                  </span>
+                </h3>
+                @if (puedeMarcar(t)) {
+                  <div class="asistencia__botones">
+                    @for (e of estadosMarcables; track e) {
+                      <button
+                        type="button"
+                        class="boton boton--asistencia"
+                        [attr.data-estado]="e"
+                        [class.elegido]="t.estado === e"
+                        [attr.aria-pressed]="t.estado === e"
+                        [disabled]="guardando() || !sePuedeMarcar(e, t.inicio)"
+                        (click)="marcar(e)"
+                      >
+                        {{ nombreEstado[e] }}
+                      </button>
+                    }
+                  </div>
+                  @if (t.estado !== 'pendiente') {
+                    <button
+                      type="button"
+                      class="enlace"
+                      [disabled]="guardando()"
+                      (click)="marcar('pendiente')"
+                    >
+                      Volver a pendiente (para corregir, mover o cancelar)
+                    </button>
+                  } @else if (!sePuedeMarcar('presente', t.inicio)) {
+                    <p class="sutil">
+                      Presente y ausente sin aviso se marcan cuando empieza el turno.
+                    </p>
+                  }
+                }
+                @if (errorPanel(); as mensaje) {
+                  <p class="aviso aviso--error" role="alert">{{ mensaje }}</p>
+                }
+              </section>
 
               @if (puedeGestionar(t)) {
                 <div class="acciones">

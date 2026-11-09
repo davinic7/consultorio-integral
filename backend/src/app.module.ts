@@ -2,11 +2,13 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { AsistenciaModule } from './asistencia/asistencia.js';
 import { AuthModule } from './auth/auth.module.js';
 import { AvisosModule } from './avisos/avisos.js';
 import { CentrosModule } from './centros/centros.module.js';
 import { validateEnv } from './config/env.js';
 import { HealthModule } from './health/health.module.js';
+import { NotasModule } from './notas/notas.js';
 import { PacientesModule } from './pacientes/pacientes.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { ProfesionalesModule } from './profesionales/profesionales.js';
@@ -29,6 +31,8 @@ import { UsuariosModule } from './usuarios/usuarios.module.js';
     PacientesModule,
     AvisosModule,
     TurnosModule,
+    AsistenciaModule,
+    NotasModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

@@ -11,6 +11,12 @@ export const envSchema = z.object({
   CORS_ORIGINS: z.string().default('http://localhost:4200'),
   /** Clave para firmar los access tokens (JWT). Mínimo 32 caracteres, al azar. */
   JWT_SECRET: z.string().min(32, 'debe tener al menos 32 caracteres'),
+  /**
+   * Clave maestra que protege las claves de datos de cada centro (notas
+   * clínicas cifradas). Mínimo 32 caracteres, al azar. Si se pierde o se cambia,
+   * las notas guardadas quedan ilegibles: guardarla aparte de la base.
+   */
+  DATOS_CLAVE_MAESTRA: z.string().min(32, 'debe tener al menos 32 caracteres'),
   /** Vida del access token, en segundos (15 minutos por defecto). */
   ACCESS_TOKEN_TTL_SEG: z.coerce.number().int().positive().default(900),
   /** Vida del refresh token, en días. */

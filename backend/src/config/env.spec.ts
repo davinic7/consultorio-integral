@@ -3,6 +3,7 @@ import { validateEnv } from './env.js';
 const BASE = {
   DATABASE_URL: 'postgresql://u:p@localhost:5432/db',
   JWT_SECRET: 'x'.repeat(32),
+  DATOS_CLAVE_MAESTRA: 'y'.repeat(32),
 };
 
 describe('validateEnv', () => {

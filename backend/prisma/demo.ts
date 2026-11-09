@@ -9,7 +9,7 @@
  *   profesional@demo.local  profesional en Centro Demo y recepción en Centro Demo Norte
  */
 import 'dotenv/config';
-import { PrismaPg } from '@prisma/adapter-pg';
+import { adaptadorPg } from '../src/prisma/adaptador.js';
 import { hashPassword } from '../src/auth/password.js';
 import { PrismaClient, Rol } from '../src/generated/prisma/client.js';
 
@@ -29,7 +29,7 @@ if (!password || password.length < 10) {
 }
 
 const prisma = new PrismaClient({
-  adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }),
+  adapter: adaptadorPg(process.env.DATABASE_URL!),
 });
 
 async function usuario(email: string, nombre: string, esSuperadmin = false) {

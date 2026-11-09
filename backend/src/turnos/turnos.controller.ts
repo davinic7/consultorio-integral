@@ -24,12 +24,14 @@ import {
   crearTurnoSchema,
   finalizarRecurrenciaSchema,
   listarTurnosSchema,
+  marcarAsistenciaSchema,
   moverTurnoSchema,
   rangoSchema,
   type CancelarTurnoDto,
   type CrearRecurrenciaDto,
   type CrearTurnoDto,
   type ListarTurnosDto,
+  type MarcarAsistenciaDto,
   type MoverTurnoDto,
 } from './turnos.schemas.js';
 import { TurnosService } from './turnos.service.js';
@@ -104,6 +106,29 @@ export class TurnosController {
     @Body({ schema: cancelarTurnoSchema }) dto: CancelarTurnoDto,
   ) {
     return this.turnos.cancelar(centroId, quien, id, dto);
+  }
+
+  /** Presente, ausente con o sin aviso, o de vuelta a pendiente para corregir. */
+  @Post(':id/asistencia')
+  @HttpCode(HttpStatus.OK)
+  @ApiBodyZod(marcarAsistenciaSchema)
+  marcarAsistencia(
+    @CentroActual() centroId: string,
+    @UsuarioActual() quien: UsuarioAutenticado,
+    @Param('id', { schema: idParam }) id: string,
+    @Body({ schema: marcarAsistenciaSchema }) dto: MarcarAsistenciaDto,
+  ) {
+    return this.turnos.marcarAsistencia(centroId, quien, id, dto);
+  }
+
+  /** Quién cambió la asistencia del turno y cuándo. */
+  @Get(':id/asistencia/cambios')
+  cambiosDeAsistencia(
+    @CentroActual() centroId: string,
+    @UsuarioActual() quien: UsuarioAutenticado,
+    @Param('id', { schema: idParam }) id: string,
+  ) {
+    return this.turnos.cambiosDeAsistencia(centroId, quien, id);
   }
 }
 

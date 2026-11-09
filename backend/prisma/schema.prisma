@@ -123,23 +123,27 @@ model Centro {
   planId      String   @map("plan_id") @db.Uuid
   zonaHoraria String   @default("America/Argentina/Catamarca") @map("zona_horaria") @db.VarChar(60)
   activo      Boolean  @default(true)
+  /// Clave de datos del centro (AES-256) para cifrar notas clínicas, guardada
+  /// cifrada con DATOS_CLAVE_MAESTRA. Se crea con la primera nota.
+  claveDatos  String?  @map("clave_datos") @db.VarChar(200)
   creadoEn    DateTime @default(now()) @map("creado_en") @db.Timestamptz(3)
 
-  plan          Plan                  @relation(fields: [planId], references: [id], onDelete: Restrict)
-  miembros      Miembro[]
-  profesionales Profesional[]
-  salas         Sala[]
-  financiadores Financiador[]
-  pacientes     Paciente[]
-  pacienteProfs PacienteProfesional[]
-  recurrencias  Recurrencia[]
-  turnos        Turno[]
-  prestaciones  Prestacion[]
-  pagos         Pago[]
-  liquidaciones Liquidacion[]
-  notasSesion   NotaSesion[]
-  sesiones      Sesion[]
-  avisos        Aviso[]
+  plan              Plan                  @relation(fields: [planId], references: [id], onDelete: Restrict)
+  miembros          Miembro[]
+  profesionales     Profesional[]
+  salas             Sala[]
+  financiadores     Financiador[]
+  pacientes         Paciente[]
+  pacienteProfs     PacienteProfesional[]
+  recurrencias      Recurrencia[]
+  turnos            Turno[]
+  prestaciones      Prestacion[]
+  pagos             Pago[]
+  liquidaciones     Liquidacion[]
+  notasSesion       NotaSesion[]
+  cambiosAsistencia CambioAsistencia[]
+  sesiones          Sesion[]
+  avisos            Aviso[]
 
   @@map("centros")
 }
@@ -157,12 +161,13 @@ model Usuario {
   creadoEn      DateTime @default(now()) @map("creado_en") @db.Timestamptz(3)
   actualizadoEn DateTime @updatedAt @map("actualizado_en") @db.Timestamptz(3)
 
-  miembros        Miembro[]
-  profesionales   Profesional[]
-  sesiones        Sesion[]
-  turnosCreados   Turno[]       @relation("TurnosCreados")
-  avisosRecibidos Aviso[]       @relation("AvisosRecibidos")
-  avisosEnviados  Aviso[]       @relation("AvisosEnviados")
+  miembros          Miembro[]
+  profesionales     Profesional[]
+  sesiones          Sesion[]
+  turnosCreados     Turno[]            @relation("TurnosCreados")
+  avisosRecibidos   Aviso[]            @relation("AvisosRecibidos")
+  avisosEnviados    Aviso[]            @relation("AvisosEnviados")
+  cambiosAsistencia CambioAsistencia[]
 
   @@map("usuarios")
 }
@@ -361,15 +366,16 @@ model Turno {
   /// Usuario que creó el turno.
   creadoPorId      String?          @map("creado_por_id") @db.Uuid
 
-  centro      Centro       @relation(fields: [centroId], references: [id], onDelete: Cascade)
-  creadoPor   Usuario?     @relation("TurnosCreados", fields: [creadoPorId], references: [id], onDelete: SetNull)
-  avisos      Aviso[]
-  paciente    Paciente     @relation(fields: [centroId, pacienteId], references: [centroId, id], onDelete: Restrict)
-  profesional Profesional  @relation(fields: [centroId, profesionalId], references: [centroId, id], onDelete: Restrict)
-  sala        Sala?        @relation(fields: [centroId, salaId], references: [centroId, id], onDelete: Restrict)
-  recurrencia Recurrencia? @relation(fields: [centroId, recurrenciaId], references: [centroId, id], onDelete: Restrict)
-  prestacion  Prestacion?
-  notasSesion NotaSesion[]
+  centro            Centro             @relation(fields: [centroId], references: [id], onDelete: Cascade)
+  creadoPor         Usuario?           @relation("TurnosCreados", fields: [creadoPorId], references: [id], onDelete: SetNull)
+  avisos            Aviso[]
+  paciente          Paciente           @relation(fields: [centroId, pacienteId], references: [centroId, id], onDelete: Restrict)
+  profesional       Profesional        @relation(fields: [centroId, profesionalId], references: [centroId, id], onDelete: Restrict)
+  sala              Sala?              @relation(fields: [centroId, salaId], references: [centroId, id], onDelete: Restrict)
+  recurrencia       Recurrencia?       @relation(fields: [centroId, recurrenciaId], references: [centroId, id], onDelete: Restrict)
+  prestacion        Prestacion?
+  notasSesion       NotaSesion[]
+  cambiosAsistencia CambioAsistencia[]
 
   @@unique([centroId, id])
   @@index([centroId, inicio])
@@ -410,6 +416,25 @@ model Aviso {
   @@unique([centroId, id])
   @@index([centroId, destinatarioId, leidoEn, creadoEn])
   @@map("avisos")
+}
+
+/// Registro de cada cambio de asistencia de un turno: quién, cuándo y de qué a qué.
+model CambioAsistencia {
+  id             String           @id @default(uuid(7)) @db.Uuid
+  centroId       String           @map("centro_id") @db.Uuid
+  turnoId        String           @map("turno_id") @db.Uuid
+  estadoAnterior EstadoAsistencia @map("estado_anterior")
+  estadoNuevo    EstadoAsistencia @map("estado_nuevo")
+  usuarioId      String?          @map("usuario_id") @db.Uuid
+  creadoEn       DateTime         @default(now()) @map("creado_en") @db.Timestamptz(3)
+
+  centro  Centro   @relation(fields: [centroId], references: [id], onDelete: Cascade)
+  turno   Turno    @relation(fields: [centroId, turnoId], references: [centroId, id], onDelete: Cascade)
+  usuario Usuario? @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+
+  @@unique([centroId, id])
+  @@index([centroId, turnoId, creadoEn])
+  @@map("cambios_asistencia")
 }
 
 /// Sesión asistida que se cobra o factura. Una por turno presente.
@@ -471,7 +496,8 @@ model Liquidacion {
 }
 
 /// Nota clínica. Privada del profesional salvo que se comparta con el equipo.
-/// El texto se guarda cifrado (AES-256-GCM, paso 6).
+/// El texto se guarda cifrado con la clave de datos del centro (AES-256-GCM,
+/// src/notas/cifrado.ts); la base nunca tiene el texto en claro.
 model NotaSesion {
   id            String   @id @default(uuid(7)) @db.Uuid
   centroId      String   @map("centro_id") @db.Uuid
@@ -481,6 +507,7 @@ model NotaSesion {
   texto         String
   compartida    Boolean  @default(false)
   creadaEn      DateTime @default(now()) @map("creada_en") @db.Timestamptz(3)
+  actualizadaEn DateTime @default(now()) @updatedAt @map("actualizada_en") @db.Timestamptz(3)
 
   centro      Centro      @relation(fields: [centroId], references: [id], onDelete: Cascade)
   turno       Turno?      @relation(fields: [centroId, turnoId], references: [centroId, id], onDelete: Restrict)

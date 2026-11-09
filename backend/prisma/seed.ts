@@ -3,7 +3,7 @@
  * Uso: npx prisma db seed
  */
 import 'dotenv/config';
-import { PrismaPg } from '@prisma/adapter-pg';
+import { adaptadorPg } from '../src/prisma/adaptador.js';
 import { Modulo, PrismaClient } from '../src/generated/prisma/client.js';
 
 const BASICO: Modulo[] = [Modulo.agenda, Modulo.asistencia, Modulo.pacientes];
@@ -37,7 +37,7 @@ const PLANES = [
 ];
 
 const prisma = new PrismaClient({
-  adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }),
+  adapter: adaptadorPg(process.env.DATABASE_URL!),
 });
 
 async function main() {

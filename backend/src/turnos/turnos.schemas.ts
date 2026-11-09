@@ -100,3 +100,16 @@ export const finalizarRecurrenciaSchema = z.object({
   /** Se cancelan los turnos pendientes desde esta fecha (incluida). */
   desde: fechaTexto,
 });
+
+/** Estados que se marcan a mano (la cancelación va por /cancelar). */
+export const ESTADOS_MARCABLES = [
+  'pendiente',
+  'presente',
+  'ausente_con_aviso',
+  'ausente_sin_aviso',
+] as const;
+
+export const marcarAsistenciaSchema = z.object({
+  estado: z.enum(ESTADOS_MARCABLES),
+});
+export type MarcarAsistenciaDto = z.infer<typeof marcarAsistenciaSchema>;

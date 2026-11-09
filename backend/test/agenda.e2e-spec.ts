@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { PrismaPg } from '@prisma/adapter-pg';
+import { adaptadorPg } from '../src/prisma/adaptador.js';
 import request from 'supertest';
 import type { App } from 'supertest/types.js';
 import { hashPassword } from '../src/auth/password.js';
@@ -39,7 +39,7 @@ describe.skipIf(!url)('Agenda y avisos (e2e)', () => {
     process.env.DATABASE_URL = url;
     process.env.LOGIN_LIMITE_POR_MIN = '1000';
     prisma = new PrismaClient({
-      adapter: new PrismaPg({ connectionString: url! }),
+      adapter: adaptadorPg(url!),
     });
     await prisma.$executeRawUnsafe(
       'TRUNCATE centros, planes, usuarios RESTART IDENTITY CASCADE',

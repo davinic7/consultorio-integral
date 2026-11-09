@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { PrismaPg } from '@prisma/adapter-pg';
+import { adaptadorPg } from '../src/prisma/adaptador.js';
 import { PrismaClient } from '../src/generated/prisma/client.js';
 import {
   clienteDeCentro,
@@ -35,7 +35,7 @@ describe.skipIf(!url)('Aislamiento entre centros (PostgreSQL)', () => {
 
   beforeAll(async () => {
     prisma = new PrismaClient({
-      adapter: new PrismaPg({ connectionString: url! }),
+      adapter: adaptadorPg(url!),
     });
     await prisma.$executeRawUnsafe(
       'TRUNCATE centros, planes, usuarios RESTART IDENTITY CASCADE',

@@ -121,4 +121,24 @@ Limitaciones conocidas:
   - Cada alta, cambio o cancelación hecha por un profesional crea un aviso para cada admin y recepcionista activo del centro (tabla `avisos`, uno por destinatario, con su propio estado de lectura).
   - Los cambios de admin y recepción no avisan.
   - El frontend consulta el contador cada minuto. Más adelante: notificaciones push en la app móvil.
-- **Estados:** solo se pueden mover y cancelar turnos pendientes. Marcar la asistencia es el paso 6.
+- **Estados:** solo se pueden mover y cancelar turnos pendientes (si ya tiene asistencia, primero se vuelve a pendiente).
+- **Zona horaria de la conexión:** el adaptador de Prisma para PostgreSQL manda y lee las fechas `timestamptz` como hora "de pared". Si la base corre en otra zona (una instalación local en Argentina, por ejemplo), cada fecha quedaba corrida tres horas: la app no lo notaba porque el corrimiento iba y volvía, pero sí cualquier consulta directa y los `now()` de la base. Toda conexión abre la sesión en UTC ([src/prisma/adaptador.ts](../backend/src/prisma/adaptador.ts)). Render corre en UTC, así que producción no estaba afectada.
+
+## 12. Asistencia y notas de sesión (paso 6)
+
+- **Quién marca la asistencia:** admin y recepción, cualquier turno; el profesional, solo los suyos (decisión del usuario). `POST /turnos/:id/asistencia` con `presente`, `ausente_con_aviso`, `ausente_sin_aviso` o `pendiente` (para corregir). La cancelación sigue por `/cancelar`.
+- **Cuándo:** "presente" y "ausente sin aviso", desde que empieza el turno; "ausente con aviso" también antes, porque el aviso llega antes de la sesión.
+- **Correcciones:** se puede cambiar hasta que se cierre el mes, es decir, mientras la liquidación de ese profesional para ese mes no esté `cerrada` o `pagada` (paso 8). Después responde 409.
+- **Registro:** cada cambio (incluida la cancelación) queda en `cambios_asistencia`: estado anterior, nuevo, quién y cuándo (`GET /turnos/:id/asistencia/cambios`).
+- **Historial y planilla:** `GET /pacientes/:id/asistencia` (resumen y turnos) y `GET /pacientes/:id/planilla?mes=AAAA-MM` (fechas del mes sin los cancelados, con financiador y n.º de afiliado). El profesional ve solo sus turnos. La planilla se imprime desde el navegador, con columnas para firmar.
+- **Pacientes compartidos:** un paciente puede tener varios profesionales (`paciente_profesional`, desde el paso 4). Lo que se comparte entre ellos son las notas.
+- **Notas de sesión:**
+  - Son del profesional que las escribe. Privadas por defecto; si las comparte, las leen los demás profesionales que atienden al paciente.
+  - Admin y recepción no acceden a notas clínicas (403). Un profesional que no atiende al paciente recibe 404.
+  - Solo el autor edita la suya. No se borran.
+- **Cifrado** ([src/notas/cifrado.ts](../backend/src/notas/cifrado.ts), portado de `crypto.php`):
+  - AES-256-GCM. Cada centro tiene su clave de datos (32 bytes al azar), creada con la primera nota y guardada en `centros.clave_datos`, cifrada con la clave maestra `DATOS_CLAVE_MAESTRA`, que vive fuera de la base.
+  - Con un volcado de la base no alcanza para leer las notas.
+  - Cada texto se cifra atado a su centro, paciente y autor: copiado a otra fila, no se descifra.
+  - **Si se pierde o se cambia `DATOS_CLAVE_MAESTRA`, las notas guardadas quedan ilegibles.** Hay que guardarla aparte (en Render la genera el Blueprint).
+  - Diferencia con la referencia PHP: allá la clave era por profesional; acá es por centro, porque las notas se comparten entre profesionales del mismo centro.

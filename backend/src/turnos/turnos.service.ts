@@ -17,6 +17,7 @@ import {
 } from '../common/tiempo.js';
 import {
   EstadoAsistencia,
+  EstadoLiquidacion,
   Prisma,
   Rol,
   TipoAviso,
@@ -29,6 +30,7 @@ import {
   type CrearRecurrenciaDto,
   type CrearTurnoDto,
   type ListarTurnosDto,
+  type MarcarAsistenciaDto,
   type MoverTurnoDto,
 } from './turnos.schemas.js';
 
@@ -284,13 +286,23 @@ export class TurnosService {
       .filter(Boolean)
       .join(' · ')
       .slice(0, 500);
-    const turno = await this.db(centroId).turno.update({
-      where: { id },
-      data: {
-        estadoAsistencia: EstadoAsistencia.cancelado_profesional,
-        observaciones: observaciones || null,
-      },
-      include: INCLUDE,
+    const turno = await this.db(centroId).$transaction(async (tx) => {
+      await tx.cambioAsistencia.create({
+        data: sinCentro<Prisma.CambioAsistenciaUncheckedCreateInput>({
+          turnoId: id,
+          estadoAnterior: actual.estadoAsistencia,
+          estadoNuevo: EstadoAsistencia.cancelado_profesional,
+          usuarioId: a.usuarioId,
+        }),
+      });
+      return tx.turno.update({
+        where: { id },
+        data: {
+          estadoAsistencia: EstadoAsistencia.cancelado_profesional,
+          observaciones: observaciones || null,
+        },
+        include: INCLUDE,
+      });
     });
     await this.avisarSiProfesional(
       a,
@@ -299,6 +311,76 @@ export class TurnosService {
       turno.id,
     );
     return vista(turno, a.zona);
+  }
+
+  /**
+   * Marca la asistencia (o la vuelve a pendiente para corregirla). Se puede
+   * corregir hasta que se cierre la liquidación del mes de ese profesional, y
+   * cada cambio queda registrado con quién y cuándo.
+   */
+  async marcarAsistencia(
+    centroId: string,
+    quien: UsuarioAutenticado,
+    id: string,
+    dto: MarcarAsistenciaDto,
+  ) {
+    const a = await this.actor(centroId, quien);
+    const actual = await this.cargarPropio(a, id);
+    if (actual.estadoAsistencia === EstadoAsistencia.cancelado_profesional) {
+      throw new BadRequestException('El turno está cancelado');
+    }
+    const estado = EstadoAsistencia[dto.estado];
+    if (estado === actual.estadoAsistencia) return vista(actual, a.zona);
+
+    const yaEmpezo = actual.inicio.getTime() <= Date.now();
+    if (
+      !yaEmpezo &&
+      (estado === EstadoAsistencia.presente ||
+        estado === EstadoAsistencia.ausente_sin_aviso)
+    ) {
+      throw new BadRequestException(
+        'El turno todavía no empezó: solo se puede marcar "ausente con aviso"',
+      );
+    }
+    await this.exigirMesAbierto(a, actual);
+
+    const turno = await this.db(centroId).$transaction(async (tx) => {
+      await tx.cambioAsistencia.create({
+        data: sinCentro<Prisma.CambioAsistenciaUncheckedCreateInput>({
+          turnoId: id,
+          estadoAnterior: actual.estadoAsistencia,
+          estadoNuevo: estado,
+          usuarioId: a.usuarioId,
+        }),
+      });
+      return tx.turno.update({
+        where: { id },
+        data: { estadoAsistencia: estado },
+        include: INCLUDE,
+      });
+    });
+    return vista(turno, a.zona);
+  }
+
+  /** Cambios de asistencia de un turno, del más reciente al más viejo. */
+  async cambiosDeAsistencia(
+    centroId: string,
+    quien: UsuarioAutenticado,
+    id: string,
+  ) {
+    const a = await this.actor(centroId, quien);
+    await this.cargarPropio(a, id);
+    const cambios = await this.db(centroId).cambioAsistencia.findMany({
+      where: { turnoId: id },
+      include: { usuario: { select: { id: true, nombre: true } } },
+      orderBy: { creadoEn: 'desc' },
+    });
+    return cambios.map((c) => ({
+      estadoAnterior: c.estadoAnterior,
+      estadoNuevo: c.estadoNuevo,
+      usuario: c.usuario,
+      fecha: c.creadoEn.toISOString(),
+    }));
   }
 
   /**
@@ -487,6 +569,23 @@ export class TurnosService {
     if (t.estadoAsistencia !== EstadoAsistencia.pendiente) {
       throw new BadRequestException(
         'El turno ya tiene registrada la asistencia',
+      );
+    }
+  }
+
+  /** El mes del turno no puede tener cerrada la liquidación del profesional. */
+  private async exigirMesAbierto(a: Actor, t: TurnoCompleto): Promise<void> {
+    const mes = aLocal(t.inicio, a.zona).fecha.slice(0, 7);
+    const cerrada = await this.db(a.centroId).liquidacion.count({
+      where: {
+        profesionalId: t.profesionalId,
+        periodo: new Date(`${mes}-01T00:00:00Z`),
+        estado: { in: [EstadoLiquidacion.cerrada, EstadoLiquidacion.pagada] },
+      },
+    });
+    if (cerrada) {
+      throw new ConflictException(
+        'La liquidación de ese mes ya está cerrada: la asistencia no se puede cambiar',
       );
     }
   }

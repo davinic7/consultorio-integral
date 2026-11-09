@@ -55,6 +55,12 @@ export const routes: Routes = [
           import('./paginas/paciente-ficha/paciente-ficha').then((m) => m.PacienteFicha),
       },
       {
+        path: 'pacientes/:id/planilla',
+        canActivate: [conCentro],
+        title: 'Planilla de asistencia · Centro Integral',
+        loadComponent: () => import('./paginas/planilla/planilla').then((m) => m.Planilla),
+      },
+      {
         path: 'pacientes/:id',
         canActivate: [conCentro],
         title: 'Paciente · Centro Integral',

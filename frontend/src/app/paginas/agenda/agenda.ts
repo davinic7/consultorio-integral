@@ -1,5 +1,6 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import {
   mensajeDeError,
   PacientesApi,
@@ -7,7 +8,15 @@ import {
   SalasApi,
   TurnosApi,
 } from '../../core/api/api';
-import type { Ocupacion, Paciente, Profesional, Sala, Turno } from '../../core/api/modelos';
+import type {
+  EstadoMarcable,
+  Ocupacion,
+  Paciente,
+  Profesional,
+  Sala,
+  Turno,
+} from '../../core/api/modelos';
+import { ESTADOS_MARCABLES, NOMBRE_ESTADO, sePuedeMarcar } from '../../core/asistencia';
 import { AuthService } from '../../core/auth/auth.service';
 import {
   diaSemana,
@@ -62,7 +71,7 @@ interface FormTurno {
 
 @Component({
   selector: 'app-agenda',
-  imports: [FormsModule],
+  imports: [FormsModule, RouterLink],
   templateUrl: './agenda.html',
   styleUrl: './agenda.scss',
 })
@@ -235,6 +244,33 @@ export class Agenda implements OnInit {
   }
 
   // ───────── Panel ─────────
+
+  protected readonly nombreEstado = NOMBRE_ESTADO;
+  protected readonly estadosMarcables = ESTADOS_MARCABLES;
+  protected readonly sePuedeMarcar = sePuedeMarcar;
+
+  /** Admin y recepción marcan cualquier turno; el profesional, los suyos. */
+  protected puedeMarcar(t: Turno): boolean {
+    if (t.estado === 'cancelado_profesional') return false;
+    return !this.esProfesional() || t.profesional.id === this.miProfesional()?.id;
+  }
+
+  /** Marcado en un clic; tocar el estado elegido de nuevo no hace nada. */
+  protected async marcar(estado: EstadoMarcable): Promise<void> {
+    const t = this.seleccionado();
+    if (!t || t.estado === estado) return;
+    this.guardando.set(true);
+    this.errorPanel.set(null);
+    try {
+      const actualizado = await this.turnosApi.marcarAsistencia(t.id, estado);
+      this.seleccionado.set(actualizado);
+      this.turnos.update((lista) => lista.map((x) => (x.id === t.id ? actualizado : x)));
+    } catch (e) {
+      this.errorPanel.set(mensajeDeError(e));
+    } finally {
+      this.guardando.set(false);
+    }
+  }
 
   protected puedeGestionar(t: Turno): boolean {
     if (t.estado !== 'pendiente') return false;

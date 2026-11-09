@@ -72,6 +72,10 @@ Para volver a crear los usuarios demo (no borra nada): `cd backend && npm run db
 | Salas | [src/salas/salas.ts](../backend/src/salas/salas.ts) |
 | Profesionales (porcentaje visible según rol) | [src/profesionales/profesionales.ts](../backend/src/profesionales/profesionales.ts) |
 | Pacientes: búsqueda, alcance por rol, asignación | [src/pacientes/pacientes.ts](../backend/src/pacientes/pacientes.ts) |
+| Marcar asistencia, registro de cambios, mes cerrado | [src/turnos/turnos.service.ts](../backend/src/turnos/turnos.service.ts) (`marcarAsistencia`) |
+| Historial y planilla mensual | [src/asistencia/asistencia.ts](../backend/src/asistencia/asistencia.ts) |
+| Notas de sesión y quién las ve | [src/notas/notas.ts](../backend/src/notas/notas.ts) |
+| **Cifrado de notas** (AES-256-GCM, clave por centro) | [src/notas/cifrado.ts](../backend/src/notas/cifrado.ts) |
 | Búsqueda sin tildes | [src/common/texto.ts](../backend/src/common/texto.ts) |
 | Errores de base → HTTP (409, 404) | [src/common/prisma-errores.filter.ts](../backend/src/common/prisma-errores.filter.ts) |
 | Planes y módulos (seed) | [prisma/seed.ts](../backend/prisma/seed.ts) |
@@ -86,7 +90,7 @@ Para volver a crear los usuarios demo (no borra nada): `cd backend && npm run db
 | Renovación automática del token ante un 401 | [core/auth/auth.interceptor.ts](../frontend/src/app/core/auth/auth.interceptor.ts) |
 | Llamadas a la API | [core/api/api.ts](../frontend/src/app/core/api/api.ts) |
 | Barra y menú por rol | [paginas/shell/](../frontend/src/app/paginas/shell) |
-| Pantallas | [paginas/](../frontend/src/app/paginas) (login, elegir-centro, inicio, salas, profesionales, pacientes, paciente-ficha) |
+| Pantallas | [paginas/](../frontend/src/app/paginas) (login, elegir-centro, inicio, salas, profesionales, pacientes, paciente-ficha con asistencia y notas, agenda, planilla, avisos) |
 | Estilos (modo claro y oscuro) | [styles.scss](../frontend/src/styles.scss) |
 
 ### Decisiones y alcance
@@ -182,7 +186,23 @@ Marcá cada caso a medida que lo probás. "Esperado" es lo que tiene que pasar.
 - [ ] Entrar con `recepcion@demo.local` → tiene sus propios avisos sin leer: cada persona marca los suyos.
 - [ ] Los cambios que hacen admin o recepción **no** generan avisos.
 
-### 4.10 Celular
+### 4.10 Asistencia (admin o recepción)
+
+- [ ] En la agenda, tocar un turno de hoy que ya empezó → sección **Asistencia** → "Presente". El turno se pinta de verde; "Ausente con aviso" lo pinta ámbar y "Ausente sin aviso", rojo.
+- [ ] Un turno futuro → "Presente" y "Ausente sin aviso" están desactivados; "Ausente con aviso" sí se puede marcar.
+- [ ] Con la asistencia marcada, "Mover o editar" y "Cancelar" desaparecen → "Volver a pendiente" los habilita de nuevo.
+- [ ] "Ver ficha del paciente" → abajo, **Asistencia**: cantidad por estado, porcentaje y la lista de turnos.
+- [ ] En la ficha, elegir el mes → **Ver planilla** → fechas precargadas, obra social, n.º de afiliado y columna para firmar. "Imprimir" deja solo la planilla (sin menú). "Mes anterior" y "Mes siguiente" cambian el mes.
+
+### 4.11 Notas de sesión (profesional)
+
+- [ ] Entrar con `profesional@demo.local` → Pacientes → abrir uno → **Notas de sesión** → escribir una nota y "Agregar nota" → aparece como "Privada".
+- [ ] Escribir otra con "Compartir con el equipo" → aparece como "Compartida". "Editar" cambia el texto o si se comparte.
+- [ ] Con admin o recepción, la ficha del paciente **no** muestra notas.
+- [ ] En la base (sección 6), `SELECT texto FROM notas_sesion;` muestra solo texto cifrado (`v1:…`), nunca la nota.
+- [ ] Para probar el compartir entre profesionales hace falta un segundo profesional con cuenta, asignado al mismo paciente (hoy se vincula por API; las pantallas de usuarios son un pendiente).
+
+### 4.12 Celular
 
 - [ ] En el navegador, abrir las herramientas de desarrollo (F12) → modo dispositivo (Ctrl+Shift+M) → iPhone o similar. La barra se acomoda en varias líneas y no hay scroll horizontal.
 - [ ] Probar el modo oscuro del sistema: la app cambia de colores.
@@ -262,19 +282,18 @@ cd frontend && npx ng test --watch=false
 
 | Suite | Cantidad | Qué cubre |
 | --- | --- | --- |
-| Backend unitarios | 24 | variables de entorno, contraseñas, filtro por centro, búsqueda sin tildes, fechas y zonas horarias |
-| Backend e2e | 64 | auth y roles, ABM, agenda (superposición, pedidos simultáneos, semanales), avisos, permisos y aislamiento entre centros, contra PostgreSQL real |
-| Frontend | 18 | sesión, renovación de token, login, fechas y ubicación de turnos en el calendario |
+| Backend unitarios | 29 | variables de entorno, contraseñas, filtro por centro, búsqueda sin tildes, fechas y zonas horarias, cifrado de notas |
+| Backend e2e | 86 | auth y roles, ABM, agenda (superposición, pedidos simultáneos, semanales), avisos, asistencia (permisos, mes cerrado, registro de cambios), historial, planilla, notas cifradas y quién las ve, aislamiento entre centros, contra PostgreSQL real |
+| Frontend | 20 | sesión, renovación de token, login, fechas, ubicación de turnos en el calendario y cuándo se puede marcar asistencia |
 
 Los e2e usan la base `centro_integral_test` (`TEST_DATABASE_URL`), que se vacía en cada corrida: nunca tocan los datos de desarrollo.
 
-Lint: `npm run lint` en cada carpeta.
+Lint: `npm run lint` en cada carpeta. En esta PC, Windows (Control de aplicaciones) bloquea el ejecutable de las reglas con tipos del lint del backend; mientras tanto: `npx oxlint --ignore-pattern "src/generated/**" src/ test/`.
 
 ---
 
 ## 8. Limitaciones conocidas (todavía no hechas)
 
-- Marcar asistencia, historial y notas de sesión: paso 6.
 - Obras sociales y financiadores: paso 7 (el paciente ya tiene el campo, sin pantalla).
 - Pantallas para el superadmin (centros y planes) y para administrar usuarios del centro: hoy solo por API.
 - Cambio de rol o baja de un usuario: se aplica en como mucho 15 minutos (vida del access token).

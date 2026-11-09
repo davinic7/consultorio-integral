@@ -130,5 +130,12 @@
         </div>
       }
     </form>
+
+    @if (paciente(); as p) {
+      @if (esProfesional()) {
+        <app-notas-paciente [pacienteId]="p.id" />
+      }
+      <app-asistencia-paciente [pacienteId]="p.id" />
+    }
   }
 </main>

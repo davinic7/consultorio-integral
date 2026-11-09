@@ -128,3 +128,67 @@ export interface Aviso {
   leidoEn: string | null;
   autor: { id: string; nombre: string } | null;
 }
+
+/** Estados que se marcan a mano desde la agenda. */
+export type EstadoMarcable = Exclude<EstadoTurno, 'cancelado_profesional'>;
+
+export interface CambioAsistencia {
+  estadoAnterior: EstadoTurno;
+  estadoNuevo: EstadoTurno;
+  usuario: { id: string; nombre: string } | null;
+  fecha: string;
+}
+
+export interface TurnoDeHistorial {
+  id: string;
+  fecha: string;
+  hora: string;
+  horaFin: string;
+  estado: EstadoTurno;
+  profesional: { id: string; nombre: string; apellido: string; disciplina: string };
+  sala: { id: string; nombre: string } | null;
+  observaciones: string | null;
+}
+
+export interface HistorialAsistencia {
+  desde: string;
+  hasta: string;
+  resumen: Record<EstadoTurno, number> & { porcentajeAsistencia: number | null };
+  turnos: TurnoDeHistorial[];
+}
+
+export interface Planilla {
+  mes: string;
+  centro: string;
+  paciente: {
+    id: string;
+    nombre: string;
+    apellido: string;
+    dni: string | null;
+    financiador: { id: string; nombre: string; tipo: string } | null;
+    nroAfiliado: string | null;
+    tieneCud: boolean;
+  };
+  profesionales: { id: string; nombre: string; apellido: string; disciplina: string }[];
+  filas: {
+    turnoId: string;
+    fecha: string;
+    hora: string;
+    horaFin: string;
+    profesional: { id: string; nombre: string; apellido: string; disciplina: string };
+    estado: EstadoTurno;
+  }[];
+}
+
+/** Nota de sesión (el texto llega ya descifrado). */
+export interface Nota {
+  id: string;
+  texto: string;
+  compartida: boolean;
+  /** La escribí yo. */
+  propia: boolean;
+  profesional: { id: string; nombre: string; apellido: string; disciplina: string };
+  turno: { id: string; inicio: string } | null;
+  creadaEn: string;
+  actualizadaEn: string;
+}

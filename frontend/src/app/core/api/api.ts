@@ -4,6 +4,11 @@ import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import type {
   Aviso,
+  CambioAsistencia,
+  EstadoMarcable,
+  HistorialAsistencia,
+  Nota,
+  Planilla,
   DatosPaciente,
   DatosRecurrencia,
   DatosTurno,
@@ -128,6 +133,14 @@ export class TurnosApi {
       this.http.post<Turno>(`${API}/turnos/${id}/cancelar`, { motivo: motivo || undefined }),
     );
   }
+  marcarAsistencia(id: string, estado: EstadoMarcable) {
+    return firstValueFrom(this.http.post<Turno>(`${API}/turnos/${id}/asistencia`, { estado }));
+  }
+  cambiosAsistencia(id: string) {
+    return firstValueFrom(
+      this.http.get<CambioAsistencia[]>(`${API}/turnos/${id}/asistencia/cambios`),
+    );
+  }
   crearRecurrencia(datos: DatosRecurrencia) {
     return firstValueFrom(this.http.post<ResultadoRecurrencia>(`${API}/recurrencias`, datos));
   }
@@ -135,6 +148,42 @@ export class TurnosApi {
     return firstValueFrom(
       this.http.post<{ cancelados: number }>(`${API}/recurrencias/${id}/finalizar`, { desde }),
     );
+  }
+}
+
+@Injectable({ providedIn: 'root' })
+export class AsistenciaApi {
+  private readonly http = inject(HttpClient);
+
+  historial(pacienteId: string, desde?: string, hasta?: string) {
+    return firstValueFrom(
+      this.http.get<HistorialAsistencia>(`${API}/pacientes/${pacienteId}/asistencia`, {
+        params: params({ desde, hasta }),
+      }),
+    );
+  }
+  planilla(pacienteId: string, mes: string, profesionalId?: string) {
+    return firstValueFrom(
+      this.http.get<Planilla>(`${API}/pacientes/${pacienteId}/planilla`, {
+        params: params({ mes, profesionalId }),
+      }),
+    );
+  }
+}
+
+/** Notas de sesión (solo profesionales). */
+@Injectable({ providedIn: 'root' })
+export class NotasApi {
+  private readonly http = inject(HttpClient);
+
+  listar(pacienteId: string) {
+    return firstValueFrom(this.http.get<Nota[]>(`${API}/pacientes/${pacienteId}/notas`));
+  }
+  crear(pacienteId: string, datos: { texto: string; compartida: boolean; turnoId?: string | null }) {
+    return firstValueFrom(this.http.post<Nota>(`${API}/pacientes/${pacienteId}/notas`, datos));
+  }
+  editar(id: string, datos: { texto?: string; compartida?: boolean }) {
+    return firstValueFrom(this.http.patch<Nota>(`${API}/notas/${id}`, datos));
   }
 }
 

@@ -11,27 +11,16 @@ Actualizado: 9 de noviembre de 2026. Orden de pasos según [prototipo.md](protot
 | 3 | Usuarios, login con tokens rotativos y roles por centro; login en Angular | `d04baf2` |
 | 4 | ABM de salas, profesionales y pacientes; búsqueda sin tildes; menú por rol | `032f01e` |
 | 5 | Agenda: superposición controlada por PostgreSQL, turnos semanales, vistas día, semana y salas; el profesional gestiona los suyos y se avisa a admin y recepción | `ac8c46d` |
+| 6 | Asistencia en un clic desde la agenda (corregible hasta cerrar el mes, con registro de cambios), historial, planilla mensual para imprimir, notas de sesión cifradas y compartibles; sesión de la base en UTC | (este commit) |
 
 Cómo probar todo: [guia-de-pruebas.md](guia-de-pruebas.md).
 
-## Próximo: paso 6 — Asistencia, pacientes compartidos y notas cifradas
+## Próximo: paso 7 — Financiadores
 
-Lo que pide el prototipo (Módulo 2 y parte del 4):
+Obras sociales, prepagas y CUD con sus reglas; selector en la ficha del paciente (hoy el campo existe pero no tiene pantalla). La planilla de asistencia ya muestra el financiador cuando está cargado.
 
-- Estado de cada turno: pendiente, presente, ausente con aviso, ausente sin aviso, cancelado por profesional. La columna ya existe; falta poder marcarlo.
-- Marcado en un clic desde la agenda.
-- Historial de asistencia por paciente.
-- Planilla mensual de asistencia por paciente y obra social, lista para imprimir y firmar.
-- Notas de sesión privadas del profesional, con opción de compartir con el equipo, guardadas cifradas. Se porta `referencia-php/app/lib/crypto.php` (AES-256-GCM con una clave por centro).
+## Después (pasos 8 a 10)
 
-Decisiones abiertas para el paso 6:
-
-- ¿Quién marca la asistencia: todos los roles, o el profesional solo la de sus turnos?
-- Un turno ya marcado (presente o ausente), ¿se puede corregir? ¿Hasta cuándo?
-
-## Después (pasos 7 a 10)
-
-7. Financiadores genéricos (obras sociales, prepagas, CUD) con sus reglas; selector en la ficha del paciente.
 8. Conciliación de asistencia contra lo facturado y liquidación por porcentaje.
 9. Planes y habilitación de módulos.
 10. Portar ARCA (Factura C) y OSEP desde `referencia-php/`.
@@ -40,7 +29,8 @@ Decisiones abiertas para el paso 6:
 
 - Pantallas para el superadmin (centros y planes) y para administrar usuarios del centro: hoy solo por API.
 - Refresh token de la web en cookie httpOnly antes de producción.
-- Tests de frontend para las pantallas de salas, profesionales, pacientes y agenda (hoy probadas a mano).
+- Tests de frontend para las pantallas de salas, profesionales, pacientes, agenda, planilla y notas (hoy probadas a mano).
+- Lint del backend: Windows (Control de aplicaciones) bloquea `tsgolint.exe`, el ejecutable de las reglas con tipos. Se corre `oxlint` sin `--type-aware` hasta resolverlo.
 - `backend/AGENTS.md` (generado por NestJS, promociona su telemetría): decidir si se borra.
 - Agenda: arrastrar y soltar turnos para moverlos (hoy se mueven desde el panel) y horario visible configurable por centro (hoy 07:00 a 22:00).
 - Avisos: hoy se consultan cada minuto; más adelante, notificaciones push en la app móvil.

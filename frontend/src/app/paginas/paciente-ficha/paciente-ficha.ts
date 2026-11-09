@@ -11,6 +11,8 @@ import { mensajeDeError, PacientesApi, ProfesionalesApi } from '../../core/api/a
 import type { DatosPaciente, Paciente, Profesional } from '../../core/api/modelos';
 import { AuthService } from '../../core/auth/auth.service';
 import { puede } from '../../core/auth/roles';
+import { AsistenciaPaciente } from './asistencia-paciente';
+import { NotasPaciente } from './notas-paciente';
 
 /** Vencimiento de CUD solo si tiene CUD. */
 function cudCoherente(g: AbstractControl): ValidationErrors | null {
@@ -22,7 +24,7 @@ const vacioANull = (s: string) => (s.trim() === '' ? null : s.trim());
 
 @Component({
   selector: 'app-paciente-ficha',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, AsistenciaPaciente, NotasPaciente],
   templateUrl: './paciente-ficha.html',
 })
 export class PacienteFicha implements OnInit {
@@ -38,6 +40,7 @@ export class PacienteFicha implements OnInit {
     puede(this.auth.sesion()?.rol, 'admin', 'recepcion'),
   );
   protected readonly esAlta = computed(() => !this.id());
+  protected readonly esProfesional = computed(() => this.auth.sesion()?.rol === 'profesional');
   protected readonly paciente = signal<Paciente | null>(null);
   protected readonly profesionales = signal<Profesional[]>([]);
   protected readonly asignados = signal<Set<string>>(new Set());

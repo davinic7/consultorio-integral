@@ -8,7 +8,7 @@
  * como superadmin (no se cambia su contraseña).
  */
 import 'dotenv/config';
-import { PrismaPg } from '@prisma/adapter-pg';
+import { adaptadorPg } from '../src/prisma/adaptador.js';
 import { randomBytes } from 'node:crypto';
 import { hashPassword } from '../src/auth/password.js';
 import { PrismaClient } from '../src/generated/prisma/client.js';
@@ -24,7 +24,7 @@ if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) || !nombre) {
 }
 
 const prisma = new PrismaClient({
-  adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }),
+  adapter: adaptadorPg(process.env.DATABASE_URL!),
 });
 
 try {

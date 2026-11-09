@@ -28,7 +28,7 @@ Con esto el sistema queda en una dirección pública (por ejemplo `https://centr
    | `SUPERADMIN_PASSWORD` | Una contraseña tuya, de al menos 10 caracteres |
    | `DEMO_PASSWORD` | Contraseña de los usuarios demo, de al menos 10 caracteres (distinta de la tuya) |
 
-   `DATABASE_URL` y `JWT_SECRET` las completa Render solo. Nada de esto queda en git.
+   `DATABASE_URL`, `JWT_SECRET` y `DATOS_CLAVE_MAESTRA` las completa Render solo. Nada de esto queda en git.
 5. **Aplicar** (*Apply*). Render crea la base, construye la imagen (unos minutos la primera vez) y arranca el servicio.
 6. **Abrir la dirección** que muestra Render (`https://centro-integral….onrender.com`).
 
@@ -41,6 +41,14 @@ Con `CARGAR_DEMO=true` (así viene en `render.yaml`) quedan los mismos usuarios 
 - **Comprobar que responde:** `https://<tu-dirección>/api/v1/health` debe devolver `{"status":"ok","db":"up"}`.
 - **Documentación de la API:** `https://<tu-dirección>/api/docs`.
 - **Ambiente real (sin demo):** en *Environment*, poner `CARGAR_DEMO` en `false`. Los usuarios demo que ya existan siguen existiendo hasta que se den de baja.
+
+## La clave de las notas (`DATOS_CLAVE_MAESTRA`)
+
+Las notas de sesión se guardan cifradas, y esta clave es la que permite leerlas. Render la genera una vez y la conserva entre deploys.
+
+- **No cambiarla ni borrarla:** las notas ya guardadas quedarían ilegibles para siempre.
+- Copiarla a un lugar seguro, fuera de Render (gestor de contraseñas). Un backup de la base sin esta clave no permite leer las notas.
+- Si al actualizar el servicio el deploy falla con "DATOS_CLAVE_MAESTRA: …", agregarla a mano en *Environment* con *Generate* (pasa si el Blueprint no se sincronizó).
 
 ## Si algo falla
 
@@ -55,5 +63,6 @@ La misma imagen sirve en **Railway**, **Fly.io** o un **servidor propio** con Do
 
 - `DATABASE_URL`: PostgreSQL 17 con las extensiones `pg_trgm` y `btree_gist` disponibles. Las crean las migraciones; el usuario tiene que ser dueño de la base.
 - `JWT_SECRET`: al menos 32 caracteres al azar.
+- `DATOS_CLAVE_MAESTRA`: al menos 32 caracteres al azar, y guardada aparte (sin ella no se leen las notas).
 - `PORT`: lo define la plataforma; si no, 3000.
 - Opcionales: `SUPERADMIN_EMAIL` y `SUPERADMIN_PASSWORD`, `CARGAR_DEMO` y `DEMO_PASSWORD`.
