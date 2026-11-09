@@ -5,9 +5,23 @@
     <title>Centro Integral</title>
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="icon" type="image/svg+xml" href="marca/favicon.svg" />
+    <link rel="alternate icon" type="image/x-icon" href="favicon.ico" />
+    <script>
+      // Tema elegido antes de que cargue la app, para que no parpadee (ver core/tema.service.ts).
+      try {
+        var t = localStorage.getItem('ci-tema');
+        if (t === 'claro' || t === 'oscuro') document.documentElement.setAttribute('data-tema', t);
+      } catch (e) {}
+    </script>
   </head>
-  <body>
+  <body class="oc-app">
     <app-root></app-root>
   </body>
 </html>

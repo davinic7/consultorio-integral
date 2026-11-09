@@ -1,33 +1,21 @@
-// Estilos base. Colores como variables para soportar modo oscuro.
-:root {
-  color-scheme: light dark;
-  --fondo: #f6f7f9;
-  --superficie: #ffffff;
-  --texto: #1d2125;
-  --sutil: #5f6b76;
-  --borde: #d5dbe1;
-  --primario: #1f6f8b;
-  --primario-texto: #ffffff;
-  --ok: #e6f4ea;
-  --alerta: #fff4e5;
-  --error: #fdecea;
-  --error-texto: #a1251b;
-}
+@use 'styles/orbita';
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --fondo: #14181c;
-    --superficie: #1d2328;
-    --texto: #e7ebee;
-    --sutil: #9aa6b1;
-    --borde: #34404a;
-    --primario: #4fa6c4;
-    --primario-texto: #0b1a20;
-    --ok: #1f3a2a;
-    --alerta: #3d3020;
-    --error: #3f2220;
-    --error-texto: #f3a59d;
-  }
+// Estilos de las pantallas que todavía no pasaron a Órbita Cian (clases sin "oc-").
+// Mientras conviven, sus variables toman los colores del tema Órbita, así todo
+// cambia junto con el botón de tema. Se borran al terminar la migración.
+:root {
+  --fondo: var(--oc-fondo);
+  --superficie: var(--oc-panel);
+  --texto: var(--oc-texto);
+  --sutil: var(--oc-texto-suave);
+  --borde: var(--oc-borde);
+  // Acción principal: cian con texto oscuro en los dos temas (regla de marca).
+  --primario: #22d3ee;
+  --primario-texto: var(--oc-sobre-acento);
+  --ok: var(--oc-ok-fondo);
+  --alerta: var(--oc-aviso-fondo);
+  --error: var(--oc-error-fondo);
+  --error-texto: var(--oc-error-texto);
 }
 
 * {
@@ -38,12 +26,7 @@ body {
   margin: 0;
   background: var(--fondo);
   color: var(--texto);
-  font-family:
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    Roboto,
-    sans-serif;
+  font-family: var(--oc-fuente);
   line-height: 1.5;
 }
 
@@ -53,7 +36,7 @@ h1 {
 }
 
 a {
-  color: var(--primario);
+  color: var(--oc-acento-texto);
 }
 
 .sutil {
@@ -365,7 +348,7 @@ a.boton {
   padding: 0;
   border: 0;
   background: none;
-  color: var(--primario);
+  color: var(--oc-acento-texto);
   cursor: pointer;
   text-decoration: underline;
 
@@ -528,6 +511,9 @@ input:disabled {
     background: #fff;
   }
   .barra,
+  .oc-nav,
+  .oc-barra,
+  .shell-abajo,
   .volver,
   .no-imprimir {
     display: none !important;
