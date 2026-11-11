@@ -1,6 +1,6 @@
 # Estado del desarrollo
 
-Actualizado: 9 de noviembre de 2026. Orden de pasos según [prototipo.md](prototipo.md).
+Actualizado: 11 de noviembre de 2026. Orden de pasos según [prototipo.md](prototipo.md).
 
 ## Hecho
 
@@ -19,14 +19,16 @@ Cómo probar todo: [guia-de-pruebas.md](guia-de-pruebas.md).
 
 Obras sociales, prepagas y CUD por centro con sus reglas (código de prestación, orden por sesión, token por sesión, máximo semanal y validez de la orden); pantalla "Obras sociales"; selector en la ficha; avisos de CUD por vencer y de semanas con más sesiones de las que cubre la obra social. Datos demo: OSEP, Prepaga Salud y CUD.
 
-## Próximo: paso 8 — Conciliación y liquidación
+## Paso 8 — Conciliación y liquidación (hecho)
 
-Prestaciones por cada turno presente con su financiador, órdenes y tokens, pagos, conciliación contra lo facturado y liquidación por porcentaje. Con eso se hace la pantalla **Cobros y liquidación** del rediseño y los indicadores de cobros del panel y la ficha.
+- **Backend** (`src/cobros/`): cada turno presente crea su prestación con la cobertura del paciente, el valor vigente ese día y, si la obra social la pide, una orden con lugar. Precios con historial (por cobertura y especiales por paciente), órdenes con vencimiento y cupo, token por sesión, pagos (uno a uno o en lote, con rechazos), resumen del mes, conciliación y liquidación por porcentaje que cierra el mes.
+- **Frontend**: pantalla **Cobros y liquidación** (`/cobros`) del rediseño, pestaña Pagos e indicadores de saldo y orden en la ficha, valor de la sesión en Obras sociales y cobros del mes en el panel.
+- Migración `cobros_y_liquidacion`; precios en los datos demo; 5 tests unitarios y 18 e2e nuevos.
 
-## Después (pasos 9 y 10)
+## Próximos (pasos 9 y 10)
 
-9. Planes y habilitación de módulos.
-10. Portar ARCA (Factura C) y OSEP desde `referencia-php/`.
+9. Planes y habilitación de módulos (hoy todos los centros ven Cobros).
+10. Portar ARCA (Factura C) y OSEP desde `referencia-php/`: la marca "presentada" de cada sesión pasa a salir de la factura o de la presentación.
 
 ## Pendientes chicos anotados
 
@@ -37,6 +39,9 @@ Prestaciones por cada turno presente con su financiador, órdenes y tokens, pago
 - `backend/AGENTS.md` (generado por NestJS, promociona su telemetría): decidir si se borra.
 - Agenda: arrastrar y soltar turnos para moverlos (hoy se mueven desde el panel) y horario visible configurable por centro (hoy 07:00 a 22:00).
 - Avisos: hoy se consultan cada minuto; más adelante, notificaciones push en la app móvil.
+- Cobros: un faltazo sin aviso de un particular no genera cobro (en la referencia PHP sí se cobraba); decidir si se agrega como regla por centro.
+- Cobros: comprobante de liquidación para imprimir o mandar al profesional.
+- `backend/package.json` pide Node ≥ 24, pero Temporal recién viene activado en Node 26 (en Node 24 hace falta `--harmony-temporal`): subir el mínimo a 26.
 - Arranque en Render: si falla un paso opcional (superadmin o datos demo, por ejemplo por una contraseña corta) el contenedor no arranca; evaluar que esos pasos solo avisen en el log.
 
 ## Rediseño Órbita Cian
@@ -45,9 +50,10 @@ Guía: [diseno/orbita-cian.md](diseno/orbita-cian.md). Migración hecha (pasos d
 
 - 1 a 3: fuentes, tema claro/oscuro, shell (menú lateral, barra superior, barra inferior en celular) y login.
 - 4 a 7: panel principal, agenda, ficha del paciente y registro de asistencia (`/asistencia`, nuevo).
+- 8: Cobros y liquidación (`/cobros`), con los indicadores de cobros del panel y de saldo y orden en la ficha. Los gráficos van debajo de la tabla salvo en pantallas de 1600 px o más.
 - 9: profesionales, salas, avisos, pacientes, planilla y elegir centro con las clases `oc-*`; `styles.scss` ya no tiene los estilos viejos.
 
-Falta el **paso 8, Cobros y liquidación**: necesita los endpoints de cobros del backend (pasos 7 y 8 del desarrollo). En el panel y en la ficha, los indicadores de cobros y de la orden de la obra social se agregan con ese módulo.
+La migración del rediseño está completa.
 
 ## Publicado
 

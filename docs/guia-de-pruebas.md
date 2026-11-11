@@ -1,6 +1,6 @@
 # Guía de pruebas — Centro Integral
 
-Estado al paso 7 del prototipo, con el rediseño Órbita Cian: login y roles por centro, ABM de salas, profesionales y pacientes, agenda con avisos, asistencia, planilla mensual, notas de sesión cifradas y obras sociales con sus reglas.
+Estado al paso 8 del prototipo, con el rediseño Órbita Cian: login y roles por centro, ABM de salas, profesionales y pacientes, agenda con avisos, asistencia, planilla mensual, notas de sesión cifradas, obras sociales con sus reglas, y cobros, conciliación y liquidación.
 
 **Probar sin instalar nada:** la versión publicada está en https://centro-integral.onrender.com (mismos usuarios demo; la contraseña es la de `DEMO_PASSWORD` que se cargó en Render). Si nadie la usó en los últimos 15 minutos, la primera visita tarda cerca de un minuto en abrir.
 
@@ -76,6 +76,10 @@ Para volver a crear los usuarios demo (no borra nada): `cd backend && npm run db
 | Pacientes: búsqueda, alcance por rol, asignación | [src/pacientes/pacientes.ts](../backend/src/pacientes/pacientes.ts) |
 | Marcar asistencia, registro de cambios, mes cerrado | [src/turnos/turnos.service.ts](../backend/src/turnos/turnos.service.ts) (`marcarAsistencia`) |
 | Obras sociales con sus reglas | [src/financiadores/financiadores.ts](../backend/src/financiadores/financiadores.ts) |
+| **Cobros**: prestación por turno presente, pagos, conciliación | [src/cobros/prestaciones.service.ts](../backend/src/cobros/prestaciones.service.ts) y [src/cobros/cobros.service.ts](../backend/src/cobros/cobros.service.ts) |
+| Reglas de cobro (estado, avisos, cálculo de la liquidación) | [src/cobros/reglas.ts](../backend/src/cobros/reglas.ts) |
+| Liquidación por profesional (generar, pagar, reabrir) | [src/cobros/liquidaciones.ts](../backend/src/cobros/liquidaciones.ts) |
+| Órdenes de autorización y precios con historial | [src/cobros/ordenes.ts](../backend/src/cobros/ordenes.ts) y [src/cobros/precios.ts](../backend/src/cobros/precios.ts) |
 | Historial y planilla mensual | [src/asistencia/asistencia.ts](../backend/src/asistencia/asistencia.ts) |
 | Notas de sesión y quién las ve | [src/notas/notas.ts](../backend/src/notas/notas.ts) |
 | **Cifrado de notas** (AES-256-GCM, clave por centro) | [src/notas/cifrado.ts](../backend/src/notas/cifrado.ts) |
@@ -95,7 +99,7 @@ Para volver a crear los usuarios demo (no borra nada): `cd backend && npm run db
 | Menú lateral, barra superior y barra inferior del celular | [paginas/shell/](../frontend/src/app/paginas/shell) |
 | Sistema de diseño Órbita Cian (colores, clases `oc-*`, tema) | [styles/_orbita.scss](../frontend/src/styles/_orbita.scss) y [docs/diseno/orbita-cian.md](diseno/orbita-cian.md) |
 | Tema claro y oscuro | [core/tema.service.ts](../frontend/src/app/core/tema.service.ts) |
-| Pantallas | [paginas/](../frontend/src/app/paginas) (login, elegir-centro, inicio (panel), agenda, asistencia, pacientes, paciente-ficha, planilla, profesionales, salas, avisos) |
+| Pantallas | [paginas/](../frontend/src/app/paginas) (login, elegir-centro, inicio (panel), agenda, asistencia, cobros, pacientes, paciente-ficha, planilla, profesionales, salas, financiadores, avisos) |
 | Estilos (modo claro y oscuro) | [styles.scss](../frontend/src/styles.scss) |
 
 ### Decisiones y alcance
@@ -143,6 +147,11 @@ Marcá cada caso a medida que lo probás. "Esperado" es lo que tiene que pasar.
 | Crear y editar profesionales | ✔ | — | — |
 | Ver pacientes | todos | todos | solo los asignados |
 | Crear y editar pacientes | ✔ | ✔ | — (ficha en solo lectura) |
+| Ver cobros (sesiones, resumen, para revisar) | todos | todos | solo los suyos |
+| Cobrar, cargar órdenes, tokens, marcar presentadas | ✔ | ✔ | — |
+| Cargar el valor de la sesión | ✔ | — (lo ve) | — |
+| Ver liquidaciones | todas | — | solo la suya |
+| Generar, marcar pagada o reabrir una liquidación | ✔ | — | — |
 
 - [ ] Entrar con cada rol y verificar la tabla: los botones de editar aparecen solo donde corresponde.
 - [ ] **Acceso por URL:** con `profesional@demo.local`, abrir http://localhost:4200/pacientes/nuevo → redirige al inicio.
@@ -229,6 +238,24 @@ Marcá cada caso a medida que lo probás. "Esperado" es lo que tiene que pasar.
 - [ ] En la ficha de un paciente → "Editar datos" → **Obra social** → elegir OSEP y guardar → el encabezado muestra OSEP. "Particular (sin obra social)" la quita.
 - [ ] Con OSEP (hasta 3 por semana), agendar 4 turnos al paciente en la misma semana → la ficha avisa qué semana se pasa.
 - [ ] Con CUD que vence en menos de 30 días (o vencido), la ficha muestra el aviso para pedir la renovación.
+
+### 4.10 quater Cobros y liquidación (admin o recepción)
+
+Los datos demo traen el valor de la sesión (particular $ 12.000, OSEP $ 9.500, Prepaga Salud $ 11.000, CUD $ 10.500). Para probar hacen falta turnos ya pasados marcados como presentes: agendar algunos en días anteriores del mes y marcarlos "Llegó" en Asistencia.
+
+- [ ] **Obras sociales** → sección "Valor de la sesión": se ve el valor vigente de cada cobertura. Como admin, cargar un aumento con fecha de hoy → "Valor guardado" y, si había sesiones sin cobrar desde esa fecha, cuántas se actualizaron. Recepción la ve sin el formulario.
+- [ ] Marcar presente un turno → menú **Cobros y liquidación** → aparece la sesión con el valor de su cobertura, "Por cobrar". Volverla a "Por llegar" en Asistencia → desaparece de Cobros.
+- [ ] **Cobrar** en la fila → pasa a "Cobrada" con el medio elegido en "Cobrar con". Con un pago registrado, cambiar la asistencia de ese turno → error "La sesión tiene pagos registrados".
+- [ ] **Detalle**: registrar un pago parcial (monto menor) → "Pago parcial" y "debe $ …". Un monto mayor al saldo → error. "Rechazado" en un pago → la sesión queda "Rechazada". "Borrar" lo quita.
+- [ ] Paciente con **OSEP** (pide orden): su sesión muestra "Falta la orden". En la ficha → pestaña **Pagos** → "Agregar orden" (número, emisión, sesiones) → la sesión toma la orden sola; el indicador "Orden de OSEP" muestra las sesiones libres y el vencimiento (emisión + 30 días).
+- [ ] Paciente con **Prepaga Salud** (pide token): "Falta el token" → en el detalle cargar el token → el aviso se va.
+- [ ] Elegir varias sesiones con las casillas → "Marcar presentadas" y "Cobrar el saldo" en lote.
+- [ ] **Para revisar** muestra cuántas sesiones tienen cada problema; tocar uno filtra la tabla.
+- [ ] Ficha → **Saldo**: suma lo que falta cobrar del paciente.
+- [ ] **Panel**: "Cobrado este mes" y lo que falta cobrar.
+- [ ] **Liquidación** (admin): una tarjeta por profesional con sesiones, facturado, retención del centro (100 − porcentaje del profesional) y a liquidar. Con turnos del mes sin marcar, "Generar liquidación" está desactivado y lo explica.
+- [ ] En un mes ya terminado y todo marcado, "Generar liquidación" → "Generada". Cambiar la asistencia de un turno de ese mes → error "La liquidación de ese mes ya está cerrada". "Reabrir" lo vuelve a permitir; "Marcar pagada" la deja cerrada para siempre.
+- [ ] Como profesional vinculado a una ficha: ve solo sus sesiones y su liquidación, sin botones para cobrar ni liquidar. Recepción no ve la pestaña Liquidación.
 
 ### 4.11 Notas de sesión (profesional)
 
@@ -320,9 +347,9 @@ cd frontend && npx ng test --watch=false
 
 | Suite | Cantidad | Qué cubre |
 | --- | --- | --- |
-| Backend unitarios | 29 | variables de entorno, contraseñas, filtro por centro, búsqueda sin tildes, fechas y zonas horarias, cifrado de notas |
-| Backend e2e | 92 | auth y roles, ABM, agenda (superposición, pedidos simultáneos, semanales), avisos, asistencia (permisos, mes cerrado, registro de cambios), historial, planilla, notas cifradas y quién las ve, obras sociales y sus reglas, aislamiento entre centros, contra PostgreSQL real |
-| Frontend | 32 | sesión, "Recordarme", renovación de token, login, tema claro/oscuro, fechas, ubicación de turnos en el calendario, cuándo se puede marcar asistencia, colores por disciplina, enlaces de WhatsApp y edad |
+| Backend unitarios | 34 | variables de entorno, contraseñas, filtro por centro, búsqueda sin tildes, fechas y zonas horarias, cifrado de notas, reglas de cobro y liquidación |
+| Backend e2e | 110 | auth y roles, ABM, agenda (superposición, pedidos simultáneos, semanales), avisos, asistencia (permisos, mes cerrado, registro de cambios), historial, planilla, notas cifradas y quién las ve, obras sociales y sus reglas, cobros (precios, órdenes, pagos, conciliación) y liquidación, aislamiento entre centros, contra PostgreSQL real |
+| Frontend | 34 | sesión, "Recordarme", renovación de token, login, tema claro/oscuro, fechas, ubicación de turnos en el calendario, cuándo se puede marcar asistencia, colores por disciplina, enlaces de WhatsApp y edad, formato de pesos y meses |
 
 Los e2e usan la base `centro_integral_test` (`TEST_DATABASE_URL`), que se vacía en cada corrida: nunca tocan los datos de desarrollo.
 
@@ -332,8 +359,9 @@ Lint: `npm run lint` en cada carpeta. En esta PC, Windows (Control de aplicacion
 
 ## 8. Limitaciones conocidas (todavía no hechas)
 
-- Órdenes de autorización y tokens de cada sesión: se cargan con el módulo de cobros (paso 8); hoy la obra social solo guarda las reglas.
-- Cobros y liquidación (pantalla y backend): paso 8. Por eso el panel y la ficha todavía no muestran montos ni la orden de la obra social.
+- Facturación electrónica (Factura C de ARCA) y presentación a OSEP: paso 10. Hoy "presentada" es una marca manual.
+- Planes: todos los centros ven Cobros aunque su plan no lo incluya; la habilitación por plan llega en el paso 9.
+- Liquidación: no hay todavía un comprobante para imprimir o mandarle al profesional.
 - Recuperar la contraseña desde el login: no existe todavía; la cambia quien administra el centro.
 - Pantallas para el superadmin (centros y planes) y para administrar usuarios del centro: hoy solo por API.
 - Cambio de rol o baja de un usuario: se aplica en como mucho 15 minutos (vida del access token).
