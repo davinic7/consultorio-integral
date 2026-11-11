@@ -17,6 +17,8 @@ export const MODELOS_DE_CENTRO: ReadonlySet<Prisma.ModelName> =
     'Prestacion',
     'Pago',
     'Liquidacion',
+    'Orden',
+    'Precio',
     'NotaSesion',
     'Aviso',
     'CambioAsistencia',

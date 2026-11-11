@@ -77,10 +77,30 @@ async function financiador(
     diasValidezOrden?: number;
   } = {},
 ) {
-  await prisma.financiador.upsert({
+  return prisma.financiador.upsert({
     where: { centroId_nombre: { centroId, nombre } },
     update: {},
     create: { centroId, nombre, tipo, ...reglas },
+  });
+}
+
+/** Valor de la sesión desde 2026-01-01, si esa cobertura todavía no tiene precio. */
+async function precio(
+  centroId: string,
+  financiadorId: string | null,
+  monto: number,
+) {
+  const hay = await prisma.precio.count({
+    where: { centroId, financiadorId, pacienteId: null },
+  });
+  if (hay) return;
+  await prisma.precio.create({
+    data: {
+      centroId,
+      financiadorId,
+      monto,
+      vigenteDesde: new Date('2026-01-01T00:00:00Z'),
+    },
   });
 }
 
@@ -101,18 +121,27 @@ try {
   await miembro(demo.id, profesional.id, Rol.profesional);
   await miembro(norte.id, profesional.id, Rol.recepcion);
 
-  await financiador(demo.id, 'OSEP', TipoFinanciador.obra_social, {
+  const osep = await financiador(demo.id, 'OSEP', TipoFinanciador.obra_social, {
     codigoPrestacion: '250101',
     requiereOrden: true,
     maxSesionesSemana: 3,
     diasValidezOrden: 30,
   });
-  await financiador(demo.id, 'Prepaga Salud', TipoFinanciador.prepaga, {
-    requiereToken: true,
-  });
-  await financiador(demo.id, 'CUD', TipoFinanciador.cud, {
+  const prepaga = await financiador(
+    demo.id,
+    'Prepaga Salud',
+    TipoFinanciador.prepaga,
+    { requiereToken: true },
+  );
+  const cud = await financiador(demo.id, 'CUD', TipoFinanciador.cud, {
     requiereOrden: true,
   });
+
+  // Valor de la sesión: particular y por cobertura.
+  await precio(demo.id, null, 12000);
+  await precio(demo.id, osep.id, 9500);
+  await precio(demo.id, prepaga.id, 11000);
+  await precio(demo.id, cud.id, 10500);
 
   console.log(
     'Datos demo listos: Centro Demo y Centro Demo Norte (ver usuarios en prisma/demo.ts).',

@@ -140,6 +140,8 @@ model Centro {
   prestaciones      Prestacion[]
   pagos             Pago[]
   liquidaciones     Liquidacion[]
+  ordenes           Orden[]
+  precios           Precio[]
   notasSesion       NotaSesion[]
   cambiosAsistencia CambioAsistencia[]
   sesiones          Sesion[]
@@ -225,6 +227,8 @@ model Profesional {
   disciplina            String  @db.VarChar(80)
   matricula             String? @db.VarChar(40)
   /// Porcentaje de lo cobrado que le corresponde al profesional (0 a 100).
+  /// Porcentaje de lo facturado (prestaciones del mes) que le corresponde al
+  /// profesional (0 a 100). El resto es la retención del centro.
   porcentajeLiquidacion Decimal @default(0) @map("porcentaje_liquidacion") @db.Decimal(5, 2)
   activo                Boolean @default(true)
 
@@ -234,6 +238,7 @@ model Profesional {
   recurrencias  Recurrencia[]
   turnos        Turno[]
   liquidaciones Liquidacion[]
+  prestaciones  Prestacion[]
   notasSesion   NotaSesion[]
 
   @@unique([centroId, id])
@@ -257,10 +262,9 @@ model Sala {
   @@map("salas")
 }
 
-/// Quién paga la sesión: particular, obra social, prepaga o CUD.
-/// Las reglas propias de cada uno (token, orden, máximo semanal...) llegan en el paso 7.
-/// Obra social, prepaga, CUD o particular, con las reglas de cada una.
-/// Las órdenes y los tokens se cargan con el módulo de cobros (paso 8).
+/// Quién paga la sesión: obra social, prepaga, CUD o particular, con las reglas
+/// de cada una. Las órdenes (tabla ordenes) y los tokens (en cada prestación) se
+/// cargan desde cobros.
 model Financiador {
   id                String          @id @default(uuid(7)) @db.Uuid
   centroId          String          @map("centro_id") @db.Uuid
@@ -282,6 +286,8 @@ model Financiador {
   centro       Centro       @relation(fields: [centroId], references: [id], onDelete: Cascade)
   pacientes    Paciente[]
   prestaciones Prestacion[]
+  ordenes      Orden[]
+  precios      Precio[]
 
   @@unique([centroId, id])
   @@unique([centroId, nombre])
@@ -315,6 +321,9 @@ model Paciente {
   profesionales PacienteProfesional[]
   recurrencias  Recurrencia[]
   turnos        Turno[]
+  prestaciones  Prestacion[]
+  ordenes       Orden[]
+  precios       Precio[]
   notasSesion   NotaSesion[]
 
   @@unique([centroId, id])
@@ -450,55 +459,133 @@ model CambioAsistencia {
   @@map("cambios_asistencia")
 }
 
-/// Sesión asistida que se cobra o factura. Una por turno presente.
+/// Sesión asistida que se cobra o factura. Una por turno presente: se crea al
+/// marcar "presente" y se borra si la asistencia se corrige (sin pagos ni factura).
 model Prestacion {
   id            String   @id @default(uuid(7)) @db.Uuid
   centroId      String   @map("centro_id") @db.Uuid
   turnoId       String   @map("turno_id") @db.Uuid
-  financiadorId String   @map("financiador_id") @db.Uuid
-  monto         Decimal  @db.Decimal(12, 2)
-  facturada     Boolean  @default(false)
+  /// Copiados del turno para filtrar y liquidar sin pasar por turnos.
+  pacienteId    String   @map("paciente_id") @db.Uuid
+  profesionalId String   @map("profesional_id") @db.Uuid
+  /// Quién paga. null: particular.
+  financiadorId String?  @map("financiador_id") @db.Uuid
+  /// Día de la sesión en la zona del centro.
+  fecha         DateTime @db.Date
   /// Primer día del mes al que corresponde (ej. 2026-11-01).
   periodo       DateTime @db.Date
+  monto         Decimal  @db.Decimal(12, 2)
+  /// El monto se cargó a mano: los cambios de precio no lo tocan.
+  montoManual   Boolean  @default(false) @map("monto_manual")
+  /// Presentada a la obra social o con factura emitida.
+  facturada     Boolean  @default(false)
+  /// Orden de autorización que cubre la sesión (si el financiador la pide).
+  ordenId       String?  @map("orden_id") @db.Uuid
+  /// Token que da el paciente en cada sesión (si el financiador lo pide).
+  token         String?  @db.VarChar(20)
+  creadaEn      DateTime @default(now()) @map("creada_en") @db.Timestamptz(3)
 
-  centro      Centro      @relation(fields: [centroId], references: [id], onDelete: Cascade)
-  turno       Turno       @relation(fields: [centroId, turnoId], references: [centroId, id], onDelete: Restrict)
-  financiador Financiador @relation(fields: [centroId, financiadorId], references: [centroId, id], onDelete: Restrict)
+  centro      Centro       @relation(fields: [centroId], references: [id], onDelete: Cascade)
+  turno       Turno        @relation(fields: [centroId, turnoId], references: [centroId, id], onDelete: Restrict)
+  paciente    Paciente     @relation(fields: [centroId, pacienteId], references: [centroId, id], onDelete: Restrict)
+  profesional Profesional  @relation(fields: [centroId, profesionalId], references: [centroId, id], onDelete: Restrict)
+  financiador Financiador? @relation(fields: [centroId, financiadorId], references: [centroId, id], onDelete: Restrict)
+  orden       Orden?       @relation(fields: [centroId, ordenId], references: [centroId, id], onDelete: Restrict)
   pagos       Pago[]
 
   @@unique([centroId, id])
   @@unique([centroId, turnoId])
-  @@index([centroId, periodo])
+  @@index([centroId, periodo, profesionalId])
+  @@index([centroId, pacienteId, fecha])
+  @@index([centroId, ordenId])
   @@map("prestaciones")
 }
 
+/// Pago de una prestación: lo que paga el paciente o lo que liquida la obra social.
 model Pago {
-  id           String     @id @default(uuid(7)) @db.Uuid
-  centroId     String     @map("centro_id") @db.Uuid
-  prestacionId String     @map("prestacion_id") @db.Uuid
-  monto        Decimal    @db.Decimal(12, 2)
-  fecha        DateTime   @db.Date
-  medio        MedioPago
-  estado       EstadoPago @default(pendiente)
+  id            String     @id @default(uuid(7)) @db.Uuid
+  centroId      String     @map("centro_id") @db.Uuid
+  prestacionId  String     @map("prestacion_id") @db.Uuid
+  monto         Decimal    @db.Decimal(12, 2)
+  fecha         DateTime   @db.Date
+  medio         MedioPago
+  estado        EstadoPago @default(pendiente)
+  observaciones String?    @db.VarChar(200)
+  creadoEn      DateTime   @default(now()) @map("creado_en") @db.Timestamptz(3)
 
   centro     Centro     @relation(fields: [centroId], references: [id], onDelete: Cascade)
   prestacion Prestacion @relation(fields: [centroId, prestacionId], references: [centroId, id], onDelete: Restrict)
 
   @@unique([centroId, id])
   @@index([centroId, fecha])
+  @@index([centroId, prestacionId])
   @@map("pagos")
 }
 
+/// Orden de autorización de una obra social para un paciente: cubre una cantidad
+/// de sesiones desde la emisión hasta el vencimiento.
+model Orden {
+  id            String    @id @default(uuid(7)) @db.Uuid
+  centroId      String    @map("centro_id") @db.Uuid
+  pacienteId    String    @map("paciente_id") @db.Uuid
+  financiadorId String    @map("financiador_id") @db.Uuid
+  numero        String    @db.VarChar(40)
+  fechaEmision  DateTime  @map("fecha_emision") @db.Date
+  /// Último día en que vale (null: no vence). Se calcula con los días de validez
+  /// del financiador, y se puede corregir.
+  vence         DateTime? @db.Date
+  /// Sesiones que autoriza.
+  sesiones      Int       @db.SmallInt
+  observaciones String?   @db.VarChar(200)
+  creadaEn      DateTime  @default(now()) @map("creada_en") @db.Timestamptz(3)
+
+  centro       Centro       @relation(fields: [centroId], references: [id], onDelete: Cascade)
+  paciente     Paciente     @relation(fields: [centroId, pacienteId], references: [centroId, id], onDelete: Restrict)
+  financiador  Financiador  @relation(fields: [centroId, financiadorId], references: [centroId, id], onDelete: Restrict)
+  prestaciones Prestacion[]
+
+  @@unique([centroId, id])
+  @@unique([centroId, financiadorId, numero])
+  @@index([centroId, pacienteId, fechaEmision])
+  @@map("ordenes")
+}
+
+/// Valor de la sesión desde una fecha (historial: no se pisa, se agrega uno nuevo).
+/// Sin paciente: valor general de la obra social (o de particular, sin financiador).
+/// Con paciente: precio especial de ese paciente con esa cobertura.
+model Precio {
+  id            String   @id @default(uuid(7)) @db.Uuid
+  centroId      String   @map("centro_id") @db.Uuid
+  financiadorId String?  @map("financiador_id") @db.Uuid
+  pacienteId    String?  @map("paciente_id") @db.Uuid
+  monto         Decimal  @db.Decimal(12, 2)
+  vigenteDesde  DateTime @map("vigente_desde") @db.Date
+  creadoEn      DateTime @default(now()) @map("creado_en") @db.Timestamptz(3)
+
+  centro      Centro       @relation(fields: [centroId], references: [id], onDelete: Cascade)
+  financiador Financiador? @relation(fields: [centroId, financiadorId], references: [centroId, id], onDelete: Restrict)
+  paciente    Paciente?    @relation(fields: [centroId, pacienteId], references: [centroId, id], onDelete: Cascade)
+
+  @@unique([centroId, id])
+  @@index([centroId, financiadorId, pacienteId, vigenteDesde])
+  @@map("precios")
+}
+
+/// Liquidación mensual de un profesional. Al generarla queda "cerrada": guarda los
+/// totales y ya no se puede cambiar la asistencia ni los montos de ese mes.
 model Liquidacion {
   id             String            @id @default(uuid(7)) @db.Uuid
   centroId       String            @map("centro_id") @db.Uuid
   profesionalId  String            @map("profesional_id") @db.Uuid
   /// Primer día del mes liquidado.
   periodo        DateTime          @db.Date
+  sesiones       Int               @default(0)
   totalBruto     Decimal           @map("total_bruto") @db.Decimal(12, 2)
   porcentaje     Decimal           @db.Decimal(5, 2)
   totalLiquidado Decimal           @map("total_liquidado") @db.Decimal(12, 2)
   estado         EstadoLiquidacion @default(borrador)
+  cerradaEn      DateTime?         @map("cerrada_en") @db.Timestamptz(3)
+  pagadaEn       DateTime?         @map("pagada_en") @db.Timestamptz(3)
 
   centro      Centro      @relation(fields: [centroId], references: [id], onDelete: Cascade)
   profesional Profesional @relation(fields: [centroId, profesionalId], references: [centroId, id], onDelete: Restrict)

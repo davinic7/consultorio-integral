@@ -14,6 +14,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
 import type { UsuarioAutenticado } from '../auth/auth.types.js';
 import { CentroActual, Roles, UsuarioActual } from '../auth/decoradores.js';
+import { CobrosModule } from '../cobros/cobros.module.js';
 import { AvisosModule } from '../avisos/avisos.js';
 import { idParam } from '../common/comunes.js';
 import { ApiBodyZod } from '../common/zod.js';
@@ -164,7 +165,7 @@ export class RecurrenciasController {
 }
 
 @Module({
-  imports: [AvisosModule],
+  imports: [AvisosModule, CobrosModule],
   controllers: [TurnosController, RecurrenciasController],
   providers: [TurnosService],
 })

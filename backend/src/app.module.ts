@@ -6,6 +6,7 @@ import { AsistenciaModule } from './asistencia/asistencia.js';
 import { AuthModule } from './auth/auth.module.js';
 import { AvisosModule } from './avisos/avisos.js';
 import { CentrosModule } from './centros/centros.module.js';
+import { CobrosModule } from './cobros/cobros.module.js';
 import { validateEnv } from './config/env.js';
 import { FinanciadoresModule } from './financiadores/financiadores.js';
 import { HealthModule } from './health/health.module.js';
@@ -35,6 +36,7 @@ import { UsuariosModule } from './usuarios/usuarios.module.js';
     TurnosModule,
     AsistenciaModule,
     NotasModule,
+    CobrosModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

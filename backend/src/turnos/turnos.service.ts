@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import type { UsuarioAutenticado } from '../auth/auth.types.js';
 import { AvisosService } from '../avisos/avisos.js';
+import { PrestacionesService } from '../cobros/prestaciones.service.js';
 import {
   aInstante,
   aLocal,
@@ -93,6 +94,7 @@ export class TurnosService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly avisos: AvisosService,
+    private readonly prestaciones: PrestacionesService,
   ) {}
 
   // ───────── Lectura ─────────
@@ -318,7 +320,9 @@ export class TurnosService {
   /**
    * Marca la asistencia (o la vuelve a pendiente para corregirla). Se puede
    * corregir hasta que se cierre la liquidación del mes de ese profesional, y
-   * cada cambio queda registrado con quién y cuándo.
+   * cada cambio queda registrado con quién y cuándo. "Presente" crea la
+   * prestación para cobrar; sacarlo de presente la borra (si no tiene pagos ni
+   * factura).
    */
   async marcarAsistencia(
     centroId: string,
@@ -345,6 +349,10 @@ export class TurnosService {
       );
     }
     await this.exigirMesAbierto(a, actual);
+    const dejaDeEstarPresente =
+      actual.estadoAsistencia === EstadoAsistencia.presente;
+    if (dejaDeEstarPresente)
+      await this.prestaciones.exigirQuitable(this.db(centroId), id);
 
     const turno = await this.db(centroId).$transaction(async (tx) => {
       await tx.cambioAsistencia.create({
@@ -355,6 +363,9 @@ export class TurnosService {
           usuarioId: a.usuarioId,
         }),
       });
+      if (dejaDeEstarPresente) await this.prestaciones.quitarDeTurno(tx, id);
+      if (estado === EstadoAsistencia.presente)
+        await this.prestaciones.crearParaTurno(tx, actual, a.zona);
       return tx.turno.update({
         where: { id },
         data: { estadoAsistencia: estado },

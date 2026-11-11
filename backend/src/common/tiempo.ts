@@ -101,3 +101,23 @@ export function formatoCorto(instante: Date, zona: string): string {
   const hora = zdt.toPlainTime().toString({ smallestUnit: 'minute' });
   return `${DIAS[zdt.dayOfWeek - 1]} ${dd}/${mm} ${hora}`;
 }
+
+/** Mes "AAAA-MM". */
+export const mesTexto = z
+  .string()
+  .regex(/^\d{4}-(0[1-9]|1[0-2])$/, 'formato AAAA-MM');
+
+/** "2026-11" → Date 2026-11-01 a medianoche UTC, como guarda PostgreSQL un DATE. */
+export function periodoDe(mes: string): Date {
+  return new Date(`${mes}-01T00:00:00Z`);
+}
+
+/** Primer y último día de un mes "AAAA-MM". */
+export function diasDelMes(mes: string): { primero: string; ultimo: string } {
+  const primero = `${mes}-01`;
+  const ultimo = Temporal.PlainDate.from(primero)
+    .add({ months: 1 })
+    .subtract({ days: 1 })
+    .toString();
+  return { primero, ultimo };
+}
