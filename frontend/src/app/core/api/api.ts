@@ -5,6 +5,11 @@ import { environment } from '../../../environments/environment';
 import type { Modulo } from '../auth/auth.models';
 import type {
   Aviso,
+  ConfigFiscal,
+  Factura,
+  PendienteFactura,
+  Presentacion,
+  ResultadoToken,
   CentroPlataforma,
   Plan,
   Conciliacion,
@@ -262,6 +267,7 @@ export class CobrosApi {
       ordenId: string | null;
       token: string | null;
       facturada: boolean;
+      fechaDeclarada: string | null;
     }>,
   ) {
     return firstValueFrom(this.http.patch<Prestacion>(`${API}/prestaciones/${id}`, datos));
@@ -406,6 +412,85 @@ export class PlataformaApi {
     datos: Partial<{ nombre: string; precioMensual: number; modulos: Modulo[]; activo: boolean }>,
   ) {
     return firstValueFrom(this.http.patch<Plan>(`${API}/planes/${id}`, datos));
+  }
+}
+
+/** Factura electrónica C con ARCA. */
+@Injectable({ providedIn: 'root' })
+export class FacturacionApi {
+  private readonly http = inject(HttpClient);
+
+  config() {
+    return firstValueFrom(this.http.get<ConfigFiscal>(`${API}/facturacion/config`));
+  }
+  guardarConfig(datos: Partial<Omit<ConfigFiscal, 'tieneClave' | 'tieneCertificado' | 'certificadoVence'>>) {
+    return firstValueFrom(this.http.put<ConfigFiscal>(`${API}/facturacion/config`, datos));
+  }
+  pedirCertificado() {
+    return firstValueFrom(
+      this.http.post<{ csr: string }>(`${API}/facturacion/config/pedido-certificado`, {}),
+    );
+  }
+  guardarCertificado(certificado: string) {
+    return firstValueFrom(
+      this.http.put<ConfigFiscal>(`${API}/facturacion/config/certificado`, { certificado }),
+    );
+  }
+  probar() {
+    return firstValueFrom(this.http.post<{ ok: boolean; mensaje: string }>(`${API}/facturacion/probar`, {}));
+  }
+  pendientes(mes: string) {
+    return firstValueFrom(
+      this.http.get<PendienteFactura[]>(`${API}/facturacion/pendientes`, { params: params({ mes }) }),
+    );
+  }
+  emitir(mes: string, pacienteIds: string[]) {
+    return firstValueFrom(
+      this.http.post<{
+        emitidas: number;
+        resultados: { pacienteId: string; ok: boolean; facturaId?: string; error?: string }[];
+      }>(`${API}/facturacion/emitir`, { mes, pacienteIds }),
+    );
+  }
+  facturas(mes: string) {
+    return firstValueFrom(
+      this.http.get<Factura[]>(`${API}/facturacion/facturas`, { params: params({ mes }) }),
+    );
+  }
+  marcarEnviada(id: string, enviada: boolean) {
+    return firstValueFrom(this.http.patch<unknown>(`${API}/facturacion/facturas/${id}`, { enviada }));
+  }
+  pdf(id: string) {
+    return firstValueFrom(
+      this.http.get(`${API}/facturacion/facturas/${id}/pdf`, { responseType: 'blob' }),
+    );
+  }
+}
+
+/** Presentación mensual a una obra social. */
+@Injectable({ providedIn: 'root' })
+export class PresentacionApi {
+  private readonly http = inject(HttpClient);
+
+  ver(mes: string, financiadorId: string) {
+    return firstValueFrom(
+      this.http.get<Presentacion>(`${API}/presentacion`, { params: params({ mes, financiadorId }) }),
+    );
+  }
+  completarFechas(mes: string, financiadorId: string) {
+    return firstValueFrom(
+      this.http.post<{ asignadas: number }>(`${API}/presentacion/fechas`, { mes, financiadorId }),
+    );
+  }
+  tokens(mes: string, financiadorId: string, texto: string, guardar: boolean) {
+    return firstValueFrom(
+      this.http.post<{ guardados: number; items: ResultadoToken[] }>(`${API}/presentacion/tokens`, {
+        mes,
+        financiadorId,
+        texto,
+        guardar,
+      }),
+    );
   }
 }
 

@@ -1,0 +1,267 @@
+<main class="oc-contenido">
+  <div class="cabecera">
+    <div>
+      <div class="oc-etiqueta">Obras sociales</div>
+      <h1>Presentación del mes</h1>
+    </div>
+    <div class="controles">
+      <label class="oc-campo">
+        <span class="visualmente-oculto">Obra social</span>
+        <select [ngModel]="financiadorId()" (ngModelChange)="financiadorId.set($event)">
+          @for (f of financiadores(); track f.id) {
+            <option [value]="f.id">{{ f.nombre }}</option>
+          }
+        </select>
+      </label>
+      <button
+        type="button"
+        class="oc-btn oc-btn--icono"
+        (click)="moverMes(-1)"
+        aria-label="Mes anterior"
+      >
+        ‹
+      </button>
+      <span class="mes" aria-live="polite">{{ titulo() }}</span>
+      <button
+        type="button"
+        class="oc-btn oc-btn--icono"
+        (click)="moverMes(1)"
+        aria-label="Mes siguiente"
+      >
+        ›
+      </button>
+    </div>
+  </div>
+
+  @if (error(); as e) {
+    <p class="oc-alerta oc-alerta--error" role="alert">{{ e }}</p>
+  }
+  @if (mensaje(); as m) {
+    <p class="oc-alerta oc-alerta--ok" role="status">{{ m }}</p>
+  }
+
+  @if (!financiadores().length) {
+    <p class="oc-suave">
+      No hay obras sociales cargadas. Se cargan en
+      <a routerLink="/financiadores">Obras sociales</a>.
+    </p>
+  } @else if (datos(); as d) {
+    <p class="oc-suave nota">
+      Las sesiones de {{ titulo() }} se declaran con fechas dentro del mes: una por día, desde la
+      emisión de la orden y antes de su vencimiento{{
+        d.financiador.maxSesionesSemana
+          ? ', hasta ' + d.financiador.maxSesionesSemana + ' por semana'
+          : ''
+      }}. La fecha sugerida corre las que no cumplen.
+      @if (d.financiador.codigoPrestacion) {
+        Código de prestación: <b class="oc-mono">{{ d.financiador.codigoPrestacion }}</b
+        >.
+      }
+    </p>
+
+    <div class="oc-indicadores">
+      <div class="oc-tarjeta">
+        <div class="oc-kpi__titulo">Sesiones</div>
+        <div class="oc-kpi__valor">{{ d.resumen.sesiones }}</div>
+      </div>
+      @if (d.financiador.requiereOrden) {
+        <div class="oc-tarjeta">
+          <div class="oc-kpi__titulo">Con orden</div>
+          <div class="oc-kpi__valor">{{ d.resumen.conOrden }}/{{ d.resumen.sesiones }}</div>
+        </div>
+      }
+      @if (d.financiador.requiereToken) {
+        <div class="oc-tarjeta">
+          <div class="oc-kpi__titulo">Con token</div>
+          <div class="oc-kpi__valor">{{ d.resumen.conToken }}/{{ d.resumen.sesiones }}</div>
+        </div>
+      }
+      <div class="oc-tarjeta oc-tarjeta--destacada">
+        <div class="oc-kpi__titulo">Presentadas</div>
+        <div class="oc-kpi__valor">{{ d.resumen.presentadas }}/{{ d.resumen.sesiones }}</div>
+      </div>
+    </div>
+
+    <div class="controles">
+      <button
+        type="button"
+        class="oc-btn oc-btn--primario"
+        (click)="completarFechas()"
+        [disabled]="ocupado()"
+      >
+        Completar fechas sugeridas
+      </button>
+      @if (d.financiador.requiereToken) {
+        <button type="button" class="oc-btn" (click)="verTokens.set(!verTokens())">
+          Cargar tokens
+        </button>
+      }
+    </div>
+
+    @if (verTokens()) {
+      <section class="oc-tarjeta paciente" aria-labelledby="tok-t">
+        <h2 id="tok-t">Cargar tokens</h2>
+        <p class="oc-suave nota">
+          Pegá un token por línea, con el n.º de afiliado o el DNI del paciente al lado (por ejemplo
+          <span class="oc-mono">AB12CD 30111222</span>). Cada token va a la primera sesión del mes
+          de ese paciente que no tiene.
+        </p>
+        <textarea [(ngModel)]="textoTokens" aria-label="Tokens"></textarea>
+        <div class="controles">
+          <button
+            type="button"
+            class="oc-btn"
+            (click)="probarTokens(false)"
+            [disabled]="ocupado() || !textoTokens.trim()"
+          >
+            Revisar
+          </button>
+          @if (resultadoTokens()) {
+            <button
+              type="button"
+              class="oc-btn oc-btn--primario"
+              (click)="probarTokens(true)"
+              [disabled]="ocupado() || !tokensListos()"
+            >
+              Guardar {{ tokensListos() }}
+            </button>
+          }
+        </div>
+        @if (resultadoTokens(); as res) {
+          <div class="oc-tabla-caja">
+            <table class="oc-tabla">
+              <thead>
+                <tr>
+                  <th>Token</th>
+                  <th>Paciente</th>
+                  <th>Sesión</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (r of res; track $index) {
+                  <tr>
+                    <td class="oc-mono">{{ r.token || '—' }}</td>
+                    <td>{{ r.paciente ?? '—' }}{{ r.por === 'dni' ? ' (por DNI)' : '' }}</td>
+                    <td class="oc-mono">{{ dmy(r.fecha) }}</td>
+                    <td>
+                      <span
+                        class="oc-estado"
+                        [class.oc-estado--ok]="r.estado === 'ok'"
+                        [class.oc-estado--aviso]="r.estado !== 'ok'"
+                      >
+                        {{ estadoToken[r.estado] }}
+                      </span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </section>
+    }
+
+    @for (p of d.pacientes; track p.paciente.id) {
+      <section
+        class="oc-tarjeta paciente"
+        [attr.aria-label]="p.paciente.nombre + ' ' + p.paciente.apellido"
+      >
+        <div class="fila">
+          <div>
+            <a [routerLink]="['/pacientes', p.paciente.id]"
+              ><b>{{ p.paciente.apellido }}, {{ p.paciente.nombre }}</b></a
+            >
+            <div class="oc-suave nota">
+              Afiliado <span class="oc-mono">{{ p.paciente.nroAfiliado ?? '—' }}</span> · DNI
+              <span class="oc-mono">{{ p.paciente.dni ?? '—' }}</span>
+            </div>
+          </div>
+          <button
+            type="button"
+            class="oc-btn oc-btn--chico"
+            (click)="presentarPaciente(p.sesiones)"
+            [disabled]="ocupado()"
+          >
+            Marcar presentadas
+          </button>
+        </div>
+        <div class="oc-tabla-caja">
+          <table class="oc-tabla">
+            <thead>
+              <tr>
+                <th>Real</th>
+                <th>A declarar</th>
+                @if (d.financiador.requiereOrden) {
+                  <th>Orden</th>
+                }
+                @if (d.financiador.requiereToken) {
+                  <th>Token</th>
+                }
+                <th>Presentada</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (s of p.sesiones; track s.prestacionId) {
+                <tr>
+                  <td class="oc-mono">{{ dmy(s.fecha) }}</td>
+                  <td>
+                    <input
+                      type="date"
+                      [value]="s.fechaDeclarada ?? ''"
+                      [disabled]="s.presentada || ocupado()"
+                      (change)="cambiarFecha(s, $any($event.target).value)"
+                      [attr.aria-label]="'Fecha a declarar de la sesión del ' + dmy(s.fecha)"
+                    />
+                    @if (!s.presentada && s.fechaSugerida && s.fechaSugerida !== s.fechaDeclarada) {
+                      <div class="oc-suave nota">Sugerida: {{ dmy(s.fechaSugerida) }}</div>
+                    }
+                    @if (!s.presentada && s.aviso) {
+                      <div class="aviso">{{ s.aviso }}</div>
+                    }
+                  </td>
+                  @if (d.financiador.requiereOrden) {
+                    <td class="oc-mono">
+                      @if (s.orden) {
+                        {{ s.orden.numero }}
+                      } @else {
+                        <span class="oc-estado oc-estado--aviso">Sin orden</span>
+                      }
+                    </td>
+                  }
+                  @if (d.financiador.requiereToken) {
+                    <td>
+                      <input
+                        class="token"
+                        maxlength="20"
+                        [value]="s.token ?? ''"
+                        [disabled]="ocupado()"
+                        (change)="guardarToken(s, $any($event.target).value)"
+                        [attr.aria-label]="'Token de la sesión del ' + dmy(s.fecha)"
+                      />
+                    </td>
+                  }
+                  <td>
+                    <label class="oc-check">
+                      <input
+                        type="checkbox"
+                        [checked]="s.presentada"
+                        (change)="alternarPresentada(s)"
+                        [disabled]="ocupado()"
+                      />
+                      {{ s.presentada ? 'Sí' : 'No' }}
+                    </label>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+    } @empty {
+      <p class="oc-suave">
+        No hay sesiones presentes con {{ d.financiador.nombre }} en {{ titulo() }}.
+      </p>
+    }
+  }
+</main>

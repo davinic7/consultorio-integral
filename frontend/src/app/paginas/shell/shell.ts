@@ -65,6 +65,22 @@ const MENU: ItemMenu[] = [
     abajo: false,
     modulo: 'obras_sociales',
   },
+  {
+    ruta: '/presentacion',
+    texto: 'Presentación a obras sociales',
+    icono: 'presentacion',
+    roles: ['admin', 'recepcion'],
+    abajo: false,
+    modulo: 'obras_sociales',
+  },
+  {
+    ruta: '/facturacion',
+    texto: 'Facturación',
+    icono: 'facturacion',
+    roles: ['admin', 'recepcion'],
+    abajo: false,
+    modulo: 'facturacion_arca',
+  },
 ];
 
 /** Superadministrador sin centro elegido. */

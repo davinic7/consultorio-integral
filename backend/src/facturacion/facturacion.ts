@@ -492,15 +492,13 @@ export class FacturacionService {
     });
   }
 
+  /** Datos fiscales del centro; sin cargar, los valores por defecto (modo simulado). */
   private async exigirConfig(centroId: string): Promise<ConfigFiscal> {
-    const c = await this.db(centroId).configFiscal.findUnique({
+    return this.db(centroId).configFiscal.upsert({
       where: { centroId },
+      create: sinCentro<Prisma.ConfigFiscalUncheckedCreateInput>({}),
+      update: {},
     });
-    if (!c)
-      throw new ConflictException(
-        'Primero cargá los datos fiscales del centro',
-      );
-    return c;
   }
 
   private vistaConfig(c: ConfigFiscal | null) {

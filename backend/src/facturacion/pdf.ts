@@ -67,12 +67,10 @@ export async function pdfFactura(d: DatosPdfFactura): Promise<Buffer> {
     .fontSize(7)
     .text('COD. 011', X + W / 2 - 22, 80, { width: 44, align: 'center' });
 
-  doc
-    .fontSize(14)
-    .text(d.emisor.razonSocial, X + 8, 62, {
-      width: W / 2 - 40,
-      align: 'center',
-    });
+  doc.fontSize(14).text(d.emisor.razonSocial, X + 8, 62, {
+    width: W / 2 - 40,
+    align: 'center',
+  });
   const fila = (y: number, k: string, v: string, x0: number, ancho: number) => {
     doc
       .font('Helvetica-Bold')
@@ -97,7 +95,10 @@ export async function pdfFactura(d: DatosPdfFactura): Promise<Buffer> {
   );
 
   const xd = X + W / 2 + 12;
-  doc.font('Helvetica-Bold').fontSize(18).text('FACTURA', xd, 60);
+  doc
+    .font('Helvetica-Bold')
+    .fontSize(18)
+    .text('FACTURA', X + W / 2 + 34, 60);
   fila(96, 'Punto de Venta:', String(d.ptoVta).padStart(5, '0'), xd, 120);
   doc
     .font('Helvetica-Bold')

@@ -1,0 +1,382 @@
+<main class="oc-contenido">
+  <div class="cabecera">
+    <div>
+      <div class="oc-etiqueta">Factura C · ARCA</div>
+      <h1>Facturación</h1>
+    </div>
+    <div class="periodo" role="group" aria-label="Mes de las sesiones">
+      <button
+        type="button"
+        class="oc-btn oc-btn--icono"
+        (click)="moverMes(-1)"
+        aria-label="Mes anterior"
+      >
+        ‹
+      </button>
+      <span class="mes" aria-live="polite">{{ titulo() }}</span>
+      <button
+        type="button"
+        class="oc-btn oc-btn--icono"
+        (click)="moverMes(1)"
+        aria-label="Mes siguiente"
+      >
+        ›
+      </button>
+    </div>
+  </div>
+
+  @if (config(); as c) {
+    @if (c.modo !== 'produccion') {
+      <p class="oc-alerta oc-alerta--aviso">
+        <span>
+          Modo {{ nombreModo[c.modo] }}: las facturas <b>no tienen validez fiscal</b>.
+          @if (esAdmin()) {
+            Pasalo a producción en "Datos fiscales" cuando el certificado de ARCA esté listo.
+          }
+        </span>
+      </p>
+    }
+  }
+  @if (error(); as e) {
+    <p class="oc-alerta oc-alerta--error" role="alert">{{ e }}</p>
+  }
+  @if (mensaje(); as m) {
+    <p class="oc-alerta oc-alerta--ok" role="status">{{ m }}</p>
+  }
+
+  <div class="oc-pestanas" role="tablist" aria-label="Secciones">
+    <button
+      type="button"
+      role="tab"
+      [attr.aria-selected]="pestana() === 'pendientes'"
+      (click)="pestana.set('pendientes')"
+    >
+      Para facturar ({{ paraFacturar().length }})
+    </button>
+    <button
+      type="button"
+      role="tab"
+      [attr.aria-selected]="pestana() === 'emitidas'"
+      (click)="pestana.set('emitidas')"
+    >
+      Emitidas ({{ enviadas() }}/{{ emitidas().length }} enviadas)
+    </button>
+    <button
+      type="button"
+      role="tab"
+      [attr.aria-selected]="pestana() === 'datos'"
+      (click)="pestana.set('datos')"
+    >
+      Datos fiscales
+    </button>
+  </div>
+
+  @switch (pestana()) {
+    @case ('pendientes') {
+      @if (conAvisos().length) {
+        <div class="oc-alerta">
+          <div>
+            <b>Revisar antes de facturar:</b> sesiones particulares sin cobrar de
+            @for (p of conAvisos(); track p.paciente.id; let ultimo = $last) {
+              <a [routerLink]="['/pacientes', p.paciente.id]"
+                >{{ p.paciente.nombre }} {{ p.paciente.apellido }}</a
+              >
+              ({{ p.impagas }}){{ ultimo ? '.' : ',' }}
+            }
+          </div>
+        </div>
+      }
+      <p class="oc-suave nota">
+        Se factura a cada paciente particular lo ya cobrado del mes. Las sesiones de obras sociales
+        se presentan desde "Presentación a obras sociales".
+      </p>
+      <div class="oc-tabla-caja">
+        <table class="oc-tabla">
+          <thead>
+            <tr>
+              <th><span class="visualmente-oculto">Elegir</span></th>
+              <th>Paciente</th>
+              <th>DNI</th>
+              <th>Detalle</th>
+              <th class="num">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of paraFacturar(); track p.paciente.id) {
+              <tr>
+                <td>
+                  <input
+                    type="checkbox"
+                    [checked]="elegidos().has(p.paciente.id)"
+                    (change)="alternar(p.paciente.id)"
+                    [attr.aria-label]="
+                      'Facturar a ' + p.paciente.nombre + ' ' + p.paciente.apellido
+                    "
+                  />
+                </td>
+                <td>{{ p.paciente.apellido }}, {{ p.paciente.nombre }}</td>
+                <td class="oc-mono">
+                  @if (p.sinDni) {
+                    <span class="oc-estado oc-estado--aviso">Sin DNI</span>
+                  } @else {
+                    {{ p.paciente.dni }}
+                  }
+                </td>
+                <td class="oc-mono">
+                  @for (it of p.items; track it.precio) {
+                    <div>{{ it.cantidad }} × {{ plata(it.precio) }}</div>
+                  }
+                </td>
+                <td class="num oc-mono">
+                  <b>{{ plata(p.total) }}</b>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5" class="oc-suave">
+                  No hay sesiones particulares cobradas sin factura en {{ titulo() }}.
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      @if (paraFacturar().length) {
+        <div class="fila">
+          <span class="oc-suave">
+            Sin DNI la factura sale a "consumidor final sin identificar". Elegidas:
+            <b class="oc-mono">{{ plata(totalElegido()) }}</b>
+          </span>
+          <button
+            type="button"
+            class="oc-btn oc-btn--primario"
+            (click)="emitir()"
+            [disabled]="ocupado() || !elegidos().size"
+          >
+            Emitir facturas elegidas
+          </button>
+        </div>
+      }
+    }
+
+    @case ('emitidas') {
+      <div class="oc-tabla-caja">
+        <table class="oc-tabla">
+          <thead>
+            <tr>
+              <th>Paciente</th>
+              <th>Comprobante</th>
+              <th>CAE</th>
+              <th class="num">Total</th>
+              <th>Estado</th>
+              <th><span class="visualmente-oculto">Acciones</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (f of emitidas(); track f.id) {
+              <tr>
+                <td>{{ f.paciente.apellido }}, {{ f.paciente.nombre }}</td>
+                <td class="oc-mono">
+                  C {{ nro(f) }}
+                  <div class="oc-suave nota">{{ dmy(f.fecha) }} · {{ f.sesiones }} ses.</div>
+                </td>
+                <td class="oc-mono">
+                  {{ f.cae }}
+                  <div class="oc-suave nota">vence {{ dmy(f.caeVence) }}</div>
+                </td>
+                <td class="num oc-mono">{{ plata(f.total) }}</td>
+                <td>
+                  <span class="oc-estado" [class.oc-estado--ok]="f.enviada">{{
+                    f.enviada ? 'Enviada' : 'Sin enviar'
+                  }}</span>
+                  @if (f.modo !== 'produccion') {
+                    <div class="oc-suave nota">{{ f.modo }}</div>
+                  }
+                </td>
+                <td>
+                  <div class="acciones-fila">
+                    <button type="button" class="oc-btn oc-btn--chico" (click)="verPdf(f)">
+                      PDF
+                    </button>
+                    <button
+                      type="button"
+                      class="oc-btn oc-btn--chico oc-btn--primario"
+                      (click)="compartir(f)"
+                    >
+                      Compartir
+                    </button>
+                    <button type="button" class="enlace" (click)="alternarEnviada(f)">
+                      {{ f.enviada ? 'Desmarcar' : 'Marcar enviada' }}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6" class="oc-suave">
+                  Todavía no hay facturas emitidas de {{ titulo() }}.
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      @if (rechazadas().length) {
+        <section class="oc-tarjeta seccion">
+          <h2>Rechazadas por ARCA</h2>
+          @for (f of rechazadas(); track f.id) {
+            <div>
+              <b>{{ f.paciente.apellido }}, {{ f.paciente.nombre }}</b> · {{ plata(f.total) }} ·
+              <span class="oc-suave">{{ f.error }}</span>
+            </div>
+          }
+          <p class="oc-suave nota">
+            Las sesiones de una factura rechazada siguen en "Para facturar".
+          </p>
+        </section>
+      }
+    }
+
+    @case ('datos') {
+      @if (esAdmin()) {
+        <form class="oc-tarjeta seccion" (ngSubmit)="guardarDatos()">
+          <h2>Datos del emisor</h2>
+          <div class="grilla">
+            <label class="oc-campo"
+              >CUIT<input
+                name="cuit"
+                [(ngModel)]="datos.cuit"
+                inputmode="numeric"
+                placeholder="20-12345678-9"
+            /></label>
+            <label class="oc-campo"
+              >Razón social<input name="razon" [(ngModel)]="datos.razonSocial"
+            /></label>
+            <label class="oc-campo"
+              >Domicilio comercial<input name="dom" [(ngModel)]="datos.domicilio"
+            /></label>
+            <label class="oc-campo"
+              >Inicio de actividades<input
+                type="date"
+                name="ini"
+                [(ngModel)]="datos.inicioActividades"
+            /></label>
+            <label class="oc-campo"
+              >Punto de venta<input type="number" min="1" name="pv" [(ngModel)]="datos.ptoVta"
+            /></label>
+            <label class="oc-campo">
+              Modo
+              <select name="modo" [(ngModel)]="datos.modo">
+                @for (m of modos; track m) {
+                  <option [value]="m">{{ nombreModo[m] }}</option>
+                }
+              </select>
+            </label>
+          </div>
+          <label class="oc-campo"
+            >Texto del ítem<input name="item" [(ngModel)]="datos.textoItem"
+          /></label>
+          <div>
+            <button type="submit" class="oc-btn oc-btn--primario" [disabled]="ocupado()">
+              Guardar
+            </button>
+          </div>
+        </form>
+
+        <section class="oc-tarjeta seccion">
+          <h2>Certificado de ARCA</h2>
+          @if (config(); as c) {
+            <p>
+              @if (c.tieneCertificado) {
+                <span class="oc-estado oc-estado--ok">Certificado cargado</span>
+                vence el {{ dmy(c.certificadoVence?.slice(0, 10) ?? null) }}.
+              } @else if (c.tieneClave) {
+                <span class="oc-estado oc-estado--aviso">Falta el certificado</span>
+                Ya se generó el pedido: falta cargar el certificado que da ARCA.
+              } @else {
+                <span class="oc-estado">Sin certificado</span>
+              }
+            </p>
+          }
+          <ol class="pasos">
+            <li>
+              Guardá el CUIT y tocá
+              <button
+                type="button"
+                class="oc-btn oc-btn--chico"
+                (click)="pedirCertificado()"
+                [disabled]="ocupado()"
+              >
+                Generar pedido de certificado
+              </button>
+              . Se descarga <span class="oc-mono">pedido-arca.csr</span>; la clave privada queda
+              guardada acá, cifrada.
+            </li>
+            <li>
+              En ARCA, con clave fiscal: "Administración de certificados digitales" → agregar alias
+              → subir el pedido → descargar el certificado (<span class="oc-mono">.crt</span>).
+              Después, en "Administrador de relaciones", autorizar el servicio "Facturación
+              electrónica" para ese certificado.
+            </li>
+            <li>
+              Cargá el certificado:
+              <input
+                type="file"
+                accept=".crt,.pem,.cer"
+                (change)="leerArchivo($event)"
+                aria-label="Archivo del certificado"
+              />
+              <textarea
+                [(ngModel)]="certificado"
+                name="crt"
+                placeholder="-----BEGIN CERTIFICATE-----"
+                aria-label="Certificado"
+              ></textarea>
+              <button
+                type="button"
+                class="oc-btn oc-btn--chico oc-btn--primario"
+                (click)="guardarCertificado()"
+                [disabled]="ocupado() || !certificado"
+              >
+                Guardar certificado
+              </button>
+            </li>
+            <li>
+              Creá en ARCA un punto de venta "RECE para aplicativo y web services", ponelo arriba y
+              probá:
+              <button
+                type="button"
+                class="oc-btn oc-btn--chico"
+                (click)="probar()"
+                [disabled]="ocupado()"
+              >
+                Probar conexión
+              </button>
+            </li>
+          </ol>
+          @if (csr(); as pem) {
+            <details>
+              <summary class="oc-suave">Ver el pedido generado</summary>
+              <textarea readonly [value]="pem" aria-label="Pedido de certificado"></textarea>
+            </details>
+          }
+        </section>
+      } @else {
+        @if (config(); as c) {
+          <section class="oc-tarjeta seccion">
+            <h2>Datos del emisor</h2>
+            <div>
+              CUIT <span class="oc-mono">{{ c.cuit ?? '—' }}</span> ·
+              {{ c.razonSocial ?? 'Sin razón social' }} · punto de venta {{ c.ptoVta }}
+            </div>
+            <div>
+              Modo: {{ nombreModo[c.modo] }} ·
+              {{ c.tieneCertificado ? 'Certificado cargado' : 'Sin certificado' }}
+            </div>
+            <p class="oc-suave nota">Los datos fiscales los carga la administración del centro.</p>
+          </section>
+        }
+      }
+    }
+  }
+</main>

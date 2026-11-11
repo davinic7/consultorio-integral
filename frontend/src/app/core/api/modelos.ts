@@ -265,6 +265,10 @@ export interface Prestacion {
   montoManual: boolean;
   facturada: boolean;
   token: string | null;
+  /** Fecha que se declara a la obra social. */
+  fechaDeclarada: string | null;
+  /** Factura electrónica que la incluye. */
+  facturaId: string | null;
   orden: { id: string; numero: string; fechaEmision: string; vence: string | null } | null;
   cobrado: number;
   saldo: number;
@@ -400,4 +404,87 @@ export interface CentroPlataforma {
   creadoEn: string;
   plan: { codigo: string; nombre: string };
   _count: { miembros: number };
+}
+
+// ───────── Facturación ARCA ─────────
+
+export type ModoArca = 'simulado' | 'homologacion' | 'produccion';
+
+export interface ConfigFiscal {
+  cuit: string | null;
+  razonSocial: string | null;
+  domicilio: string | null;
+  inicioActividades: string | null;
+  ptoVta: number;
+  modo: ModoArca;
+  textoItem: string;
+  tieneClave: boolean;
+  tieneCertificado: boolean;
+  certificadoVence: string | null;
+}
+
+export interface PendienteFactura {
+  paciente: { id: string; nombre: string; apellido: string; dni: string | null };
+  sesiones: number;
+  prestacionIds: string[];
+  items: { cantidad: number; precio: number }[];
+  total: number;
+  impagas: number;
+  sinDni: boolean;
+}
+
+export interface Factura {
+  id: string;
+  paciente: { id: string; nombre: string; apellido: string; telefono: string | null };
+  numero: number | null;
+  ptoVta: number;
+  fecha: string;
+  total: number;
+  sesiones: number;
+  cae: string | null;
+  caeVence: string | null;
+  modo: ModoArca;
+  estado: 'emitida' | 'rechazada';
+  error: string | null;
+  enviada: boolean;
+}
+
+// ───────── Presentación a obras sociales ─────────
+
+export interface SesionPresentacion {
+  prestacionId: string;
+  fecha: string;
+  fechaDeclarada: string | null;
+  fechaSugerida: string | null;
+  aviso: string | null;
+  orden: { id: string; numero: string } | null;
+  token: string | null;
+  presentada: boolean;
+}
+
+export interface Presentacion {
+  mes: string;
+  financiador: {
+    id: string;
+    nombre: string;
+    codigoPrestacion: string | null;
+    requiereOrden: boolean;
+    requiereToken: boolean;
+    maxSesionesSemana: number | null;
+  };
+  resumen: { sesiones: number; conOrden: number; conToken: number; presentadas: number };
+  pacientes: {
+    paciente: { id: string; nombre: string; apellido: string; dni: string | null; nroAfiliado: string | null };
+    sesiones: SesionPresentacion[];
+  }[];
+}
+
+export interface ResultadoToken {
+  token: string;
+  pacienteId: string | null;
+  paciente: string | null;
+  por: 'manual' | 'afiliado' | 'dni' | null;
+  prestacionId: string | null;
+  fecha: string | null;
+  estado: 'ok' | 'duplicado' | 'sin_paciente' | 'sin_sesion' | 'invalido';
 }

@@ -54,6 +54,18 @@ export const routes: Routes = [
         loadComponent: () => import('./paginas/cobros/cobros').then((m) => m.Cobros),
       },
       {
+        path: 'facturacion',
+        canActivate: [rolGuard('admin', 'recepcion'), moduloGuard('facturacion_arca')],
+        title: 'Facturación · Centro Integral',
+        loadComponent: () => import('./paginas/facturacion/facturacion').then((m) => m.Facturacion),
+      },
+      {
+        path: 'presentacion',
+        canActivate: [rolGuard('admin', 'recepcion'), moduloGuard('obras_sociales')],
+        title: 'Presentación a obras sociales · Centro Integral',
+        loadComponent: () => import('./paginas/presentacion/presentacion').then((m) => m.Presentacion),
+      },
+      {
         path: 'plataforma',
         canActivate: [superadminGuard],
         title: 'Centros y planes · Centro Integral',
