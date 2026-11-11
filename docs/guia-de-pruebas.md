@@ -1,6 +1,6 @@
 # Guía de pruebas — Centro Integral
 
-Estado al paso 8 del prototipo, con el rediseño Órbita Cian: login y roles por centro, ABM de salas, profesionales y pacientes, agenda con avisos, asistencia, planilla mensual, notas de sesión cifradas, obras sociales con sus reglas, y cobros, conciliación y liquidación.
+Versión 1.0: los 10 pasos del prototipo, con el rediseño Órbita Cian. Login y roles por centro, ABM de salas, profesionales y pacientes, agenda con avisos, asistencia, planilla mensual, notas de sesión cifradas, obras sociales con sus reglas, cobros, conciliación y liquidación, planes con módulos, facturación electrónica con ARCA y presentación a obras sociales.
 
 **Probar sin instalar nada:** la versión publicada está en https://centro-integral.onrender.com (mismos usuarios demo; la contraseña es la de `DEMO_PASSWORD` que se cargó en Render). Si nadie la usó en los últimos 15 minutos, la primera visita tarda cerca de un minuto en abrir.
 
@@ -8,7 +8,7 @@ Estado al paso 8 del prototipo, con el rediseño Órbita Cian: login y roles por
 
 ## 1. Levantar el sistema
 
-Requisitos: Node 24 o superior y PostgreSQL 17 corriendo (servicio de Windows `postgresql-x64-17`).
+Requisitos: Node 26 o superior (trae `Temporal`, que usa la agenda) y PostgreSQL 17 corriendo (servicio de Windows `postgresql-x64-17`).
 
 **Desde el Code tab de Claude:** los servidores ya están en `.claude/launch.json` (`backend` y `frontend`).
 
@@ -71,6 +71,10 @@ Para volver a crear los usuarios demo (no borra nada): `cd backend && npm run db
 | Hash de contraseñas (scrypt) | [src/auth/password.ts](../backend/src/auth/password.ts) |
 | Usuarios del centro (admin) | [src/usuarios/](../backend/src/usuarios) |
 | Alta de centros (superadmin) | [src/centros/centros.service.ts](../backend/src/centros/centros.service.ts) |
+| **Planes y módulos**: `@RequiereModulo`, caché, endpoints del superadmin | [src/planes/planes.ts](../backend/src/planes/planes.ts) |
+| **Cliente ARCA** (WSAA, WSFEv1, firma CMS, QR) | [src/facturacion/arca.ts](../backend/src/facturacion/arca.ts) |
+| Facturación: datos fiscales, emisión, PDF | [src/facturacion/facturacion.ts](../backend/src/facturacion/facturacion.ts) y [pdf.ts](../backend/src/facturacion/pdf.ts) |
+| Presentación a obras sociales (fecha a declarar, tokens) | [src/cobros/presentacion.ts](../backend/src/cobros/presentacion.ts) y [presentacion-reglas.ts](../backend/src/cobros/presentacion-reglas.ts) |
 | Salas | [src/salas/salas.ts](../backend/src/salas/salas.ts) |
 | Profesionales (porcentaje visible según rol) | [src/profesionales/profesionales.ts](../backend/src/profesionales/profesionales.ts) |
 | Pacientes: búsqueda, alcance por rol, asignación | [src/pacientes/pacientes.ts](../backend/src/pacientes/pacientes.ts) |
@@ -99,7 +103,7 @@ Para volver a crear los usuarios demo (no borra nada): `cd backend && npm run db
 | Menú lateral, barra superior y barra inferior del celular | [paginas/shell/](../frontend/src/app/paginas/shell) |
 | Sistema de diseño Órbita Cian (colores, clases `oc-*`, tema) | [styles/_orbita.scss](../frontend/src/styles/_orbita.scss) y [docs/diseno/orbita-cian.md](diseno/orbita-cian.md) |
 | Tema claro y oscuro | [core/tema.service.ts](../frontend/src/app/core/tema.service.ts) |
-| Pantallas | [paginas/](../frontend/src/app/paginas) (login, elegir-centro, inicio (panel), agenda, asistencia, cobros, pacientes, paciente-ficha, planilla, profesionales, salas, financiadores, avisos) |
+| Pantallas | [paginas/](../frontend/src/app/paginas) (login, elegir-centro, inicio (panel), agenda, asistencia, cobros, facturacion, presentacion, pacientes, paciente-ficha, planilla, profesionales, salas, financiadores, avisos, plataforma) |
 | Estilos (modo claro y oscuro) | [styles.scss](../frontend/src/styles.scss) |
 
 ### Decisiones y alcance
@@ -122,7 +126,7 @@ Marcá cada caso a medida que lo probás. "Esperado" es lo que tiene que pasar.
 - [ ] **Recargar la página (F5):** la sesión sigue abierta, en el mismo centro.
 - [ ] **Cambiar de centro:** con `profesional@demo.local`, enlace "Cambiar de centro" → elegir el otro → la barra muestra el centro y el rol nuevos.
 - [ ] **Salir:** botón Salir → vuelve al login; al entrar a http://localhost:4200/ manda al login.
-- [ ] **Superadmin:** entrar con `superadmin@demo.local` → "Entraste como superadministrador", sin menú de centro.
+- [ ] **Superadmin:** entrar con `superadmin@demo.local` → "Entraste como superadministrador" y en el menú solo Panel y "Centros y planes".
 - [ ] **Mostrar contraseña:** el ícono del ojo muestra y oculta lo escrito.
 - [ ] **Recordarme:** sin tildar "Recordarme en este equipo", entrar, cerrar la pestaña y abrir la app de nuevo → pide ingresar. Tildado → la sesión sigue.
 - [ ] **Celular:** el formulario aparece completo sin bajar; el sello DaviNic queda debajo.
@@ -257,6 +261,32 @@ Los datos demo traen el valor de la sesión (particular $ 12.000, OSEP $ 9.500, 
 - [ ] En un mes ya terminado y todo marcado, "Generar liquidación" → "Generada". Cambiar la asistencia de un turno de ese mes → error "La liquidación de ese mes ya está cerrada". "Reabrir" lo vuelve a permitir; "Marcar pagada" la deja cerrada para siempre.
 - [ ] Como profesional vinculado a una ficha: ve solo sus sesiones y su liquidación, sin botones para cobrar ni liquidar. Recepción no ve la pestaña Liquidación.
 
+### 4.10 quinquies Planes y módulos (superadmin)
+
+- [ ] Entrar con `superadmin@demo.local` → **Centros y planes**: se ven Centro Demo (Integral) y Centro Demo Norte (Básico), y los tres planes con sus módulos.
+- [ ] Cambiar el plan de Centro Demo a **Básico** → entrar con `admin@demo.local` (o renovar la sesión): desaparecen Cobros, Obras sociales, Presentación y Facturación del menú, la pestaña Pagos y el saldo de la ficha, y "Cobrado este mes" del panel. Abrir http://localhost:4200/cobros a mano → vuelve al inicio. Volver a Integral.
+- [ ] En un plan, destildar un módulo y "Guardar" → la API lo bloquea enseguida (403 "El plan del centro no incluye …"); el menú se actualiza al renovar la sesión.
+- [ ] "Nuevo centro" con nombre, identificador, plan y su administrador (con contraseña si la cuenta no existe) → aparece en la lista y esa cuenta ya puede entrar. "Dar de baja" lo desactiva.
+
+### 4.10 sexies Facturación electrónica (admin o recepción)
+
+Arranca en **modo simulado**: no se conecta con ARCA y las facturas no tienen validez fiscal.
+
+- [ ] Con sesiones particulares cobradas en el mes (ver 4.10 quater), menú **Facturación** → mes de esas sesiones → "Para facturar" muestra cada paciente con sus sesiones agrupadas por precio y el total. Los que tienen sesiones sin cobrar aparecen en "Revisar antes de facturar".
+- [ ] Elegir pacientes → "Emitir facturas elegidas" → confirmar → pestaña **Emitidas** con número, CAE y vencimiento. "PDF" abre la factura con la letra C, el QR y "SIN VALIDEZ FISCAL".
+- [ ] "Compartir": en el celular abre compartir con el PDF; en la computadora lo descarga y abre el chat de WhatsApp del paciente. Queda marcada como enviada.
+- [ ] Una sesión ya facturada no se puede cambiar de asistencia ni de monto (error).
+- [ ] **Datos fiscales** (admin): CUIT, razón social, domicilio, inicio de actividades, punto de venta y modo. "Generar pedido de certificado" descarga `pedido-arca.csr`. Cargar un certificado que no es de esa clave → error.
+- [ ] **Con certificado real de ARCA (homologación):** subir el pedido en ARCA ("Administración de certificados digitales"), autorizar "Facturación electrónica" en el "Administrador de relaciones", cargar el `.crt`, crear un punto de venta "RECE para aplicativo y web services", pasar a "Homologación" y "Probar conexión" → muestra el estado de los servidores y el último número del punto de venta.
+
+### 4.10 septies Presentación a obras sociales (admin o recepción)
+
+- [ ] Menú **Presentación a obras sociales** → arranca en OSEP (o la primera que pide orden o token) → resumen con sesiones, con orden, con token y presentadas.
+- [ ] Con una orden de OSEP emitida después de algunas sesiones del mes: "Completar fechas sugeridas" → las sesiones anteriores a la orden se declaran desde la emisión, una por día y hasta 3 por semana; cada una dice por qué se movió.
+- [ ] Cambiar a mano una fecha a declarar → queda guardada.
+- [ ] Prepaga Salud (pide token): "Cargar tokens" → pegar `AB12CD 30111222` (token y DNI) → "Revisar" muestra a qué paciente y sesión va → "Guardar". Un token repetido aparece como "Repetido".
+- [ ] "Marcar presentadas" en un paciente → sus sesiones con fecha quedan presentadas (también en Cobros).
+
 ### 4.11 Notas de sesión (profesional)
 
 - [ ] Entrar con `profesional@demo.local` → Pacientes → abrir uno → pestaña **Notas** → escribir una nota y "Agregar nota" → aparece como "Privada".
@@ -287,7 +317,7 @@ Casos:
 - [ ] `GET /api/v1/pacientes?q=gomez` → devuelve `items`, `total`, `pagina`, `porPagina`.
 - [ ] `POST /api/v1/salas` con `{"nombre": ""}` → 400 con el detalle de validación.
 - [ ] Sin Authorize, cualquier ruta salvo `health` y `auth/login` → 401.
-- [ ] **Superadmin** (no tiene pantalla todavía): login con `superadmin@demo.local`, Authorize, y `POST /api/v1/centros`:
+- [ ] **Superadmin** (también desde la pantalla "Centros y planes"): login con `superadmin@demo.local`, Authorize, y `POST /api/v1/centros`:
   ```json
   {
     "nombre": "Centro Prueba",
@@ -347,8 +377,8 @@ cd frontend && npx ng test --watch=false
 
 | Suite | Cantidad | Qué cubre |
 | --- | --- | --- |
-| Backend unitarios | 34 | variables de entorno, contraseñas, filtro por centro, búsqueda sin tildes, fechas y zonas horarias, cifrado de notas, reglas de cobro y liquidación |
-| Backend e2e | 110 | auth y roles, ABM, agenda (superposición, pedidos simultáneos, semanales), avisos, asistencia (permisos, mes cerrado, registro de cambios), historial, planilla, notas cifradas y quién las ve, obras sociales y sus reglas, cobros (precios, órdenes, pagos, conciliación) y liquidación, aislamiento entre centros, contra PostgreSQL real |
+| Backend unitarios | 46 | variables de entorno, contraseñas, filtro por centro, búsqueda sin tildes, fechas y zonas horarias, cifrado de notas, reglas de cobro y liquidación, cliente ARCA (firma CMS, ticket, Factura C, QR), fechas a declarar y tokens |
+| Backend e2e | 122 | auth y roles, ABM, agenda (superposición, pedidos simultáneos, semanales), avisos, asistencia (permisos, mes cerrado, registro de cambios), historial, planilla, notas cifradas y quién las ve, obras sociales y sus reglas, cobros (precios, órdenes, pagos, conciliación) y liquidación, planes y módulos, facturación (simulada y contra un ARCA de prueba), presentación a obras sociales, aislamiento entre centros, contra PostgreSQL real |
 | Frontend | 34 | sesión, "Recordarme", renovación de token, login, tema claro/oscuro, fechas, ubicación de turnos en el calendario, cuándo se puede marcar asistencia, colores por disciplina, enlaces de WhatsApp y edad, formato de pesos y meses |
 
 Los e2e usan la base `centro_integral_test` (`TEST_DATABASE_URL`), que se vacía en cada corrida: nunca tocan los datos de desarrollo.
@@ -359,10 +389,10 @@ Lint: `npm run lint` en cada carpeta. En esta PC, Windows (Control de aplicacion
 
 ## 8. Limitaciones conocidas (todavía no hechas)
 
-- Facturación electrónica (Factura C de ARCA) y presentación a OSEP: paso 10. Hoy "presentada" es una marca manual.
-- Planes: todos los centros ven Cobros aunque su plan no lo incluya; la habilitación por plan llega en el paso 9.
+- ARCA: probado contra un servidor simulado en los tests; falta una prueba en homologación con un certificado real. Factura el centro con su CUIT (no cada profesional).
+- Obras sociales: los tokens y las órdenes se cargan a mano o pegados como texto (todavía sin leerlos de fotos).
 - Liquidación: no hay todavía un comprobante para imprimir o mandarle al profesional.
 - Recuperar la contraseña desde el login: no existe todavía; la cambia quien administra el centro.
-- Pantallas para el superadmin (centros y planes) y para administrar usuarios del centro: hoy solo por API.
+- Pantalla para administrar usuarios del centro: hoy solo por API.
 - Cambio de rol o baja de un usuario: se aplica en como mucho 15 minutos (vida del access token).
 - En la web el refresh token queda en `localStorage`: antes de producción, pasarlo a cookie httpOnly.

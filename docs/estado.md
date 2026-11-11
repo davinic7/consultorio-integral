@@ -1,6 +1,6 @@
 # Estado del desarrollo
 
-Actualizado: 11 de noviembre de 2026. Orden de pasos según [prototipo.md](prototipo.md).
+Actualizado: 11 de noviembre de 2026 (versión 1.0). Orden de pasos según [prototipo.md](prototipo.md).
 
 ## Hecho
 
@@ -25,14 +25,28 @@ Obras sociales, prepagas y CUD por centro con sus reglas (código de prestación
 - **Frontend**: pantalla **Cobros y liquidación** (`/cobros`) del rediseño, pestaña Pagos e indicadores de saldo y orden en la ficha, valor de la sesión en Obras sociales y cobros del mes en el panel.
 - Migración `cobros_y_liquidacion`; precios en los datos demo; 5 tests unitarios y 18 e2e nuevos.
 
-## Próximos (pasos 9 y 10)
+## Paso 9 — Planes y módulos (hecho)
 
-9. Planes y habilitación de módulos (hoy todos los centros ven Cobros).
-10. Portar ARCA (Factura C) y OSEP desde `referencia-php/`: la marca "presentada" de cada sesión pasa a salir de la factura o de la presentación.
+- `@RequiereModulo` en los controllers: el plan del centro tiene que incluir el módulo (403 si no). El frontend oculta del menú, las rutas, la ficha y el panel lo que el plan no incluye (la sesión trae el plan y sus módulos).
+- Pantalla **Centros y planes** (`/plataforma`) para el superadmin: alta de centros con su primer administrador, cambio de plan, baja, y precio y módulos de cada plan.
+- 5 tests e2e nuevos.
+
+## Paso 10 — ARCA y obras sociales (hecho)
+
+- **Facturación electrónica** (`src/facturacion/`, pantalla `/facturacion`): Factura C con ARCA portada de `Arca.php` (WSAA con firma CMS + WSFEv1), en modo simulado, homologación o producción. Datos fiscales y certificado del centro (la clave privada se genera en el sistema y se guarda cifrada). Una factura por paciente particular con las sesiones cobradas del mes; PDF con el formato de ARCA y su QR; compartir por WhatsApp.
+- **Presentación a obras sociales** (`/presentacion`): lo de OSEP de la referencia, para cualquier obra social: fecha a declarar sugerida por las reglas (desde la orden, una por día, máximo semanal, antes del vencimiento), tokens pegados como texto emparejados por afiliado o DNI, y marca de presentada.
+- 12 tests unitarios y 7 e2e nuevos. Se probó contra un ARCA simulado en los tests; **falta probar en homologación con un certificado real**.
+
+## Prototipo completo
+
+Los 10 pasos de [prototipo.md](prototipo.md) están hechos (versión 1.0).
 
 ## Pendientes chicos anotados
 
-- Pantallas para el superadmin (centros y planes) y para administrar usuarios del centro: hoy solo por API.
+- Pantalla para administrar usuarios del centro (hoy solo por API).
+- ARCA: probar en homologación con un certificado real del centro antes de pasar a producción. Decidir si cada profesional factura con su propio CUIT (hoy factura el centro).
+- Obras sociales: leer órdenes y tokens desde fotos (la referencia usaba OCR en el navegador) y planilla de la orden en PDF.
+- Módulo "reportes" del plan: todavía no tiene pantallas propias.
 - Refresh token de la web en cookie httpOnly antes de producción.
 - Tests de frontend para las pantallas de salas, profesionales, pacientes, agenda, planilla y notas (hoy probadas a mano).
 - Lint del backend: Windows (Control de aplicaciones) bloquea `tsgolint.exe`, el ejecutable de las reglas con tipos. Se corre `oxlint` sin `--type-aware` hasta resolverlo.
@@ -41,7 +55,6 @@ Obras sociales, prepagas y CUD por centro con sus reglas (código de prestación
 - Avisos: hoy se consultan cada minuto; más adelante, notificaciones push en la app móvil.
 - Cobros: un faltazo sin aviso de un particular no genera cobro (en la referencia PHP sí se cobraba); decidir si se agrega como regla por centro.
 - Cobros: comprobante de liquidación para imprimir o mandar al profesional.
-- `backend/package.json` pide Node ≥ 24, pero Temporal recién viene activado en Node 26 (en Node 24 hace falta `--harmony-temporal`): subir el mínimo a 26.
 - Arranque en Render: si falla un paso opcional (superadmin o datos demo, por ejemplo por una contraseña corta) el contenedor no arranca; evaluar que esos pasos solo avisen en el log.
 
 ## Rediseño Órbita Cian

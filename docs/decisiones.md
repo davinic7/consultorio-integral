@@ -167,3 +167,28 @@ Limitaciones conocidas:
 - **Permisos:** admin y recepción ven y gestionan cobros y órdenes; el valor de la sesión lo carga el admin (recepción lo ve). Liquidaciones: el admin todas; el profesional solo la suya; recepción no. El profesional ve sus sesiones sin acciones.
 - **Montos:** `Decimal` de Prisma para sumar (sin errores de punto flotante); la API devuelve números.
 
+## 15. Planes y módulos (paso 9)
+
+- **Dónde se controla:** `@RequiereModulo(Modulo.x)` en cada controller (o ruta). El AuthGuard, después del rol, consulta los módulos del plan del centro y responde 403 "El plan del centro no incluye …". Una caché de 30 segundos evita ir a la base en cada pedido; se limpia al cambiar un plan o el plan de un centro.
+- **Qué controla cada módulo:** agenda (turnos y semanales), asistencia (historial y planilla), pacientes (pacientes y notas), cobros (sesiones, pagos, resumen, precios), liquidación, obras sociales (órdenes, presentación y el alta o edición de obras sociales; la lista se sigue leyendo porque la usa la ficha) y facturación electrónica. Marcar asistencia sigue creando la sesión para cobrar aunque el plan no tenga cobros: si el centro cambia de plan, los datos ya están.
+- **Frontend:** la sesión trae `centro.plan` y `centro.modulos`; menú, rutas, ficha y panel ocultan lo que no corresponde. La API controla igual.
+- **Superadmin:** `/planes` (listar, crear, precio y módulos) y `PATCH /centros/:id` (plan, nombre, baja), con su pantalla.
+
+## 16. Facturación electrónica con ARCA (paso 10)
+
+- **Emisor: el centro.** Un CUIT, punto de venta y certificado por centro (tabla `config_fiscal`). En la referencia cada profesional facturaba con su CUIT; si un centro necesita eso, se agrega un emisor por profesional.
+- **Qué se factura:** Factura C (monotributo) a consumidor final, una por paciente particular y por mes, con las sesiones ya cobradas y sin factura. Sin DNI sale "sin identificar" (tipo 99). Las sesiones de obras sociales no se facturan acá: se presentan.
+- **Cliente ARCA en TypeScript** ([src/facturacion/arca.ts](../backend/src/facturacion/arca.ts)), portado de `Arca.php`: WSAA firma el pedido de ticket en CMS con el contenido incluido (`node-forge`; verificado con `openssl cms -verify`) y el ticket (12 h) se guarda y reutiliza; WSFEv1 pide el último número y solicita el CAE. Las conexiones bajan el nivel de TLS (`SECLEVEL=1`) solo para ARCA, como la referencia. El transporte se puede reemplazar: así se prueba sin red.
+- **Modos:** simulado (no llama a ARCA; numeración propia y CAE ficticio), homologación y producción. Fuera de producción el PDF dice "SIN VALIDEZ FISCAL".
+- **Certificado:** el sistema genera la clave privada y el pedido (CSR); la clave se guarda **cifrada con la clave de datos del centro** (como las notas) y nunca sale. Al cargar el certificado se controla que corresponda a esa clave.
+- **Después de emitir:** las sesiones quedan atadas a la factura y marcadas como presentadas; no cambian monto, cobertura ni asistencia. Una factura rechazada queda registrada con el motivo y sus sesiones vuelven a "para facturar". Si ARCA no responde, la emisión corta ahí.
+- **PDF** con el formato habitual y el QR de la RG 4291 (`pdfkit` y `qrcode`).
+
+## 17. Presentación a obras sociales (paso 10)
+
+- **Generalizado:** lo que la referencia hacía para OSEP sirve para cualquier obra social, con sus reglas de la tabla `financiadores`.
+- **Fecha a declarar** (`prestaciones.fecha_declarada`): sugerida con las reglas de `sugerir_fechas_osep` (no antes de la emisión de la orden, una por día, de lunes a sábado, hasta el máximo semanal y antes del vencimiento, dentro del mes). Se completa con un botón y se puede corregir a mano.
+- **Órdenes:** una orden nueva cubre también las sesiones de su mes anteriores a la emisión (en OSEP la orden se compra después y esas sesiones se declaran con fecha posterior). El aviso "orden fuera de fecha" mira la fecha declarada si la hay.
+- **Tokens:** se pegan como texto (token y n.º de afiliado o DNI por línea) y se emparejan como `emparejar_tokens`: por afiliado, si no por DNI; un token repetido se descarta. Primero se revisa y después se guarda. Leerlos de las capturas con OCR queda para más adelante.
+- **Presentada:** la misma marca `facturada` de la sesión, que ya usaban Cobros y la conciliación.
+
