@@ -3,5 +3,5 @@ export const environment = {
   production: false,
   apiUrl: '/api/v1',
   /** Versión que se muestra al pie del menú. */
-  version: '0.6',
+  version: '0.8',
 };

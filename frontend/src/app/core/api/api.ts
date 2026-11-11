@@ -4,6 +4,15 @@ import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import type {
   Aviso,
+  Conciliacion,
+  DatosOrden,
+  DatosPago,
+  LiquidacionProfesional,
+  MedioPago,
+  Orden,
+  Precio,
+  Prestacion,
+  ResumenCobros,
   CambioAsistencia,
   DatosFinanciador,
   Financiador,
@@ -223,6 +232,144 @@ export class AvisosApi {
   }
   marcarTodos() {
     return firstValueFrom(this.http.post<{ marcados: number }>(`${API}/avisos/leer-todos`, {}));
+  }
+}
+
+/** Prestaciones, pagos, resumen y conciliación del mes. */
+@Injectable({ providedIn: 'root' })
+export class CobrosApi {
+  private readonly http = inject(HttpClient);
+
+  prestaciones(filtro: {
+    mes?: string;
+    pacienteId?: string;
+    profesionalId?: string;
+    financiadorId?: string;
+    estado?: 'por_cobrar' | 'cobrada';
+  }) {
+    return firstValueFrom(
+      this.http.get<Prestacion[]>(`${API}/prestaciones`, { params: params(filtro) }),
+    );
+  }
+  actualizar(
+    id: string,
+    datos: Partial<{
+      monto: number | null;
+      financiadorId: string | null;
+      ordenId: string | null;
+      token: string | null;
+      facturada: boolean;
+    }>,
+  ) {
+    return firstValueFrom(this.http.patch<Prestacion>(`${API}/prestaciones/${id}`, datos));
+  }
+  facturar(ids: string[], facturada = true) {
+    return firstValueFrom(
+      this.http.post<{ actualizadas: number }>(`${API}/prestaciones/facturar`, { ids, facturada }),
+    );
+  }
+  generarFaltantes(mes: string) {
+    return firstValueFrom(
+      this.http.post<{ creadas: number; omitidas: number }>(`${API}/prestaciones/generar`, { mes }),
+    );
+  }
+  pagar(prestacionId: string, datos: DatosPago) {
+    return firstValueFrom(
+      this.http.post<Prestacion>(`${API}/prestaciones/${prestacionId}/pagos`, datos),
+    );
+  }
+  pagarLote(prestacionIds: string[], medio: MedioPago, fecha?: string) {
+    return firstValueFrom(
+      this.http.post<{ pagos: number; total: number; sinSaldo: number }>(`${API}/pagos/lote`, {
+        prestacionIds,
+        medio,
+        fecha,
+      }),
+    );
+  }
+  actualizarPago(id: string, datos: Partial<DatosPago>) {
+    return firstValueFrom(this.http.patch<Prestacion>(`${API}/pagos/${id}`, datos));
+  }
+  borrarPago(id: string) {
+    return firstValueFrom(this.http.delete<Prestacion>(`${API}/pagos/${id}`));
+  }
+  resumen(mes: string) {
+    return firstValueFrom(
+      this.http.get<ResumenCobros>(`${API}/cobros/resumen`, { params: params({ mes }) }),
+    );
+  }
+  conciliacion(mes: string) {
+    return firstValueFrom(
+      this.http.get<Conciliacion>(`${API}/cobros/conciliacion`, { params: params({ mes }) }),
+    );
+  }
+}
+
+@Injectable({ providedIn: 'root' })
+export class LiquidacionesApi {
+  private readonly http = inject(HttpClient);
+
+  listar(mes: string) {
+    return firstValueFrom(
+      this.http.get<LiquidacionProfesional[]>(`${API}/liquidaciones`, { params: params({ mes }) }),
+    );
+  }
+  generar(profesionalId: string, mes: string) {
+    return firstValueFrom(
+      this.http.post<LiquidacionProfesional>(`${API}/liquidaciones`, { profesionalId, mes }),
+    );
+  }
+  pagar(id: string) {
+    return firstValueFrom(
+      this.http.post<LiquidacionProfesional>(`${API}/liquidaciones/${id}/pagar`, {}),
+    );
+  }
+  reabrir(id: string) {
+    return firstValueFrom(
+      this.http.post<LiquidacionProfesional>(`${API}/liquidaciones/${id}/reabrir`, {}),
+    );
+  }
+}
+
+@Injectable({ providedIn: 'root' })
+export class OrdenesApi {
+  private readonly http = inject(HttpClient);
+
+  listar(pacienteId: string) {
+    return firstValueFrom(
+      this.http.get<Orden[]>(`${API}/ordenes`, { params: params({ pacienteId }) }),
+    );
+  }
+  crear(datos: DatosOrden) {
+    return firstValueFrom(this.http.post<Orden>(`${API}/ordenes`, datos));
+  }
+  borrar(id: string) {
+    return firstValueFrom(this.http.delete<void>(`${API}/ordenes/${id}`));
+  }
+}
+
+@Injectable({ providedIn: 'root' })
+export class PreciosApi {
+  private readonly http = inject(HttpClient);
+
+  /** Sin paciente: los valores generales de cada cobertura. */
+  listar(pacienteId?: string) {
+    return firstValueFrom(
+      this.http.get<Precio[]>(`${API}/precios`, { params: params({ pacienteId }) }),
+    );
+  }
+  crear(datos: {
+    financiadorId: string | null;
+    pacienteId?: string | null;
+    monto: number;
+    vigenteDesde: string;
+  }) {
+    return firstValueFrom(
+      this.http.post<{ id: string; recalculadas: number }>(`${API}/precios`, datos),
+    );
+  }
+  borrar(id: string) {
+    return firstValueFrom(this.http.delete<{ recalculadas: number }>(`${API}/precios/${id}`));
   }
 }
 

@@ -1,9 +1,10 @@
 import { Component, computed, DestroyRef, effect, inject, signal, untracked } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { AvisosApi, PacientesApi, SalasApi, TurnosApi } from '../../core/api/api';
-import type { Aviso, Sala, Turno } from '../../core/api/modelos';
+import { AvisosApi, CobrosApi, PacientesApi, SalasApi, TurnosApi } from '../../core/api/api';
+import type { Aviso, ResumenCobros, Sala, Turno } from '../../core/api/modelos';
 import { AuthService } from '../../core/auth/auth.service';
 import { puede } from '../../core/auth/roles';
+import { plata } from '../../core/cobros';
 import { colorDisciplina, iniciales } from '../../core/disciplina';
 import { ahoraEn, diaSemana, minutos, NOMBRE_DIA, sumarDias } from '../../core/fechas';
 
@@ -36,7 +37,7 @@ interface Bloque {
 /**
  * Panel principal (Órbita Cian, docs/diseno/referencia/Panel.dc.html): indicadores
  * del día, salas en tiempo real, próximo turno, asistencia por profesional y avisos.
- * Todo sale de la agenda real; los indicadores de cobros llegan con el módulo de cobros.
+ * Todo sale de la agenda real y de cobros (lo cobrado y lo que falta cobrar en el mes).
  */
 @Component({
   selector: 'app-inicio',
@@ -50,6 +51,7 @@ export class Inicio {
   private readonly salasApi = inject(SalasApi);
   private readonly pacientesApi = inject(PacientesApi);
   private readonly avisosApi = inject(AvisosApi);
+  private readonly cobrosApi = inject(CobrosApi);
 
   private readonly zona = computed(() => this.auth.sesion()?.centro?.zonaHoraria);
   protected readonly recibeAvisos = computed(() =>
@@ -60,6 +62,8 @@ export class Inicio {
   protected readonly turnos = signal<Turno[]>([]);
   protected readonly semana = signal<number | null>(null);
   protected readonly pacientes = signal<number | null>(null);
+  protected readonly cobros = signal<ResumenCobros | null>(null);
+  protected readonly plata = plata;
   protected readonly salas = signal<Sala[]>([]);
   protected readonly avisos = signal<Aviso[]>([]);
   protected readonly cargando = signal(true);
@@ -208,6 +212,11 @@ export class Inicio {
       this.semana.set(semana.length);
       this.salas.set(salas);
       this.pacientes.set(pacientes.total);
+      // Cobros del mes: si falla, el panel sigue igual sin ese indicador.
+      this.cobrosApi
+        .resumen(hoy.slice(0, 7))
+        .then((r) => this.cobros.set(r))
+        .catch(() => this.cobros.set(null));
       if (this.recibeAvisos()) {
         const r = await this.avisosApi.listar();
         this.avisos.set(r.items.slice(0, 3));

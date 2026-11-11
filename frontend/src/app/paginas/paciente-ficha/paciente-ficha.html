@@ -94,10 +94,37 @@
           <div class="oc-suave ficha__nota">Sin turnos agendados.</div>
         }
       </div>
+      @if (orden(); as o) {
+        <div class="oc-tarjeta oc-tarjeta--interactiva">
+          <div class="oc-kpi__titulo">Orden de {{ p.financiador?.nombre }}</div>
+          @if (o.vigente; as v) {
+            <div class="oc-kpi__valor">{{ v.disponibles }}/{{ v.sesiones }}</div>
+            <div class="oc-suave ficha__nota">
+              sesiones libres · N.º {{ v.numero }}{{ v.vence ? ', vence ' + fechaCorta(v.vence).slice(0, 5) : '' }}
+            </div>
+          } @else {
+            <div class="oc-kpi__valor">—</div>
+            <div class="ficha__nota ficha__alerta">Sin orden vigente</div>
+          }
+          @if (o.esperando) {
+            <div class="ficha__nota ficha__alerta">
+              {{ o.esperando }} {{ o.esperando === 1 ? 'sesión espera' : 'sesiones esperan' }} orden
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="oc-tarjeta oc-tarjeta--interactiva">
+          <div class="oc-kpi__titulo">Sesiones este mes</div>
+          <div class="oc-kpi__valor">{{ sesionesDelMes() }}</div>
+          <div class="oc-suave ficha__nota">sin contar las canceladas</div>
+        </div>
+      }
       <div class="oc-tarjeta oc-tarjeta--interactiva">
-        <div class="oc-kpi__titulo">Sesiones este mes</div>
-        <div class="oc-kpi__valor">{{ sesionesDelMes() }}</div>
-        <div class="oc-suave ficha__nota">sin contar las canceladas</div>
+        <div class="oc-kpi__titulo">Saldo</div>
+        <div class="oc-kpi__valor" [class.ficha__alerta]="saldo().monto > 0">{{ plata(saldo().monto) }}</div>
+        <div class="oc-suave ficha__nota">
+          {{ saldo().sesiones ? saldo().sesiones + (saldo().sesiones === 1 ? ' sesión por cobrar' : ' sesiones por cobrar') : 'al día' }}
+        </div>
       </div>
     </div>
 
@@ -163,6 +190,15 @@
       }
       @case ('sesiones') {
         <app-asistencia-paciente [pacienteId]="p.id" [historial]="historial()" />
+      }
+      @case ('pagos') {
+        <app-pagos-paciente
+          [pacienteId]="p.id"
+          [financiador]="p.financiador"
+          [prestaciones]="prestaciones()"
+          [ordenes]="ordenes()"
+          (cambio)="cargarCobros()"
+        />
       }
       @case ('notas') {
         <app-notas-paciente [pacienteId]="p.id" />

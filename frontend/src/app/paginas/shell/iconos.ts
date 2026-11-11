@@ -1,7 +1,8 @@
 /**
  * Íconos de línea del menú (Órbita Cian): trazo de 1,5 px y `currentColor`.
  * Cada uno es el contenido interno de un <svg viewBox="0 0 24 24">.
- * Los de Panel, Agenda y Pacientes salen de docs/diseno/referencia/Panel.dc.html.
+ * Los de Panel, Agenda y Pacientes salen de docs/diseno/referencia/Panel.dc.html;
+ * el de Cobros, de Cobros.dc.html.
  */
 export const ICONOS = {
   panel:
@@ -13,6 +14,7 @@ export const ICONOS = {
   profesionales:
     '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="11" r="2.5"/><path d="M5.5 17c.6-1.8 1.9-2.8 3.5-2.8s2.9 1 3.5 2.8M15 10h3M15 14h3"/>',
   salas: '<path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16M3 21h18"/><circle cx="15" cy="12" r="1"/>',
+  cobros: '<rect x="3" y="6" width="18" height="14" rx="3"/><path d="M3 10h18M16 15h2"/>',
   financiadores: '<path d="M12 3 4 6v6c0 4.5 3.4 8 8 9 4.6-1 8-4.5 8-9V6z"/><path d="M12 8v6M9 11h6"/>',
   mas: '<path d="M4 7h16M4 12h16M4 17h16"/>',
 } as const;

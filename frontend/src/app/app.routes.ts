@@ -42,6 +42,12 @@ export const routes: Routes = [
         loadComponent: () => import('./paginas/asistencia/asistencia').then((m) => m.Asistencia),
       },
       {
+        path: 'cobros',
+        canActivate: [conCentro],
+        title: 'Cobros y liquidación · Centro Integral',
+        loadComponent: () => import('./paginas/cobros/cobros').then((m) => m.Cobros),
+      },
+      {
         path: 'avisos',
         canActivate: [rolGuard('admin', 'recepcion')],
         title: 'Avisos · Centro Integral',

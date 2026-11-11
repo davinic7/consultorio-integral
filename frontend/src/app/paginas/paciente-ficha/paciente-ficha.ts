@@ -10,8 +10,10 @@ import {
 import { Router, RouterLink } from '@angular/router';
 import {
   AsistenciaApi,
+  CobrosApi,
   FinanciadoresApi,
   mensajeDeError,
+  OrdenesApi,
   PacientesApi,
   ProfesionalesApi,
 } from '../../core/api/api';
@@ -19,10 +21,13 @@ import type {
   DatosPaciente,
   Financiador,
   HistorialAsistencia,
+  Orden,
   Paciente,
+  Prestacion,
   Profesional,
 } from '../../core/api/modelos';
 import { NOMBRE_ESTADO } from '../../core/asistencia';
+import { plata } from '../../core/cobros';
 import { edad, enlaceWhatsApp } from '../../core/contacto';
 import { colorDisciplina, iniciales } from '../../core/disciplina';
 import { ahoraEn, fechaLarga, lunesDe, minutos } from '../../core/fechas';
@@ -30,8 +35,9 @@ import { AuthService } from '../../core/auth/auth.service';
 import { puede } from '../../core/auth/roles';
 import { AsistenciaPaciente } from './asistencia-paciente';
 import { NotasPaciente } from './notas-paciente';
+import { PagosPaciente } from './pagos-paciente';
 
-type Pestana = 'resumen' | 'sesiones' | 'notas' | 'datos';
+type Pestana = 'resumen' | 'sesiones' | 'pagos' | 'notas' | 'datos';
 
 /** Vencimiento de CUD solo si tiene CUD. */
 function cudCoherente(g: AbstractControl): ValidationErrors | null {
@@ -43,7 +49,14 @@ const vacioANull = (s: string) => (s.trim() === '' ? null : s.trim());
 
 @Component({
   selector: 'app-paciente-ficha',
-  imports: [ReactiveFormsModule, RouterLink, NgTemplateOutlet, AsistenciaPaciente, NotasPaciente],
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    NgTemplateOutlet,
+    AsistenciaPaciente,
+    NotasPaciente,
+    PagosPaciente,
+  ],
   templateUrl: './paciente-ficha.html',
   styleUrl: './paciente-ficha.scss',
 })
@@ -55,6 +68,8 @@ export class PacienteFicha implements OnInit {
   private readonly profesionalesApi = inject(ProfesionalesApi);
   private readonly asistenciaApi = inject(AsistenciaApi);
   private readonly financiadoresApi = inject(FinanciadoresApi);
+  private readonly cobrosApi = inject(CobrosApi);
+  private readonly ordenesApi = inject(OrdenesApi);
   protected readonly financiadores = signal<Financiador[]>([]);
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
@@ -72,11 +87,14 @@ export class PacienteFicha implements OnInit {
   protected readonly error = signal<string | null>(null);
   protected readonly guardado = signal(false);
   protected readonly historial = signal<HistorialAsistencia | null>(null);
+  protected readonly prestaciones = signal<Prestacion[]>([]);
+  protected readonly ordenes = signal<Orden[]>([]);
   protected readonly pestana = signal<Pestana>('resumen');
   protected readonly pestanas = computed(() => {
     const p: { id: Pestana; texto: string }[] = [
       { id: 'resumen', texto: 'Resumen' },
       { id: 'sesiones', texto: 'Sesiones' },
+      { id: 'pagos', texto: 'Pagos' },
     ];
     if (this.esProfesional()) p.push({ id: 'notas', texto: 'Notas' });
     p.push({ id: 'datos', texto: this.puedeEditar() ? 'Editar datos' : 'Datos' });
@@ -157,6 +175,21 @@ export class PacienteFicha implements OnInit {
       .map(([lunes, n]) => ({ lunes, n }))
       .sort((a, b) => a.lunes.localeCompare(b.lunes));
   });
+  /** Lo que falta cobrar de las sesiones asistidas. */
+  protected readonly saldo = computed(() => {
+    const deuda = this.prestaciones().filter((p) => p.saldo > 0);
+    return { monto: deuda.reduce((a, p) => a + p.saldo, 0), sesiones: deuda.length };
+  });
+  /** Orden vigente con más lugar (si la obra social pide orden). */
+  protected readonly orden = computed(() => {
+    if (!this.paciente()?.financiador?.requiereOrden) return null;
+    const vigentes = this.ordenes().filter((o) => o.vigente);
+    return {
+      vigente: vigentes.find((o) => o.disponibles > 0) ?? vigentes[0] ?? null,
+      esperando: this.prestaciones().filter((p) => p.avisos.includes('falta_orden')).length,
+    };
+  });
+  protected readonly plata = plata;
   protected readonly nombreEstado = NOMBRE_ESTADO;
   protected readonly fechaLarga = fechaLarga;
   protected readonly colorDe = colorDisciplina;
@@ -205,6 +238,7 @@ export class PacienteFicha implements OnInit {
       if (paciente) {
         this.mostrar(paciente);
         void this.cargarHistorial(paciente.id);
+        void this.cargarCobros();
       }
     } catch (e) {
       this.error.set(mensajeDeError(e, 'No se pudo cargar el paciente.'));
@@ -272,6 +306,20 @@ export class PacienteFicha implements OnInit {
     } catch (e) {
       this.error.set(mensajeDeError(e));
     }
+  }
+
+  /** Sesiones para cobrar y órdenes del paciente (fallar no rompe la ficha). */
+  protected async cargarCobros(): Promise<void> {
+    const p = this.paciente();
+    if (!p) return;
+    const [prestaciones, ordenes] = await Promise.all([
+      this.cobrosApi.prestaciones({ pacienteId: p.id }).catch(() => []),
+      p.financiador?.requiereOrden
+        ? this.ordenesApi.listar(p.id).catch(() => [])
+        : Promise.resolve([]),
+    ]);
+    this.prestaciones.set(prestaciones);
+    this.ordenes.set(ordenes);
   }
 
   private async cargarHistorial(id: string): Promise<void> {

@@ -217,3 +217,162 @@ export interface Nota {
   creadaEn: string;
   actualizadaEn: string;
 }
+
+// ───────── Cobros y liquidación ─────────
+
+export type MedioPago = 'efectivo' | 'transferencia' | 'tarjeta' | 'otro';
+export type EstadoPago = 'pendiente' | 'cobrado' | 'rechazado';
+export type EstadoCobro = 'pendiente' | 'parcial' | 'cobrada' | 'rechazada';
+export type AvisoPrestacion =
+  | 'sin_precio'
+  | 'falta_orden'
+  | 'orden_vencida'
+  | 'falta_token'
+  | 'sin_facturar'
+  | 'facturada_sin_cobrar'
+  | 'rechazada'
+  | 'impaga';
+
+export interface Pago {
+  id: string;
+  monto: number;
+  /** AAAA-MM-DD */
+  fecha: string;
+  medio: MedioPago;
+  estado: EstadoPago;
+  observaciones: string | null;
+}
+
+/** Sesión asistida que se cobra (una por turno presente). */
+export interface Prestacion {
+  id: string;
+  turnoId: string;
+  fecha: string;
+  hora: string;
+  paciente: { id: string; nombre: string; apellido: string };
+  profesional: ProfesionalResumen;
+  /** null: particular. */
+  financiador: {
+    id: string;
+    nombre: string;
+    tipo: TipoFinanciador;
+    requiereOrden: boolean;
+    requiereToken: boolean;
+  } | null;
+  monto: number;
+  montoManual: boolean;
+  facturada: boolean;
+  token: string | null;
+  orden: { id: string; numero: string; fechaEmision: string; vence: string | null } | null;
+  cobrado: number;
+  saldo: number;
+  estadoCobro: EstadoCobro;
+  pagos: Pago[];
+  avisos: AvisoPrestacion[];
+  /** La liquidación del mes está cerrada. */
+  cerrada: boolean;
+}
+
+export interface DatosPago {
+  monto?: number;
+  fecha?: string;
+  medio: MedioPago;
+  estado?: EstadoPago;
+  observaciones?: string | null;
+}
+
+export interface ResumenCobros {
+  mes: string;
+  sesiones: number;
+  facturado: number;
+  cobrado: number;
+  porCobrar: number;
+  porCobrarSesiones: number;
+  aLiquidar: number;
+  retencion: number;
+  cobradoPorMedio: { medio: MedioPago; monto: number }[];
+  cobradoPorDia: { fecha: string; monto: number }[];
+  porProfesional: { profesional: ProfesionalResumen; sesiones: number; facturado: number }[];
+}
+
+export interface Conciliacion {
+  mes: string;
+  porProfesional: {
+    profesional: ProfesionalResumen;
+    presentes: number;
+    prestaciones: number;
+    facturadas: number;
+    cobradas: number;
+    facturado: number;
+    cobrado: number;
+  }[];
+  conteo: Partial<Record<AvisoPrestacion | 'sin_prestacion', number>>;
+  sinPrestacion: {
+    turnoId: string;
+    fecha: string;
+    hora: string;
+    paciente: { id: string; nombre: string; apellido: string };
+    profesional: ProfesionalResumen;
+  }[];
+  diferencias: Prestacion[];
+}
+
+export type EstadoLiquidacion = 'borrador' | 'cerrada' | 'pagada';
+
+export interface LiquidacionProfesional {
+  profesional: ProfesionalResumen;
+  sesiones: number;
+  facturado: number;
+  cobrado: number;
+  porcentaje: number;
+  retencionPorcentaje: number;
+  aLiquidar: number;
+  retencion: number;
+  liquidacion: {
+    id: string;
+    estado: EstadoLiquidacion;
+    cerradaEn: string | null;
+    pagadaEn: string | null;
+  } | null;
+  /** Turnos del mes sin asistencia marcada. */
+  sinMarcar: number;
+  sinPrestacion: number;
+}
+
+/** Orden de autorización de una obra social. */
+export interface Orden {
+  id: string;
+  pacienteId: string;
+  financiador: { id: string; nombre: string };
+  numero: string;
+  fechaEmision: string;
+  vence: string | null;
+  sesiones: number;
+  usadas: number;
+  disponibles: number;
+  fechasUsadas: string[];
+  vigente: boolean;
+  observaciones: string | null;
+}
+
+export interface DatosOrden {
+  pacienteId: string;
+  financiadorId: string;
+  numero: string;
+  fechaEmision: string;
+  vence?: string | null;
+  sesiones: number;
+  observaciones?: string | null;
+}
+
+/** Valor de la sesión desde una fecha. */
+export interface Precio {
+  id: string;
+  /** null: particular. */
+  financiador: { id: string; nombre: string } | null;
+  pacienteId: string | null;
+  monto: number;
+  vigenteDesde: string;
+  vigente: boolean;
+  futuro: boolean;
+}

@@ -35,7 +35,9 @@ const MENU: ItemMenu[] = [
   { ruta: '/', texto: 'Panel', icono: 'panel', roles: TODOS, abajo: true },
   { ruta: '/agenda', texto: 'Agenda', icono: 'agenda', roles: TODOS, abajo: true },
   { ruta: '/asistencia', texto: 'Asistencia', icono: 'asistencia', roles: TODOS, abajo: true },
-  { ruta: '/pacientes', texto: 'Pacientes', icono: 'pacientes', roles: TODOS, abajo: true },
+  { ruta: '/pacientes', texto: 'Pacientes', icono: 'pacientes', roles: TODOS, abajo: false },
+  // En celular la barra inferior es Panel, Agenda, Asistencia, Cobros y Más (Celular.dc.html).
+  { ruta: '/cobros', texto: 'Cobros y liquidación', icono: 'cobros', roles: TODOS, abajo: true },
   {
     ruta: '/profesionales',
     texto: 'Profesionales',

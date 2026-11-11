@@ -1,0 +1,516 @@
+<main class="oc-contenido cobros">
+  <div class="cobros__cabecera">
+    <div>
+      <div class="oc-etiqueta">
+        {{ esProfesional() ? 'Tus sesiones' : 'Facturación del centro' }}
+      </div>
+      <h1 class="cobros__titulo">Cobros y liquidación</h1>
+    </div>
+    <div class="cobros__controles">
+      <div class="cobros__periodo" role="group" aria-label="Período">
+        <button
+          type="button"
+          class="oc-btn oc-btn--icono"
+          (click)="moverMes(-1)"
+          aria-label="Mes anterior"
+        >
+          <svg
+            aria-hidden="true"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.7"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="m15 6-6 6 6 6" />
+          </svg>
+        </button>
+        <span class="cobros__mes" aria-live="polite">{{ titulo() }}</span>
+        <button
+          type="button"
+          class="oc-btn oc-btn--icono"
+          (click)="moverMes(1)"
+          aria-label="Mes siguiente"
+        >
+          <svg
+            aria-hidden="true"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.7"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="m9 6 6 6-6 6" />
+          </svg>
+        </button>
+      </div>
+      @if (veLiquidacion()) {
+        <div class="oc-segmentado" role="tablist" aria-label="Sección">
+          <button
+            type="button"
+            role="tab"
+            [attr.aria-selected]="seccion() === 'cobros'"
+            (click)="seccion.set('cobros')"
+          >
+            Cobros
+          </button>
+          <button
+            type="button"
+            role="tab"
+            [attr.aria-selected]="seccion() === 'liquidacion'"
+            (click)="seccion.set('liquidacion')"
+          >
+            Liquidación
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+
+  @if (error(); as e) {
+    <p class="oc-alerta oc-alerta--error" role="alert">{{ e }}</p>
+  }
+  @if (mensaje(); as m) {
+    <p class="oc-alerta oc-alerta--ok" role="status">{{ m }}</p>
+  }
+
+  <!-- Indicadores -->
+  @if (resumen(); as r) {
+    <div class="oc-indicadores">
+      <div class="oc-tarjeta oc-tarjeta--interactiva">
+        <div class="oc-kpi__titulo">Facturado</div>
+        <div class="oc-kpi__valor">{{ plata(r.facturado) }}</div>
+        <div class="oc-suave cobros__nota">
+          {{ r.sesiones }} {{ r.sesiones === 1 ? 'sesión' : 'sesiones' }}
+        </div>
+      </div>
+      <div class="oc-tarjeta oc-tarjeta--interactiva">
+        <div class="oc-kpi__titulo">Cobrado</div>
+        <div class="oc-kpi__valor cobros__ok">{{ plata(r.cobrado) }}</div>
+        <div class="cobros__barra" aria-hidden="true">
+          <span [style.width.%]="r.facturado ? (r.cobrado * 100) / r.facturado : 0"></span>
+        </div>
+      </div>
+      <div class="oc-tarjeta oc-tarjeta--interactiva">
+        <div class="oc-kpi__titulo">Por cobrar</div>
+        <div class="oc-kpi__valor cobros__aviso">{{ plata(r.porCobrar) }}</div>
+        <div class="oc-suave cobros__nota">
+          {{ r.porCobrarSesiones }} {{ r.porCobrarSesiones === 1 ? 'sesión' : 'sesiones' }}
+        </div>
+      </div>
+      <div class="oc-tarjeta oc-tarjeta--destacada">
+        <div class="oc-kpi__titulo">
+          {{ esProfesional() ? 'Te corresponde' : 'A liquidar a profesionales' }}
+        </div>
+        <div class="oc-kpi__valor">{{ plata(r.aLiquidar) }}</div>
+        <div class="oc-suave cobros__nota">
+          @if (esProfesional()) {
+            Retención del centro: {{ plata(r.retencion) }}
+          } @else if (veLiquidacion()) {
+            {{ retencionTexto() }}
+          } @else {
+            Retención del centro: {{ plata(r.retencion) }}
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (seccion() === 'cobros') {
+    <!-- Para revisar (conciliación) -->
+    @if (conciliacion(); as c) {
+      @if (c.sinPrestacion.length || revisar().length) {
+        <section class="oc-tarjeta cobros__revisar" aria-labelledby="rev-t">
+          <div class="cobros__titulo-seccion">
+            <h2 id="rev-t">Para revisar</h2>
+            <span class="oc-suave cobros__nota">Asistencia contra lo facturado y lo cobrado</span>
+          </div>
+          @if (c.sinPrestacion.length) {
+            <p class="oc-alerta oc-alerta--aviso cobros__faltan">
+              <span>
+                {{ c.sinPrestacion.length }}
+                {{
+                  c.sinPrestacion.length === 1
+                    ? 'sesión presente no está registrada'
+                    : 'sesiones presentes no están registradas'
+                }}
+                para cobrar (de antes de este módulo).
+              </span>
+              @if (gestiona()) {
+                <button
+                  type="button"
+                  class="oc-btn oc-btn--chico"
+                  (click)="generarFaltantes()"
+                  [disabled]="ocupado()"
+                >
+                  Registrarlas
+                </button>
+              }
+            </p>
+          }
+          <div class="cobros__chips">
+            @for (x of revisar(); track x.tipo) {
+              @if (x.tipo !== 'sin_prestacion') {
+                <button
+                  type="button"
+                  class="cobros__chip"
+                  [attr.aria-pressed]="aviso() === x.tipo"
+                  (click)="filtrarAviso(x.tipo)"
+                >
+                  {{ x.texto }} <span class="oc-mono">{{ x.n }}</span>
+                </button>
+              }
+            }
+          </div>
+        </section>
+      }
+    }
+
+    <div class="cobros__fila">
+      <!-- Tabla de sesiones -->
+      <section class="cobros__tabla" aria-labelledby="ses-t">
+        <h2 id="ses-t" class="visualmente-oculto">Sesiones del mes</h2>
+        <div class="cobros__filtros">
+          <div class="cobros__chips" role="group" aria-label="Filtrar sesiones">
+            @for (f of filtros(); track f.id) {
+              <button
+                type="button"
+                class="cobros__chip"
+                [attr.aria-pressed]="filtro() === f.id && !aviso()"
+                (click)="elegirFiltro(f.id)"
+              >
+                {{ f.texto }} <span class="oc-mono">{{ f.n }}</span>
+              </button>
+            }
+          </div>
+          @if (gestiona()) {
+            <label class="cobros__medio">
+              Cobrar con
+              <select [ngModel]="medioLote()" (ngModelChange)="medioLote.set($event)">
+                @for (m of medios; track m) {
+                  <option [value]="m">{{ nombreMedio[m] }}</option>
+                }
+              </select>
+            </label>
+          }
+        </div>
+
+        @if (gestiona() && seleccion().size) {
+          <div class="cobros__lote" role="region" aria-label="Acciones con las sesiones elegidas">
+            <span
+              ><b>{{ seleccion().size }}</b>
+              {{ seleccion().size === 1 ? 'elegida' : 'elegidas' }}</span
+            >
+            <button
+              type="button"
+              class="oc-btn oc-btn--chico oc-btn--primario"
+              (click)="cobrarSeleccion()"
+              [disabled]="ocupado()"
+            >
+              Cobrar el saldo ({{ nombreMedio[medioLote()] }})
+            </button>
+            <button
+              type="button"
+              class="oc-btn oc-btn--chico"
+              (click)="facturarSeleccion(true)"
+              [disabled]="ocupado()"
+            >
+              Marcar presentadas
+            </button>
+            <button
+              type="button"
+              class="oc-btn oc-btn--chico oc-btn--fantasma"
+              (click)="facturarSeleccion(false)"
+              [disabled]="ocupado()"
+            >
+              Desmarcar
+            </button>
+          </div>
+        }
+
+        <div class="oc-tabla-caja">
+          <table class="oc-tabla">
+            <thead>
+              <tr>
+                @if (gestiona()) {
+                  <th class="cobros__check">
+                    <input
+                      type="checkbox"
+                      [checked]="todasSeleccionadas()"
+                      (change)="alternarTodas()"
+                      aria-label="Elegir todas"
+                    />
+                  </th>
+                }
+                <th>Fecha</th>
+                <th>Paciente</th>
+                @if (!esProfesional()) {
+                  <th>Profesional</th>
+                }
+                <th>Cobertura</th>
+                <th class="cobros__num">Monto</th>
+                <th>Estado</th>
+                <th><span class="visualmente-oculto">Acciones</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (p of filas(); track p.id) {
+                <tr>
+                  @if (gestiona()) {
+                    <td class="cobros__check">
+                      <input
+                        type="checkbox"
+                        [checked]="seleccion().has(p.id)"
+                        (change)="alternar(p.id)"
+                        [attr.aria-label]="
+                          'Elegir la sesión de ' + p.paciente.nombre + ' del ' + diaMes(p.fecha)
+                        "
+                      />
+                    </td>
+                  }
+                  <td class="oc-mono">{{ diaMes(p.fecha) }}</td>
+                  <td>
+                    <a [routerLink]="['/pacientes', p.paciente.id]" class="cobros__paciente">
+                      {{ p.paciente.nombre }} {{ p.paciente.apellido }}
+                    </a>
+                    @if (p.avisos.length) {
+                      <div class="cobros__avisos">
+                        @for (a of p.avisos; track a) {
+                          <span>{{ nombreAviso[a] }}</span>
+                        }
+                      </div>
+                    }
+                  </td>
+                  @if (!esProfesional()) {
+                    <td>
+                      <span
+                        class="cobros__punto"
+                        [style.--color]="'var(--oc-' + colorDe(p.profesional.disciplina) + ')'"
+                        aria-hidden="true"
+                      ></span>
+                      {{ p.profesional.apellido }}
+                    </td>
+                  }
+                  <td>
+                    {{ p.financiador?.nombre ?? 'Particular' }}
+                    @if (p.orden) {
+                      <div class="oc-suave cobros__nota">Orden {{ p.orden.numero }}</div>
+                    }
+                    @if (p.facturada) {
+                      <div class="oc-suave cobros__nota">Presentada</div>
+                    }
+                  </td>
+                  <td class="cobros__num oc-mono">
+                    {{ plata(p.monto) }}
+                    @if (p.estadoCobro === 'parcial') {
+                      <div class="oc-suave cobros__nota">debe {{ plata(p.saldo) }}</div>
+                    }
+                  </td>
+                  <td>
+                    <span [class]="claseCobro[p.estadoCobro]">{{
+                      nombreCobro[p.estadoCobro]
+                    }}</span>
+                  </td>
+                  <td class="cobros__acciones">
+                    @if (gestiona() && p.estadoCobro !== 'cobrada' && p.saldo > 0) {
+                      <button
+                        type="button"
+                        class="oc-btn oc-btn--chico oc-btn--primario"
+                        (click)="cobrarRapido(p)"
+                        [disabled]="ocupado()"
+                      >
+                        Cobrar
+                      </button>
+                    }
+                    <button type="button" class="oc-btn oc-btn--chico" (click)="abrir(p)">
+                      {{ gestiona() ? 'Detalle' : 'Ver' }}
+                    </button>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="8" class="oc-suave cobros__vacio">
+                    {{
+                      cargando()
+                        ? 'Cargando…'
+                        : prestaciones().length
+                          ? 'Ninguna sesión con este filtro.'
+                          : 'Todavía no hay sesiones presentes en ' + titulo() + '.'
+                    }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Gráficos -->
+      <aside class="cobros__graficos">
+        <section class="oc-tarjeta" aria-labelledby="medio-t">
+          <h2 id="medio-t">Cobrado por medio</h2>
+          @for (m of porMedio(); track m.medio) {
+            <div class="cobros__medio-fila">
+              <div class="cobros__medio-dato">
+                <span>{{ m.nombre }}</span>
+                <span class="oc-mono">{{ m.pct }}%</span>
+              </div>
+              <div class="cobros__barra" [style.--color]="colorMedio[m.medio]">
+                <span [style.width.%]="m.pct"></span>
+              </div>
+              <div class="oc-suave cobros__nota oc-mono">{{ plata(m.monto) }}</div>
+            </div>
+          } @empty {
+            <p class="oc-suave cobros__nota">Todavía no hay cobros en el mes.</p>
+          }
+        </section>
+        <section class="oc-tarjeta" aria-labelledby="dia-t">
+          <h2 id="dia-t">Cobrado por día</h2>
+          @if (porDia().length) {
+            <div class="cobros__dias" role="list">
+              @for (d of porDia(); track d.fecha) {
+                <div
+                  class="cobros__dia"
+                  role="listitem"
+                  [title]="diaMes(d.fecha) + ': ' + plata(d.monto)"
+                >
+                  <span class="cobros__dia-barra" [style.height.%]="d.alto"></span>
+                  <span class="oc-mono cobros__dia-fecha">{{ diaMes(d.fecha) }}</span>
+                  <span class="visualmente-oculto">{{ plata(d.monto) }}</span>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="oc-suave cobros__nota">Sin cobros registrados.</p>
+          }
+        </section>
+      </aside>
+    </div>
+  } @else {
+    <!-- Liquidación -->
+    @if (!esProfesional() && porProfesional().length) {
+      <section class="oc-tarjeta" aria-labelledby="fact-t">
+        <h2 id="fact-t">Facturación por profesional</h2>
+        <div class="cobros__barras">
+          @for (f of porProfesional(); track f.profesional.id) {
+            <div class="cobros__barras-fila">
+              <span class="cobros__barras-nombre"
+                >{{ f.profesional.nombre }} {{ f.profesional.apellido }}</span
+              >
+              <div
+                class="cobros__barra cobros__barra--alta"
+                [style.--color]="'var(--oc-' + f.color + ')'"
+              >
+                <span [style.width.%]="f.ancho"></span>
+              </div>
+              <span class="oc-mono cobros__barras-monto">{{ plata(f.facturado) }}</span>
+            </div>
+          }
+        </div>
+      </section>
+    }
+
+    <div class="cobros__profesionales">
+      @for (l of liquidaciones(); track l.profesional.id) {
+        @let estado = l.liquidacion?.estado;
+        <article class="oc-tarjeta cobros__liq" [attr.data-estado]="estado ?? 'sin'">
+          <header class="cobros__liq-cabecera">
+            <span
+              class="cobros__avatar"
+              [attr.data-color]="colorDe(l.profesional.disciplina)"
+              aria-hidden="true"
+            >
+              {{ inicialesDe(l.profesional.nombre, l.profesional.apellido) }}
+            </span>
+            <div>
+              <h3>{{ l.profesional.nombre }} {{ l.profesional.apellido }}</h3>
+              <div class="oc-suave cobros__nota">{{ l.profesional.disciplina }}</div>
+            </div>
+            @if (estado) {
+              <span
+                class="oc-estado"
+                [class.oc-estado--ok]="estado === 'pagada'"
+                [class.oc-estado--info]="estado === 'cerrada'"
+              >
+                {{ nombreLiquidacion[estado] }}
+              </span>
+            }
+          </header>
+          <dl class="cobros__liq-datos">
+            <dt>Sesiones</dt>
+            <dd class="oc-mono">{{ l.sesiones }}</dd>
+            <dt>Facturado</dt>
+            <dd class="oc-mono">{{ plata(l.facturado) }}</dd>
+            <dt>Retención {{ l.retencionPorcentaje }}%</dt>
+            <dd class="oc-mono">− {{ plata(l.retencion) }}</dd>
+            <dt class="cobros__liq-total">A liquidar</dt>
+            <dd class="oc-mono cobros__liq-total">{{ plata(l.aLiquidar) }}</dd>
+          </dl>
+          @if (l.sinMarcar && estado !== 'cerrada' && estado !== 'pagada') {
+            <p class="oc-alerta oc-alerta--aviso cobros__nota">
+              {{ l.sinMarcar === 1 ? 'Queda 1 turno' : 'Quedan ' + l.sinMarcar + ' turnos' }} del
+              mes sin asistencia marcada: hay que marcarlos antes de liquidar.
+            </p>
+          }
+          @if (l.sinPrestacion && estado !== 'cerrada' && estado !== 'pagada') {
+            <p class="oc-suave cobros__nota">
+              Al generarla se registran {{ l.sinPrestacion }} sesiones presentes que faltaban.
+            </p>
+          }
+          @if (esAdmin()) {
+            <div class="cobros__liq-acciones">
+              @if (estado === 'cerrada') {
+                <button
+                  type="button"
+                  class="oc-btn oc-btn--chico oc-btn--primario"
+                  (click)="pagarLiquidacion(l)"
+                  [disabled]="ocupado()"
+                >
+                  Marcar pagada
+                </button>
+                <button
+                  type="button"
+                  class="oc-btn oc-btn--chico oc-btn--fantasma"
+                  (click)="reabrirLiquidacion(l)"
+                  [disabled]="ocupado()"
+                >
+                  Reabrir
+                </button>
+              } @else if (estado === 'pagada') {
+                <span class="oc-suave cobros__nota"
+                  >Pagada. El mes queda cerrado para este profesional.</span
+                >
+              } @else {
+                <button
+                  type="button"
+                  class="oc-btn oc-btn--chico oc-btn--primario"
+                  (click)="generarLiquidacion(l)"
+                  [disabled]="ocupado() || l.sinMarcar > 0"
+                >
+                  Generar liquidación
+                </button>
+              }
+            </div>
+            @if (estado === 'cerrada') {
+              <p class="oc-suave cobros__nota">
+                Generada: la asistencia y los montos del mes ya no se pueden cambiar.
+              </p>
+            }
+          }
+        </article>
+      } @empty {
+        <p class="oc-suave">
+          {{ cargando() ? 'Cargando…' : 'No hay sesiones para liquidar en ' + titulo() + '.' }}
+        </p>
+      }
+    </div>
+  }
+</main>
+
+<app-detalle-cobro [(prestacion)]="detalle" (cambio)="recargar()" />

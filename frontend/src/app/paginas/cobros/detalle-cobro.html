@@ -1,0 +1,198 @@
+<dialog #dialogo class="detalle" (close)="cerrar()" aria-labelledby="det-t">
+  @if (prestacion(); as p) {
+    <div class="detalle__cabecera">
+      <div>
+        <h2 id="det-t">{{ p.paciente.nombre }} {{ p.paciente.apellido }}</h2>
+        <div class="oc-suave detalle__nota">
+          {{ diaMes(p.fecha) }} {{ p.hora }} · {{ p.profesional.nombre }}
+          {{ p.profesional.apellido }} ·
+          {{ p.financiador?.nombre ?? 'Particular' }}
+        </div>
+      </div>
+      <button type="button" class="oc-btn oc-btn--icono" (click)="cerrar()" aria-label="Cerrar">
+        <svg
+          aria-hidden="true"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+        >
+          <path d="M6 6l12 12M18 6 6 18" />
+        </svg>
+      </button>
+    </div>
+
+    <dl class="detalle__datos">
+      <dt>Monto</dt>
+      <dd class="oc-mono">{{ plata(p.monto) }}{{ p.montoManual ? ' (a mano)' : '' }}</dd>
+      <dt>Cobrado</dt>
+      <dd class="oc-mono">{{ plata(p.cobrado) }}</dd>
+      <dt>Saldo</dt>
+      <dd class="oc-mono">{{ plata(p.saldo) }}</dd>
+      <dt>Estado</dt>
+      <dd>
+        <span [class]="claseCobro[p.estadoCobro]">{{ nombreCobro[p.estadoCobro] }}</span>
+      </dd>
+      @if (p.financiador?.requiereOrden) {
+        <dt>Orden</dt>
+        <dd>{{ p.orden ? p.orden.numero : 'Sin orden' }}</dd>
+      }
+    </dl>
+    @if (p.avisos.length) {
+      <div class="detalle__avisos">
+        @for (a of p.avisos; track a) {
+          <span>{{ nombreAviso[a] }}</span>
+        }
+      </div>
+    }
+    @if (p.cerrada) {
+      <p class="oc-alerta detalle__nota">
+        La liquidación de este mes está cerrada: el monto ya no cambia.
+      </p>
+    }
+
+    @if (p.pagos.length) {
+      <h3>Pagos</h3>
+      <ul class="detalle__pagos">
+        @for (x of p.pagos; track x.id) {
+          <li>
+            <span class="oc-mono">{{ diaMes(x.fecha) }}</span>
+            <span>{{ nombreMedio[x.medio] }}</span>
+            <span class="oc-mono">{{ plata(x.monto) }}</span>
+            <span
+              class="oc-estado"
+              [class.oc-estado--ok]="x.estado === 'cobrado'"
+              [class.oc-estado--error]="x.estado === 'rechazado'"
+              [class.oc-estado--aviso]="x.estado === 'pendiente'"
+            >
+              {{
+                x.estado === 'cobrado'
+                  ? 'Cobrado'
+                  : x.estado === 'rechazado'
+                    ? 'Rechazado'
+                    : 'En curso'
+              }}
+            </span>
+            @if (gestiona()) {
+              <span class="detalle__pago-acciones">
+                @if (x.estado !== 'rechazado') {
+                  <button
+                    type="button"
+                    class="enlace"
+                    (click)="rechazarPago(x.id)"
+                    [disabled]="ocupado()"
+                  >
+                    Rechazado
+                  </button>
+                }
+                <button
+                  type="button"
+                  class="enlace"
+                  (click)="borrarPago(x.id)"
+                  [disabled]="ocupado()"
+                >
+                  Borrar
+                </button>
+              </span>
+            }
+          </li>
+        }
+      </ul>
+    }
+
+    @if (gestiona()) {
+      @if (p.saldo > 0) {
+        <form class="detalle__form" (ngSubmit)="registrarPago(p)">
+          <h3>Registrar pago</h3>
+          <div class="detalle__campos">
+            <label class="oc-campo">
+              Medio
+              <select name="medio" [(ngModel)]="pago.medio">
+                @for (m of medios; track m) {
+                  <option [value]="m">{{ nombreMedio[m] }}</option>
+                }
+              </select>
+            </label>
+            <label class="oc-campo">
+              Monto
+              <input
+                name="monto"
+                type="number"
+                min="0.01"
+                step="0.01"
+                [(ngModel)]="pago.monto"
+                [placeholder]="'Saldo: ' + p.saldo"
+              />
+            </label>
+            <label class="oc-campo">
+              Fecha
+              <input name="fecha" type="date" [(ngModel)]="pago.fecha" />
+            </label>
+          </div>
+          <button type="submit" class="oc-btn oc-btn--primario" [disabled]="ocupado()">
+            Registrar
+          </button>
+        </form>
+      }
+
+      <div class="detalle__campos">
+        @if (p.financiador?.requiereToken || p.token) {
+          <form class="detalle__en-linea" (ngSubmit)="guardarToken(p)">
+            <label class="oc-campo">
+              Token de la sesión
+              <input name="token" [(ngModel)]="token" maxlength="20" autocomplete="off" />
+            </label>
+            <button type="submit" class="oc-btn oc-btn--chico" [disabled]="ocupado()">
+              Guardar
+            </button>
+          </form>
+        }
+        @if (!p.cerrada) {
+          <form class="detalle__en-linea" (ngSubmit)="guardarMonto(p)">
+            <label class="oc-campo">
+              Monto de la sesión
+              <input
+                name="montoManual"
+                type="number"
+                min="0"
+                step="0.01"
+                [(ngModel)]="montoManual"
+              />
+            </label>
+            <button type="submit" class="oc-btn oc-btn--chico" [disabled]="ocupado()">
+              Cambiar
+            </button>
+            @if (p.montoManual) {
+              <button
+                type="button"
+                class="enlace"
+                (click)="guardarMonto(p, true)"
+                [disabled]="ocupado()"
+              >
+                Volver al precio vigente
+              </button>
+            }
+          </form>
+        }
+      </div>
+      @if (p.financiador) {
+        <label class="oc-check">
+          <input
+            type="checkbox"
+            [checked]="p.facturada"
+            (change)="alternarFacturada(p)"
+            [disabled]="ocupado()"
+          />
+          Presentada a {{ p.financiador.nombre }}
+        </label>
+      }
+    }
+
+    @if (error(); as e) {
+      <p class="oc-alerta oc-alerta--error" role="alert">{{ e }}</p>
+    }
+  }
+</dialog>

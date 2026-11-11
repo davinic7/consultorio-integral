@@ -123,4 +123,85 @@
       <li class="lista__item oc-suave">Todavía no hay obras sociales cargadas.</li>
     }
   </ul>
+
+  @if (vePrecios()) {
+    <section class="oc-tarjeta tarifas" aria-labelledby="tar-t">
+      <h2 id="tar-t">Valor de la sesión</h2>
+      <p class="oc-suave">
+        Cada sesión presente toma el valor vigente ese día según la cobertura del paciente. Un aumento se carga
+        con su fecha y no borra el anterior; las sesiones sin cobrar desde esa fecha se actualizan solas.
+      </p>
+      <div class="oc-tabla-caja">
+        <table class="oc-tabla">
+          <thead>
+            <tr>
+              <th>Cobertura</th>
+              <th class="num">Vigente</th>
+              <th>Desde</th>
+              <th>Próximo</th>
+              <th>Anteriores</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (t of tarifas(); track t.nombre) {
+              <tr>
+                <td>{{ t.nombre }}</td>
+                <td class="num oc-mono">{{ t.vigente ? plata(t.vigente.monto) : 'Sin cargar' }}</td>
+                <td class="oc-mono">{{ t.vigente ? fechaCorta(t.vigente.vigenteDesde) : '—' }}</td>
+                <td>
+                  @for (p of t.proximos; track p.id) {
+                    <div class="oc-mono">
+                      {{ plata(p.monto) }} desde {{ fechaCorta(p.vigenteDesde) }}
+                      @if (esAdmin()) {
+                        <button type="button" class="enlace" (click)="borrarPrecio(p)">Quitar</button>
+                      }
+                    </div>
+                  } @empty {
+                    <span class="oc-suave">—</span>
+                  }
+                </td>
+                <td class="oc-suave oc-mono">
+                  @for (p of t.historial.slice(0, 3); track p.id; let ultimo = $last) {
+                    {{ plata(p.monto) }} ({{ fechaCorta(p.vigenteDesde) }}){{ ultimo ? '' : ', ' }}
+                  } @empty {
+                    —
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      @if (esAdmin()) {
+        <form class="form-precio" [formGroup]="formPrecio" (ngSubmit)="agregarPrecio()" novalidate>
+          <label class="oc-campo">
+            Cobertura
+            <select formControlName="financiadorId">
+              <option value="">Particular</option>
+              @for (f of financiadores(); track f.id) {
+                @if (f.activo) {
+                  <option [value]="f.id">{{ f.nombre }}</option>
+                }
+              }
+            </select>
+          </label>
+          <label class="oc-campo">
+            Valor de la sesión ($)
+            <input type="number" min="0" step="0.01" formControlName="monto" />
+          </label>
+          <label class="oc-campo">
+            Desde
+            <input type="date" formControlName="vigenteDesde" />
+          </label>
+          <button type="submit" class="oc-btn oc-btn--primario">Guardar valor</button>
+        </form>
+      }
+      @if (avisoPrecio(); as m) {
+        <p class="oc-alerta oc-alerta--ok" role="status">{{ m }}</p>
+      }
+      @if (errorPrecio(); as m) {
+        <p class="oc-alerta oc-alerta--error" role="alert">{{ m }}</p>
+      }
+    </section>
+  }
 </main>

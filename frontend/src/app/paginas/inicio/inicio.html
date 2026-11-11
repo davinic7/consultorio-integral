@@ -105,6 +105,17 @@
           <div class="oc-suave panel-inicio__nota">activos</div>
           <a routerLink="/pacientes" class="panel-inicio__enlace">Ver pacientes</a>
         </div>
+
+        @if (cobros(); as c) {
+          <div class="oc-tarjeta oc-tarjeta--interactiva">
+            <div class="oc-kpi__titulo">Cobrado este mes</div>
+            <div class="oc-kpi__valor">{{ plata(c.cobrado) }}</div>
+            <div [class]="c.porCobrar ? 'panel-inicio__error' : 'oc-suave panel-inicio__nota'">
+              {{ c.porCobrar ? plata(c.porCobrar) + ' por cobrar' : 'nada pendiente' }}
+            </div>
+            <a routerLink="/cobros" class="panel-inicio__enlace">Ver cobros</a>
+          </div>
+        }
       </div>
 
       <div class="panel-inicio__fila">

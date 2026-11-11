@@ -140,6 +140,10 @@ h2 {
     color: var(--oc-acento-texto);
   }
 
+  &__alerta {
+    color: var(--oc-aviso-texto);
+  }
+
   &__nota {
     margin: 0.25rem 0 0;
     font-size: 0.75rem;
