@@ -22,7 +22,11 @@ const INCLUDE_CENTRO = {
   centro: {
     include: {
       plan: {
-        select: { codigo: true, nombre: true, modulos: { select: { modulo: true } } },
+        select: {
+          codigo: true,
+          nombre: true,
+          modulos: { select: { modulo: true } },
+        },
       },
     },
   },

@@ -128,7 +128,12 @@ export class OrdenesService {
           pacienteId: dto.pacienteId,
           financiadorId: dto.financiadorId,
           ordenId: null,
-          fecha: { gte: o.fechaEmision, ...(o.vence ? { lte: o.vence } : {}) },
+          // Desde el primer día del mes de la emisión: las sesiones anteriores a la
+          // orden se declaran con una fecha posterior (ver presentación).
+          fecha: {
+            gte: new Date(`${dto.fechaEmision.slice(0, 7)}-01T00:00:00Z`),
+            ...(o.vence ? { lte: o.vence } : {}),
+          },
         },
         select: { id: true },
         orderBy: { fecha: 'asc' },

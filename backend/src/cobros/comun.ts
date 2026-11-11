@@ -83,13 +83,16 @@ export function vistaPrestacion(
     montoManual: p.montoManual,
     facturada: p.facturada,
     token: p.token,
+    fechaDeclarada: aFechaSolo(p.fechaDeclarada),
+    facturaId: p.facturaId,
     orden,
     cobrado: num(cobro.cobrado),
     saldo: num(cobro.saldo),
     estadoCobro: cobro.estado,
     pagos: p.pagos.map(vistaPago),
     avisos: avisosDe({
-      fecha: f,
+      // Para la orden cuenta la fecha que se declara, si ya está.
+      fecha: aFechaSolo(p.fechaDeclarada) ?? f,
       monto: p.monto,
       facturada: p.facturada,
       token: p.token,

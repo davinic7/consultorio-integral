@@ -84,6 +84,22 @@ enum EstadoPago {
   @@map("estado_pago")
 }
 
+/// Cómo se conecta con ARCA: simulado no llama a ARCA (CAE ficticio, sin validez fiscal).
+enum ModoArca {
+  simulado
+  homologacion
+  produccion
+
+  @@map("modo_arca")
+}
+
+enum EstadoFactura {
+  emitida
+  rechazada
+
+  @@map("estado_factura")
+}
+
 enum EstadoLiquidacion {
   borrador
   cerrada
@@ -142,6 +158,8 @@ model Centro {
   liquidaciones     Liquidacion[]
   ordenes           Orden[]
   precios           Precio[]
+  facturas          Factura[]
+  configFiscal      ConfigFiscal?
   notasSesion       NotaSesion[]
   cambiosAsistencia CambioAsistencia[]
   sesiones          Sesion[]
@@ -324,6 +342,7 @@ model Paciente {
   prestaciones  Prestacion[]
   ordenes       Orden[]
   precios       Precio[]
+  facturas      Factura[]
   notasSesion   NotaSesion[]
 
   @@unique([centroId, id])
@@ -462,28 +481,32 @@ model CambioAsistencia {
 /// Sesión asistida que se cobra o factura. Una por turno presente: se crea al
 /// marcar "presente" y se borra si la asistencia se corrige (sin pagos ni factura).
 model Prestacion {
-  id            String   @id @default(uuid(7)) @db.Uuid
-  centroId      String   @map("centro_id") @db.Uuid
-  turnoId       String   @map("turno_id") @db.Uuid
+  id             String    @id @default(uuid(7)) @db.Uuid
+  centroId       String    @map("centro_id") @db.Uuid
+  turnoId        String    @map("turno_id") @db.Uuid
   /// Copiados del turno para filtrar y liquidar sin pasar por turnos.
-  pacienteId    String   @map("paciente_id") @db.Uuid
-  profesionalId String   @map("profesional_id") @db.Uuid
+  pacienteId     String    @map("paciente_id") @db.Uuid
+  profesionalId  String    @map("profesional_id") @db.Uuid
   /// Quién paga. null: particular.
-  financiadorId String?  @map("financiador_id") @db.Uuid
+  financiadorId  String?   @map("financiador_id") @db.Uuid
   /// Día de la sesión en la zona del centro.
-  fecha         DateTime @db.Date
+  fecha          DateTime  @db.Date
   /// Primer día del mes al que corresponde (ej. 2026-11-01).
-  periodo       DateTime @db.Date
-  monto         Decimal  @db.Decimal(12, 2)
+  periodo        DateTime  @db.Date
+  monto          Decimal   @db.Decimal(12, 2)
   /// El monto se cargó a mano: los cambios de precio no lo tocan.
-  montoManual   Boolean  @default(false) @map("monto_manual")
+  montoManual    Boolean   @default(false) @map("monto_manual")
   /// Presentada a la obra social o con factura emitida.
-  facturada     Boolean  @default(false)
+  facturada      Boolean   @default(false)
   /// Orden de autorización que cubre la sesión (si el financiador la pide).
-  ordenId       String?  @map("orden_id") @db.Uuid
+  ordenId        String?   @map("orden_id") @db.Uuid
   /// Token que da el paciente en cada sesión (si el financiador lo pide).
-  token         String?  @db.VarChar(20)
-  creadaEn      DateTime @default(now()) @map("creada_en") @db.Timestamptz(3)
+  token          String?   @db.VarChar(20)
+  /// Fecha que se declara a la obra social (puede diferir de la real por sus reglas).
+  fechaDeclarada DateTime? @map("fecha_declarada") @db.Date
+  /// Factura electrónica que la incluye (particulares).
+  facturaId      String?   @map("factura_id") @db.Uuid
+  creadaEn       DateTime  @default(now()) @map("creada_en") @db.Timestamptz(3)
 
   centro      Centro       @relation(fields: [centroId], references: [id], onDelete: Cascade)
   turno       Turno        @relation(fields: [centroId, turnoId], references: [centroId, id], onDelete: Restrict)
@@ -491,6 +514,7 @@ model Prestacion {
   profesional Profesional  @relation(fields: [centroId, profesionalId], references: [centroId, id], onDelete: Restrict)
   financiador Financiador? @relation(fields: [centroId, financiadorId], references: [centroId, id], onDelete: Restrict)
   orden       Orden?       @relation(fields: [centroId, ordenId], references: [centroId, id], onDelete: Restrict)
+  factura     Factura?     @relation(fields: [centroId, facturaId], references: [centroId, id], onDelete: Restrict)
   pagos       Pago[]
 
   @@unique([centroId, id])
@@ -593,6 +617,71 @@ model Liquidacion {
   @@unique([centroId, id])
   @@unique([centroId, profesionalId, periodo])
   @@map("liquidaciones")
+}
+
+/// Datos fiscales del centro para facturar con ARCA (uno por centro).
+/// La clave privada se guarda cifrada con la clave de datos del centro.
+model ConfigFiscal {
+  centroId          String    @id @map("centro_id") @db.Uuid
+  /// 11 dígitos, sin guiones.
+  cuit              String?   @db.VarChar(11)
+  razonSocial       String?   @map("razon_social") @db.VarChar(120)
+  domicilio         String?   @db.VarChar(200)
+  inicioActividades DateTime? @map("inicio_actividades") @db.Date
+  /// Punto de venta "RECE para aplicativo y web services".
+  ptoVta            Int       @default(1) @map("pto_vta") @db.SmallInt
+  modo              ModoArca  @default(simulado)
+  /// Descripción del ítem de la factura.
+  textoItem         String    @default("Honorarios por sesión") @map("texto_item") @db.VarChar(200)
+  clavePrivada      String?   @map("clave_privada")
+  certificado       String?
+  certificadoVence  DateTime? @map("certificado_vence") @db.Timestamptz(3)
+  /// Ticket de acceso de WSAA (dura 12 h): se reutiliza mientras vale.
+  ticketToken       String?   @map("ticket_token")
+  ticketSign        String?   @map("ticket_sign")
+  ticketVence       DateTime? @map("ticket_vence") @db.Timestamptz(3)
+  ticketModo        ModoArca? @map("ticket_modo")
+
+  centro Centro @relation(fields: [centroId], references: [id], onDelete: Cascade)
+
+  @@map("config_fiscal")
+}
+
+/// Factura C (monotributo) a un paciente particular por las sesiones de un mes.
+model Factura {
+  id         String        @id @default(uuid(7)) @db.Uuid
+  centroId   String        @map("centro_id") @db.Uuid
+  pacienteId String        @map("paciente_id") @db.Uuid
+  /// Primer día del mes de las sesiones.
+  periodo    DateTime      @db.Date
+  fecha      DateTime      @db.Date
+  ptoVta     Int           @map("pto_vta") @db.SmallInt
+  /// 11 = Factura C.
+  cbteTipo   Int           @default(11) @map("cbte_tipo") @db.SmallInt
+  numero     Int?
+  /// 96 = DNI, 99 = consumidor final sin identificar.
+  docTipo    Int           @map("doc_tipo") @db.SmallInt
+  docNro     String        @map("doc_nro") @db.VarChar(11)
+  total      Decimal       @db.Decimal(12, 2)
+  /// Ítems: [{ descripcion, cantidad, precio }].
+  detalle    Json
+  cae        String?       @db.VarChar(20)
+  caeVence   DateTime?     @map("cae_vence") @db.Date
+  modo       ModoArca
+  estado     EstadoFactura
+  error      String?       @db.VarChar(1000)
+  /// Ya se le mandó al paciente.
+  enviada    Boolean       @default(false)
+  creadaEn   DateTime      @default(now()) @map("creada_en") @db.Timestamptz(3)
+
+  centro       Centro       @relation(fields: [centroId], references: [id], onDelete: Cascade)
+  paciente     Paciente     @relation(fields: [centroId, pacienteId], references: [centroId, id], onDelete: Restrict)
+  prestaciones Prestacion[]
+
+  @@unique([centroId, id])
+  @@unique([centroId, modo, ptoVta, cbteTipo, numero])
+  @@index([centroId, periodo])
+  @@map("facturas")
 }
 
 /// Nota clínica. Privada del profesional salvo que se comparta con el equipo.

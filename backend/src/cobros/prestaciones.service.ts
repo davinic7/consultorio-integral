@@ -212,6 +212,14 @@ export class PrestacionesService {
     const p = await this.cargar(db, id);
     const cerrada = await this.estaCerrada(db, p.profesionalId, p.periodo);
     if (
+      p.facturaId &&
+      (dto.monto !== undefined || dto.financiadorId !== undefined)
+    ) {
+      throw new ConflictException(
+        'La sesión ya tiene factura electrónica: el monto y la cobertura no se pueden cambiar',
+      );
+    }
+    if (
       cerrada &&
       (dto.monto !== undefined || dto.financiadorId !== undefined)
     ) {
@@ -289,6 +297,8 @@ export class PrestacionesService {
     }
     if (dto.token !== undefined) data.token = dto.token;
     if (dto.facturada !== undefined) data.facturada = dto.facturada;
+    if (dto.fechaDeclarada !== undefined)
+      data.fechaDeclarada = dto.fechaDeclarada ? dia(dto.fechaDeclarada) : null;
 
     const act = await db.prestacion.update({
       where: { id },
@@ -301,7 +311,8 @@ export class PrestacionesService {
   /** Marca (o desmarca) varias prestaciones como presentadas o facturadas. */
   async facturar(centroId: string, ids: string[], facturada: boolean) {
     const r = await this.db(centroId).prestacion.updateMany({
-      where: { id: { in: ids } },
+      // Las que tienen factura electrónica no se desmarcan.
+      where: { id: { in: ids }, ...(facturada ? {} : { facturaId: null }) },
       data: { facturada },
     });
     return { actualizadas: r.count };

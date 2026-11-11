@@ -36,6 +36,8 @@ export const actualizarPrestacionSchema = z
       .transform((s) => (s === '' ? null : s))
       .nullable(),
     facturada: z.boolean(),
+    /** Fecha que se declara a la obra social; null la borra. */
+    fechaDeclarada: fechaTexto.nullable(),
   })
   .partial()
   .refine((d) => Object.keys(d).length > 0, 'sin cambios');

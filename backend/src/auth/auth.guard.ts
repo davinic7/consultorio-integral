@@ -9,7 +9,11 @@ import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import type { Request } from 'express';
 import type { Modulo, Rol } from '../generated/prisma/client.js';
-import { CLAVE_MODULO, ModulosCentro, NOMBRE_MODULO } from '../planes/planes.js';
+import {
+  CLAVE_MODULO,
+  ModulosCentro,
+  NOMBRE_MODULO,
+} from '../planes/planes.js';
 import type { PayloadToken } from './auth.types.js';
 import { CLAVE_PUBLICO, CLAVE_ROLES, CLAVE_SUPERADMIN } from './decoradores.js';
 

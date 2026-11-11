@@ -108,6 +108,35 @@ export class CifradoService {
     );
   }
 
+  /**
+   * Cualquier otro dato sensible del centro (ej. la clave privada de ARCA),
+   * atado a un contexto: cifrado para un contexto, no se descifra en otro.
+   */
+  async cifrarDato(
+    centroId: string,
+    texto: string,
+    contexto: string,
+  ): Promise<string> {
+    const clave = await this.claveDeCentro(centroId);
+    return cifrarAes(
+      Buffer.from(texto, 'utf8'),
+      clave,
+      `${contexto}|${centroId}`,
+    );
+  }
+
+  async descifrarDato(
+    centroId: string,
+    dato: string,
+    contexto: string,
+  ): Promise<string | null> {
+    const clave = await this.claveDeCentro(centroId);
+    return (
+      descifrarAes(dato, clave, `${contexto}|${centroId}`)?.toString('utf8') ??
+      null
+    );
+  }
+
   /** Clave de datos del centro; la crea la primera vez. */
   private async claveDeCentro(centroId: string): Promise<Buffer> {
     const enCache = this.cache.get(centroId);
@@ -118,7 +147,11 @@ export class CifradoService {
       select: { claveDatos: true },
     });
     if (!centro.claveDatos) {
-      const nueva = cifrarAes(randomBytes(32), this.maestra, aadClave(centroId));
+      const nueva = cifrarAes(
+        randomBytes(32),
+        this.maestra,
+        aadClave(centroId),
+      );
       // Solo se guarda si sigue vacía: si dos pedidos llegan a la vez, gana uno.
       await this.prisma.centro.updateMany({
         where: { id: centroId, claveDatos: null },
