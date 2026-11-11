@@ -1,3 +1,4 @@
+import { RequiereModulo } from '../planes/planes.js';
 import {
   Body,
   Controller,
@@ -18,7 +19,7 @@ import { CobrosModule } from '../cobros/cobros.module.js';
 import { AvisosModule } from '../avisos/avisos.js';
 import { idParam } from '../common/comunes.js';
 import { ApiBodyZod } from '../common/zod.js';
-import { Rol } from '../generated/prisma/client.js';
+import { Modulo, Rol } from '../generated/prisma/client.js';
 import {
   cancelarTurnoSchema,
   crearRecurrenciaSchema,
@@ -44,6 +45,7 @@ import { TurnosService } from './turnos.service.js';
 @ApiTags('turnos')
 @ApiBearerAuth()
 @Roles(Rol.admin, Rol.recepcion, Rol.profesional)
+@RequiereModulo(Modulo.agenda)
 @Controller('turnos')
 export class TurnosController {
   constructor(private readonly turnos: TurnosService) {}
@@ -136,6 +138,7 @@ export class TurnosController {
 @ApiTags('turnos')
 @ApiBearerAuth()
 @Roles(Rol.admin, Rol.recepcion, Rol.profesional)
+@RequiereModulo(Modulo.agenda)
 @Controller('recurrencias')
 export class RecurrenciasController {
   constructor(private readonly turnos: TurnosService) {}

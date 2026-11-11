@@ -32,6 +32,7 @@ import { edad, enlaceWhatsApp } from '../../core/contacto';
 import { colorDisciplina, iniciales } from '../../core/disciplina';
 import { ahoraEn, fechaLarga, lunesDe, minutos } from '../../core/fechas';
 import { AuthService } from '../../core/auth/auth.service';
+import { tieneModulo } from '../../core/auth/modulos';
 import { puede } from '../../core/auth/roles';
 import { AsistenciaPaciente } from './asistencia-paciente';
 import { NotasPaciente } from './notas-paciente';
@@ -78,6 +79,11 @@ export class PacienteFicha implements OnInit {
     puede(this.auth.sesion()?.rol, 'admin', 'recepcion'),
   );
   protected readonly esAlta = computed(() => !this.id());
+  /** El plan del centro incluye cobros (pestaña Pagos y saldo) y obras sociales (órdenes). */
+  protected readonly conCobros = computed(() => tieneModulo(this.auth.sesion(), 'cobros'));
+  private readonly conOrdenes = computed(() =>
+    tieneModulo(this.auth.sesion(), 'obras_sociales'),
+  );
   protected readonly esProfesional = computed(() => this.auth.sesion()?.rol === 'profesional');
   protected readonly paciente = signal<Paciente | null>(null);
   protected readonly profesionales = signal<Profesional[]>([]);
@@ -94,8 +100,8 @@ export class PacienteFicha implements OnInit {
     const p: { id: Pestana; texto: string }[] = [
       { id: 'resumen', texto: 'Resumen' },
       { id: 'sesiones', texto: 'Sesiones' },
-      { id: 'pagos', texto: 'Pagos' },
     ];
+    if (this.conCobros()) p.push({ id: 'pagos', texto: 'Pagos' });
     if (this.esProfesional()) p.push({ id: 'notas', texto: 'Notas' });
     p.push({ id: 'datos', texto: this.puedeEditar() ? 'Editar datos' : 'Datos' });
     return p;
@@ -182,7 +188,8 @@ export class PacienteFicha implements OnInit {
   });
   /** Orden vigente con más lugar (si la obra social pide orden). */
   protected readonly orden = computed(() => {
-    if (!this.paciente()?.financiador?.requiereOrden) return null;
+    if (!this.conCobros() || !this.conOrdenes() || !this.paciente()?.financiador?.requiereOrden)
+      return null;
     const vigentes = this.ordenes().filter((o) => o.vigente);
     return {
       vigente: vigentes.find((o) => o.disponibles > 0) ?? vigentes[0] ?? null,
@@ -311,10 +318,10 @@ export class PacienteFicha implements OnInit {
   /** Sesiones para cobrar y órdenes del paciente (fallar no rompe la ficha). */
   protected async cargarCobros(): Promise<void> {
     const p = this.paciente();
-    if (!p) return;
+    if (!p || !this.conCobros()) return;
     const [prestaciones, ordenes] = await Promise.all([
       this.cobrosApi.prestaciones({ pacienteId: p.id }).catch(() => []),
-      p.financiador?.requiereOrden
+      p.financiador?.requiereOrden && this.conOrdenes()
         ? this.ordenesApi.listar(p.id).catch(() => [])
         : Promise.resolve([]),
     ]);

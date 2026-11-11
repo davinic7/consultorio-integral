@@ -2,8 +2,11 @@ import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http'
 import { inject, Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import type { Modulo } from '../auth/auth.models';
 import type {
   Aviso,
+  CentroPlataforma,
+  Plan,
   Conciliacion,
   DatosOrden,
   DatosPago,
@@ -370,6 +373,39 @@ export class PreciosApi {
   }
   borrar(id: string) {
     return firstValueFrom(this.http.delete<{ recalculadas: number }>(`${API}/precios/${id}`));
+  }
+}
+
+/** Centros y planes de la plataforma (solo superadmin). */
+@Injectable({ providedIn: 'root' })
+export class PlataformaApi {
+  private readonly http = inject(HttpClient);
+
+  centros() {
+    return firstValueFrom(this.http.get<CentroPlataforma[]>(`${API}/centros`));
+  }
+  crearCentro(datos: {
+    nombre: string;
+    slug: string;
+    plan: string;
+    admin: { email: string; nombre: string; password?: string };
+  }) {
+    return firstValueFrom(this.http.post<{ id: string }>(`${API}/centros`, datos));
+  }
+  actualizarCentro(id: string, datos: { nombre?: string; plan?: string; activo?: boolean }) {
+    return firstValueFrom(this.http.patch<unknown>(`${API}/centros/${id}`, datos));
+  }
+  planes() {
+    return firstValueFrom(this.http.get<Plan[]>(`${API}/planes`));
+  }
+  crearPlan(datos: { codigo: string; nombre: string; precioMensual: number; modulos: Modulo[] }) {
+    return firstValueFrom(this.http.post<Plan>(`${API}/planes`, datos));
+  }
+  actualizarPlan(
+    id: string,
+    datos: Partial<{ nombre: string; precioMensual: number; modulos: Modulo[]; activo: boolean }>,
+  ) {
+    return firstValueFrom(this.http.patch<Plan>(`${API}/planes/${id}`, datos));
   }
 }
 

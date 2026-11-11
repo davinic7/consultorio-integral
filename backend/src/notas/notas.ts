@@ -1,3 +1,4 @@
+import { RequiereModulo } from '../planes/planes.js';
 import {
   BadRequestException,
   Body,
@@ -17,7 +18,7 @@ import type { UsuarioAutenticado } from '../auth/auth.types.js';
 import { CentroActual, Roles, UsuarioActual } from '../auth/decoradores.js';
 import { idParam, textoObligatorio } from '../common/comunes.js';
 import { ApiBodyZod } from '../common/zod.js';
-import { Prisma, Rol } from '../generated/prisma/client.js';
+import { Modulo, Prisma, Rol } from '../generated/prisma/client.js';
 import { sinCentro, type ClienteDeCentro } from '../prisma/centro.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CifradoService } from './cifrado.js';
@@ -197,6 +198,7 @@ export class NotasService {
 @ApiTags('notas')
 @ApiBearerAuth()
 @Roles(Rol.profesional)
+@RequiereModulo(Modulo.pacientes)
 @Controller('pacientes')
 export class NotasDePacienteController {
   constructor(private readonly notas: NotasService) {}
@@ -226,6 +228,7 @@ export class NotasDePacienteController {
 @ApiTags('notas')
 @ApiBearerAuth()
 @Roles(Rol.profesional)
+@RequiereModulo(Modulo.pacientes)
 @Controller('notas')
 export class NotasController {
   constructor(private readonly notas: NotasService) {}

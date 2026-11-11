@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import { TODOS_LOS_MODULOS } from './ayudas.js';
 import { adaptadorPg } from '../src/prisma/adaptador.js';
 import { PrismaClient } from '../src/generated/prisma/client.js';
 import {
@@ -41,7 +42,7 @@ describe.skipIf(!url)('Aislamiento entre centros (PostgreSQL)', () => {
       'TRUNCATE centros, planes, usuarios RESTART IDENTITY CASCADE',
     );
     const plan = await prisma.plan.create({
-      data: { codigo: 'test', nombre: 'Test', precioMensual: 0 },
+      data: { codigo: 'test', nombre: 'Test', precioMensual: 0, modulos: TODOS_LOS_MODULOS },
     });
     a = await sembrarCentro(prisma, plan.id, 'centro-a');
     b = await sembrarCentro(prisma, plan.id, 'centro-b');

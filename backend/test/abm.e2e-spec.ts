@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import { TODOS_LOS_MODULOS } from './ayudas.js';
 import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { adaptadorPg } from '../src/prisma/adaptador.js';
@@ -32,7 +33,7 @@ describe.skipIf(!url)('ABM de salas, profesionales y pacientes (e2e)', () => {
     );
 
     const plan = await prisma.plan.create({
-      data: { codigo: 'basico', nombre: 'Básico', precioMensual: 0 },
+      data: { codigo: 'basico', nombre: 'Básico', precioMensual: 0, modulos: TODOS_LOS_MODULOS },
     });
     const a = await prisma.centro.create({
       data: { nombre: 'A', slug: 'a', planId: plan.id },

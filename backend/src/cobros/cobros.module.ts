@@ -1,3 +1,4 @@
+import { RequiereModulo } from '../planes/planes.js';
 import {
   Body,
   Controller,
@@ -17,7 +18,7 @@ import type { UsuarioAutenticado } from '../auth/auth.types.js';
 import { CentroActual, Roles, UsuarioActual } from '../auth/decoradores.js';
 import { idParam } from '../common/comunes.js';
 import { ApiBodyZod } from '../common/zod.js';
-import { Rol } from '../generated/prisma/client.js';
+import { Modulo, Rol } from '../generated/prisma/client.js';
 import {
   actualizarPagoSchema,
   actualizarPrestacionSchema,
@@ -48,6 +49,7 @@ import { PrestacionesService } from './prestaciones.service.js';
  */
 @ApiTags('cobros')
 @ApiBearerAuth()
+@RequiereModulo(Modulo.cobros)
 @Controller('prestaciones')
 export class PrestacionesController {
   constructor(private readonly prestaciones: PrestacionesService) {}
@@ -113,6 +115,7 @@ export class PrestacionesController {
 @ApiTags('cobros')
 @ApiBearerAuth()
 @Roles(Rol.admin, Rol.recepcion)
+@RequiereModulo(Modulo.cobros)
 @Controller('pagos')
 export class PagosController {
   constructor(private readonly prestaciones: PrestacionesService) {}
@@ -149,6 +152,7 @@ export class PagosController {
 @ApiTags('cobros')
 @ApiBearerAuth()
 @Roles(Rol.admin, Rol.recepcion, Rol.profesional)
+@RequiereModulo(Modulo.cobros)
 @Controller('cobros')
 export class CobrosController {
   constructor(private readonly cobros: CobrosService) {}

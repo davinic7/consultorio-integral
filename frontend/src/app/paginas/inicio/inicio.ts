@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { AvisosApi, CobrosApi, PacientesApi, SalasApi, TurnosApi } from '../../core/api/api';
 import type { Aviso, ResumenCobros, Sala, Turno } from '../../core/api/modelos';
 import { AuthService } from '../../core/auth/auth.service';
+import { tieneModulo } from '../../core/auth/modulos';
 import { puede } from '../../core/auth/roles';
 import { plata } from '../../core/cobros';
 import { colorDisciplina, iniciales } from '../../core/disciplina';
@@ -212,8 +213,9 @@ export class Inicio {
       this.semana.set(semana.length);
       this.salas.set(salas);
       this.pacientes.set(pacientes.total);
-      // Cobros del mes: si falla, el panel sigue igual sin ese indicador.
-      this.cobrosApi
+      // Cobros del mes (si el plan lo incluye): si falla, el panel sigue sin ese indicador.
+      if (tieneModulo(this.auth.sesion(), 'cobros'))
+        this.cobrosApi
         .resumen(hoy.slice(0, 7))
         .then((r) => this.cobros.set(r))
         .catch(() => this.cobros.set(null));

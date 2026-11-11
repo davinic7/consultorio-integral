@@ -10,6 +10,7 @@ import type {
   ResumenCobros,
 } from '../../core/api/modelos';
 import { AuthService } from '../../core/auth/auth.service';
+import { tieneModulo } from '../../core/auth/modulos';
 import { puede } from '../../core/auth/roles';
 import {
   CLASE_COBRO,
@@ -50,8 +51,12 @@ export class Cobros {
   protected readonly gestiona = computed(() => puede(this.rol(), 'admin', 'recepcion'));
   protected readonly esAdmin = computed(() => this.rol() === 'admin');
   protected readonly esProfesional = computed(() => this.rol() === 'profesional');
-  /** Recepción no ve liquidaciones. */
-  protected readonly veLiquidacion = computed(() => puede(this.rol(), 'admin', 'profesional'));
+  /** Recepción no ve liquidaciones; tampoco se ven si el plan no las incluye. */
+  protected readonly veLiquidacion = computed(
+    () =>
+      puede(this.rol(), 'admin', 'profesional') &&
+      tieneModulo(this.auth.sesion(), 'liquidacion'),
+  );
   private readonly hoy = computed(() => ahoraEn(this.auth.sesion()?.centro?.zonaHoraria).fecha);
 
   protected readonly mes = signal(this.hoy().slice(0, 7));

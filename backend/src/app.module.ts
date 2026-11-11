@@ -12,6 +12,7 @@ import { FinanciadoresModule } from './financiadores/financiadores.js';
 import { HealthModule } from './health/health.module.js';
 import { NotasModule } from './notas/notas.js';
 import { PacientesModule } from './pacientes/pacientes.js';
+import { PlanesModule } from './planes/planes.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { ProfesionalesModule } from './profesionales/profesionales.js';
 import { SalasModule } from './salas/salas.js';
@@ -24,6 +25,7 @@ import { UsuariosModule } from './usuarios/usuarios.module.js';
     // Límite general por IP; el login tiene uno más estricto.
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 300 }]),
     PrismaModule,
+    PlanesModule,
     HealthModule,
     AuthModule,
     UsuariosModule,

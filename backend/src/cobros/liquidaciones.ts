@@ -1,3 +1,4 @@
+import { RequiereModulo } from '../planes/planes.js';
 import {
   Body,
   ConflictException,
@@ -18,12 +19,7 @@ import { CentroActual, Roles, UsuarioActual } from '../auth/decoradores.js';
 import { idParam } from '../common/comunes.js';
 import { ApiBodyZod } from '../common/zod.js';
 import { diasDelMes, periodoDe, rangoDeFechas } from '../common/tiempo.js';
-import {
-  EstadoAsistencia,
-  EstadoLiquidacion,
-  Prisma,
-  Rol,
-} from '../generated/prisma/client.js';
+import { EstadoAsistencia, EstadoLiquidacion, Modulo, Prisma, Rol } from '../generated/prisma/client.js';
 import type { ClienteDeCentro } from '../prisma/centro.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { generarLiquidacionSchema, mesSchema } from './cobros.schemas.js';
@@ -325,6 +321,7 @@ export class LiquidacionesService {
 
 @ApiTags('liquidaciones')
 @ApiBearerAuth()
+@RequiereModulo(Modulo.liquidacion)
 @Controller('liquidaciones')
 export class LiquidacionesController {
   constructor(private readonly liquidaciones: LiquidacionesService) {}

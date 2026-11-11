@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import { TODOS_LOS_MODULOS } from './ayudas.js';
 import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { adaptadorPg } from '../src/prisma/adaptador.js';
@@ -47,7 +48,7 @@ describe.skipIf(!url)('Auth y roles (e2e, PostgreSQL)', () => {
     );
 
     const plan = await prisma.plan.create({
-      data: { codigo: 'basico', nombre: 'Básico', precioMensual: 0 },
+      data: { codigo: 'basico', nombre: 'Básico', precioMensual: 0, modulos: TODOS_LOS_MODULOS },
     });
     centroA = (
       await prisma.centro.create({

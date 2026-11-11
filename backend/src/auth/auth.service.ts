@@ -10,6 +10,7 @@ import type { Env } from '../config/env.js';
 import type {
   Centro,
   Miembro,
+  Modulo,
   Rol,
   Usuario,
 } from '../generated/prisma/client.js';
@@ -17,12 +18,25 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import type { PayloadToken, UsuarioAutenticado } from './auth.types.js';
 import { hashSenuelo, verificarPassword } from './password.js';
 
-type MiembroConCentro = Miembro & { centro: Centro };
+const INCLUDE_CENTRO = {
+  centro: {
+    include: {
+      plan: {
+        select: { codigo: true, nombre: true, modulos: { select: { modulo: true } } },
+      },
+    },
+  },
+} as const;
+type CentroConPlan = Centro & {
+  plan: { codigo: string; nombre: string; modulos: { modulo: Modulo }[] };
+};
+type MiembroConCentro = Miembro & { centro: CentroConPlan };
 
 export interface CentroDeUsuario {
   id: string;
   nombre: string;
   slug: string;
+  zonaHoraria: string;
   rol: Rol;
 }
 
@@ -37,6 +51,9 @@ export interface RespuestaSesion {
     nombre: string;
     slug: string;
     zonaHoraria: string;
+    /** Plan del centro y módulos que habilita. */
+    plan: { codigo: string; nombre: string };
+    modulos: Modulo[];
   } | null;
   rol: Rol | null;
   /** Centros a los que puede entrar. */
@@ -185,7 +202,7 @@ export class AuthService {
   private miembrosActivos(usuarioId: string): Promise<MiembroConCentro[]> {
     return this.prisma.miembro.findMany({
       where: { usuarioId, activo: true, centro: { activo: true } },
-      include: { centro: true },
+      include: INCLUDE_CENTRO,
       orderBy: { centro: { nombre: 'asc' } },
     });
   }
@@ -239,16 +256,19 @@ export class AuthService {
     };
   }
 
-  private datosCentro(c: Centro) {
+  private datosCentro(c: CentroConPlan) {
     return {
       id: c.id,
       nombre: c.nombre,
       slug: c.slug,
       zonaHoraria: c.zonaHoraria,
+      plan: { codigo: c.plan.codigo, nombre: c.plan.nombre },
+      modulos: c.plan.modulos.map((m) => m.modulo),
     };
   }
 
   private centroDeUsuario(m: MiembroConCentro): CentroDeUsuario {
-    return { ...this.datosCentro(m.centro), rol: m.rol };
+    const { id, nombre, slug, zonaHoraria } = m.centro;
+    return { id, nombre, slug, zonaHoraria, rol: m.rol };
   }
 }

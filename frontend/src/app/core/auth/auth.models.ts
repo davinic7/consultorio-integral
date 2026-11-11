@@ -1,11 +1,26 @@
 export type Rol = 'admin' | 'recepcion' | 'profesional';
 
+/** Módulos que un plan puede habilitar. */
+export type Modulo =
+  | 'agenda'
+  | 'asistencia'
+  | 'pacientes'
+  | 'cobros'
+  | 'liquidacion'
+  | 'reportes'
+  | 'obras_sociales'
+  | 'facturacion_arca';
+
 export interface CentroResumen {
   id: string;
   nombre: string;
   slug: string;
   /** Zona horaria IANA del centro (ej. America/Argentina/Catamarca). */
   zonaHoraria?: string;
+  /** Plan del centro (solo el centro de la sesión). */
+  plan?: { codigo: string; nombre: string };
+  /** Módulos que habilita el plan (solo el centro de la sesión). */
+  modulos?: Modulo[];
 }
 
 export interface CentroDeUsuario extends CentroResumen {

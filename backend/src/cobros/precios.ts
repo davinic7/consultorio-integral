@@ -1,3 +1,4 @@
+import { RequiereModulo } from '../planes/planes.js';
 import {
   Body,
   Controller,
@@ -15,7 +16,7 @@ import { CentroActual, Roles } from '../auth/decoradores.js';
 import { aFechaSolo, idParam } from '../common/comunes.js';
 import { aLocal } from '../common/tiempo.js';
 import { ApiBodyZod } from '../common/zod.js';
-import { Prisma, Rol } from '../generated/prisma/client.js';
+import { Modulo, Prisma, Rol } from '../generated/prisma/client.js';
 import { sinCentro, type ClienteDeCentro } from '../prisma/centro.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import {
@@ -174,6 +175,7 @@ export class PreciosService {
 /** Valor de la sesión de cada obra social y de particular. Los ven admin y recepción; los carga el admin. */
 @ApiTags('precios')
 @ApiBearerAuth()
+@RequiereModulo(Modulo.cobros)
 @Controller('precios')
 export class PreciosController {
   constructor(private readonly precios: PreciosService) {}

@@ -1,5 +1,11 @@
 import { Routes } from '@angular/router';
-import { autenticadoGuard, conSesionGuard, invitadoGuard } from './core/auth/auth.guards';
+import {
+  autenticadoGuard,
+  conSesionGuard,
+  invitadoGuard,
+  superadminGuard,
+} from './core/auth/auth.guards';
+import { moduloGuard } from './core/auth/modulos';
 import { rolGuard } from './core/auth/roles';
 
 const conCentro = rolGuard('admin', 'recepcion', 'profesional');
@@ -43,9 +49,15 @@ export const routes: Routes = [
       },
       {
         path: 'cobros',
-        canActivate: [conCentro],
+        canActivate: [conCentro, moduloGuard('cobros')],
         title: 'Cobros y liquidación · Centro Integral',
         loadComponent: () => import('./paginas/cobros/cobros').then((m) => m.Cobros),
+      },
+      {
+        path: 'plataforma',
+        canActivate: [superadminGuard],
+        title: 'Centros y planes · Centro Integral',
+        loadComponent: () => import('./paginas/plataforma/plataforma').then((m) => m.Plataforma),
       },
       {
         path: 'avisos',

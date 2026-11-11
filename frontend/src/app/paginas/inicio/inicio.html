@@ -26,7 +26,7 @@
 
     @if (sesion.usuario.esSuperadmin && !sesion.centro) {
       <p class="oc-alerta">
-        Entraste como superadministrador. La gestión de centros y planes llega con su pantalla.
+        Entraste como superadministrador. <a routerLink="/plataforma">Centros y planes</a>: alta de centros, cambio de plan y módulos de cada plan.
       </p>
     } @else if (!sesion.centro) {
       <p class="oc-alerta oc-alerta--aviso">Tu cuenta todavía no pertenece a ningún centro activo.</p>

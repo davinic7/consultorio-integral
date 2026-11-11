@@ -1,3 +1,4 @@
+import { RequiereModulo } from '../planes/planes.js';
 import {
   Controller,
   Get,
@@ -19,7 +20,7 @@ import {
   rangoDeFechas,
   sumarDias,
 } from '../common/tiempo.js';
-import { EstadoAsistencia, Prisma, Rol } from '../generated/prisma/client.js';
+import { EstadoAsistencia, Modulo, Prisma, Rol } from '../generated/prisma/client.js';
 import type { ClienteDeCentro } from '../prisma/centro.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
@@ -224,6 +225,7 @@ export class AsistenciaService {
 @ApiTags('asistencia')
 @ApiBearerAuth()
 @Roles(Rol.admin, Rol.recepcion, Rol.profesional)
+@RequiereModulo(Modulo.asistencia)
 @Controller('pacientes')
 export class AsistenciaController {
   constructor(private readonly asistencia: AsistenciaService) {}

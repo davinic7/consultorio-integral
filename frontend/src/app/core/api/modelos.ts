@@ -1,3 +1,5 @@
+import type { Modulo } from '../auth/auth.models';
+
 export interface Pagina<T> {
   items: T[];
   total: number;
@@ -375,4 +377,27 @@ export interface Precio {
   vigenteDesde: string;
   vigente: boolean;
   futuro: boolean;
+}
+
+// ───────── Plataforma (superadmin) ─────────
+
+export interface Plan {
+  id: string;
+  codigo: string;
+  nombre: string;
+  precioMensual: number;
+  activo: boolean;
+  modulos: Modulo[];
+  /** Centros que lo usan. */
+  centros: number;
+}
+
+export interface CentroPlataforma {
+  id: string;
+  nombre: string;
+  slug: string;
+  activo: boolean;
+  creadoEn: string;
+  plan: { codigo: string; nombre: string };
+  _count: { miembros: number };
 }

@@ -22,3 +22,9 @@ export const invitadoGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   return !auth.autenticado() || inject(Router).createUrlTree(['/']);
 };
+
+/** Solo el superadministrador de la plataforma. */
+export const superadminGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  return !!auth.sesion()?.usuario.esSuperadmin || inject(Router).createUrlTree(['/']);
+};

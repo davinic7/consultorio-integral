@@ -14,6 +14,8 @@ import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/rou
 import { environment } from '../../../environments/environment';
 import type { Rol } from '../../core/auth/auth.models';
 import { AuthService } from '../../core/auth/auth.service';
+import type { Modulo } from '../../core/auth/auth.models';
+import { tieneModulo } from '../../core/auth/modulos';
 import { NOMBRE_ROL, puede } from '../../core/auth/roles';
 import { AvisosService } from '../../core/avisos.service';
 import { Isotipo, SelloDavinic } from '../../core/marca/marca';
@@ -27,6 +29,8 @@ interface ItemMenu {
   roles: Rol[];
   /** Va en la barra inferior del celular (las demás quedan en "Más"). */
   abajo: boolean;
+  /** Módulo del plan que hace falta para verlo. */
+  modulo?: Modulo;
 }
 
 const TODOS: Rol[] = ['admin', 'recepcion', 'profesional'];
@@ -37,7 +41,14 @@ const MENU: ItemMenu[] = [
   { ruta: '/asistencia', texto: 'Asistencia', icono: 'asistencia', roles: TODOS, abajo: true },
   { ruta: '/pacientes', texto: 'Pacientes', icono: 'pacientes', roles: TODOS, abajo: false },
   // En celular la barra inferior es Panel, Agenda, Asistencia, Cobros y Más (Celular.dc.html).
-  { ruta: '/cobros', texto: 'Cobros y liquidación', icono: 'cobros', roles: TODOS, abajo: true },
+  {
+    ruta: '/cobros',
+    texto: 'Cobros y liquidación',
+    icono: 'cobros',
+    roles: TODOS,
+    abajo: true,
+    modulo: 'cobros',
+  },
   {
     ruta: '/profesionales',
     texto: 'Profesionales',
@@ -52,7 +63,14 @@ const MENU: ItemMenu[] = [
     icono: 'financiadores',
     roles: ['admin', 'recepcion'],
     abajo: false,
+    modulo: 'obras_sociales',
   },
+];
+
+/** Superadministrador sin centro elegido. */
+const MENU_PLATAFORMA: ItemMenu[] = [
+  { ruta: '/', texto: 'Panel', icono: 'panel', roles: [], abajo: true },
+  { ruta: '/plataforma', texto: 'Centros y planes', icono: 'plataforma', roles: [], abajo: true },
 ];
 
 /**
@@ -81,8 +99,14 @@ export class Shell {
     return rol ? NOMBRE_ROL[rol] : null;
   });
   protected readonly menu = computed(() => {
-    const rol = this.auth.sesion()?.rol;
-    return rol ? MENU.filter((m) => m.roles.includes(rol)) : [];
+    const sesion = this.auth.sesion();
+    const rol = sesion?.rol;
+    const items = rol
+      ? MENU.filter((m) => m.roles.includes(rol) && (!m.modulo || tieneModulo(sesion, m.modulo)))
+      : [];
+    if (sesion?.usuario.esSuperadmin)
+      return rol ? [...items, MENU_PLATAFORMA[1]!] : MENU_PLATAFORMA;
+    return items;
   });
   protected readonly menuAbajo = computed(() => this.menu().filter((m) => m.abajo));
   protected readonly menuMas = computed(() => this.menu().filter((m) => !m.abajo));

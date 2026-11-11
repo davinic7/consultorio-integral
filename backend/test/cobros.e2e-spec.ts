@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import { TODOS_LOS_MODULOS } from './ayudas.js';
 import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
@@ -66,7 +67,7 @@ describe.skipIf(!url)('Cobros y liquidación (e2e)', () => {
       'TRUNCATE centros, planes, usuarios RESTART IDENTITY CASCADE',
     );
     const plan = await prisma.plan.create({
-      data: { codigo: 'integral', nombre: 'Integral', precioMensual: 0 },
+      data: { codigo: 'integral', nombre: 'Integral', precioMensual: 0, modulos: TODOS_LOS_MODULOS },
     });
     const a = await prisma.centro.create({
       data: { nombre: 'A', slug: 'a', planId: plan.id },

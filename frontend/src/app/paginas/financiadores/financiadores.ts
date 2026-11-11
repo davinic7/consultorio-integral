@@ -3,6 +3,7 @@ import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angula
 import { FinanciadoresApi, mensajeDeError, PreciosApi } from '../../core/api/api';
 import type { DatosFinanciador, Financiador, Precio, TipoFinanciador } from '../../core/api/modelos';
 import { AuthService } from '../../core/auth/auth.service';
+import { tieneModulo } from '../../core/auth/modulos';
 import { puede } from '../../core/auth/roles';
 import { plata } from '../../core/cobros';
 import { ahoraEn } from '../../core/fechas';
@@ -76,7 +77,11 @@ export class Financiadores implements OnInit {
 
   private readonly preciosApi = inject(PreciosApi);
   protected readonly esAdmin = computed(() => this.auth.sesion()?.rol === 'admin');
-  protected readonly vePrecios = computed(() => puede(this.auth.sesion()?.rol, 'admin', 'recepcion'));
+  protected readonly vePrecios = computed(
+    () =>
+      puede(this.auth.sesion()?.rol, 'admin', 'recepcion') &&
+      tieneModulo(this.auth.sesion(), 'cobros'),
+  );
   protected readonly precios = signal<Precio[]>([]);
   protected readonly errorPrecio = signal<string | null>(null);
   protected readonly avisoPrecio = signal<string | null>(null);

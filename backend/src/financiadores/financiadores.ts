@@ -20,10 +20,12 @@ import {
 } from '../common/comunes.js';
 import { ApiBodyZod } from '../common/zod.js';
 import {
+  Modulo,
   Prisma,
   Rol,
   TipoFinanciador,
 } from '../generated/prisma/client.js';
+import { RequiereModulo } from '../planes/planes.js';
 import { sinCentro } from '../prisma/centro.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
@@ -122,6 +124,7 @@ export class FinanciadoresController {
 
   @Post()
   @Roles(Rol.admin)
+  @RequiereModulo(Modulo.obras_sociales)
   @ApiBodyZod(crearFinanciadorSchema)
   crear(
     @CentroActual() centroId: string,
@@ -132,6 +135,7 @@ export class FinanciadoresController {
 
   @Patch(':id')
   @Roles(Rol.admin)
+  @RequiereModulo(Modulo.obras_sociales)
   @ApiBodyZod(actualizarFinanciadorSchema)
   actualizar(
     @CentroActual() centroId: string,
