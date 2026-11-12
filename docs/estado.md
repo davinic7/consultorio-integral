@@ -60,6 +60,8 @@ Los 10 pasos de [prototipo.md](prototipo.md) están hechos (versión 1.0).
 
 ## Pendientes chicos anotados
 
+- **Base de Render: vence alrededor del 9/12/2026** (más 14 días de gracia). Respaldar y pasar a plan pago o a una base nueva: [respaldo-base.md](respaldo-base.md), con `scripts/respaldar-base.sh` y `scripts/restaurar-base.sh`.
+
 - Tipografías: servirlas desde el propio servidor en vez de Google Fonts antes de salir al mercado o de la app móvil (hoy es una excepción autorizada, ver [decisiones.md](decisiones.md) §18).
 
 - ARCA: probar en homologación con un certificado real (seguir [arca-paso-a-paso.md](arca-paso-a-paso.md)) antes de pasar a producción.

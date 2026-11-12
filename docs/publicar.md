@@ -13,7 +13,7 @@ Con esto el sistema queda en una dirección pública (por ejemplo `https://centr
 
 - El servicio **se duerme tras 15 minutos sin uso**. La primera visita después tarda cerca de un minuto en responder.
 - **La base gratis vence a los 30 días** de creada; después hay 14 días para pasarla a un plan pago antes de que se borre. Sirve para mostrar el prototipo, no para datos reales.
-- Para uso real: plan pago en el servicio y en la base (con backups).
+- Para uso real: plan pago en el servicio y en la base (con backups). Respaldo, restauración y qué hacer cuando vence: [respaldo-base.md](respaldo-base.md).
 
 ## Pasos (los hacés vos en render.com)
 
