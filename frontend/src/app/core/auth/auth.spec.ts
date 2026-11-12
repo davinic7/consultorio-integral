@@ -6,12 +6,11 @@ import { firstValueFrom } from 'rxjs';
 import type { RespuestaSesion } from './auth.models';
 import { authInterceptor } from './auth.interceptor';
 import { AuthService } from './auth.service';
-import { TokenStorage } from './token-storage';
+import { MARCA_SESION, TokenStorage } from './token-storage';
 
 const respuesta = (n: number, extra: Partial<RespuestaSesion> = {}): RespuestaSesion => ({
   accessToken: `access-${n}`,
   accessTokenExpiraEn: new Date().toISOString(),
-  refreshToken: `refresh-${n}`,
   usuario: { id: 'u1', email: 'a@b.com', nombre: 'Ana', esSuperadmin: false },
   centro: { id: 'c1', nombre: 'Centro', slug: 'centro' },
   rol: 'admin',
@@ -35,7 +34,8 @@ describe('AuthService + authInterceptor', () => {
           provide: TokenStorage,
           useValue: {
             leer: () => guardado,
-            guardar: (t: string) => (guardado = t),
+            guardar: () => (guardado = MARCA_SESION),
+            recuerda: () => true,
             borrar: () => (guardado = null),
           },
         },
@@ -53,12 +53,17 @@ describe('AuthService + authInterceptor', () => {
     await p;
   }
 
-  it('login guarda la sesión y el refresh token', async () => {
-    await loguear();
+  it('login pide la cookie de sesión y guarda solo la marca', async () => {
+    const p = auth.login('a@b.com', 'clave');
+    const req = http.expectOne('/api/v1/auth/login');
+    expect(req.request.headers.get('X-Sesion')).toBe('cookie');
+    expect(req.request.body).toEqual({ email: 'a@b.com', password: 'clave', recordar: true });
+    req.flush(respuesta(1));
+    await p;
     expect(auth.autenticado()).toBe(true);
     expect(auth.sesion()?.centro?.slug).toBe('centro');
     expect(auth.token()).toBe('access-1');
-    expect(guardado).toBe('refresh-1');
+    expect(guardado).toBe(MARCA_SESION);
   });
 
   it('guarda si atiende (admin que también es profesional)', async () => {
@@ -104,7 +109,8 @@ describe('AuthService + authInterceptor', () => {
     http.expectOne('/api/v1/b').flush(null, { status: 401, statusText: 'Unauthorized' });
 
     const refresh = http.expectOne('/api/v1/auth/refresh');
-    expect(refresh.request.body).toEqual({ refreshToken: 'refresh-1' });
+    expect(refresh.request.body).toEqual({ recordar: true });
+    expect(refresh.request.headers.get('X-Sesion')).toBe('cookie');
     refresh.flush(respuesta(2));
 
     const a = http.expectOne('/api/v1/a');
@@ -114,7 +120,7 @@ describe('AuthService + authInterceptor', () => {
     b.flush({ ok: 'b' });
     expect(await r1).toEqual({ ok: 'a' });
     expect(await r2).toEqual({ ok: 'b' });
-    expect(guardado).toBe('refresh-2');
+    expect(guardado).toBe(MARCA_SESION);
   });
 
   it('si la renovación falla, cierra la sesión y va al login', async () => {
@@ -130,7 +136,17 @@ describe('AuthService + authInterceptor', () => {
     expect(navegar).toHaveBeenCalledWith(['/login']);
   });
 
-  it('restaurar sin refresh token guardado no llama a la API', async () => {
+  it('un refresh token de la versión anterior se manda una vez para pasarlo a cookie', async () => {
+    guardado = 'token-viejo';
+    const p = auth.restaurar();
+    const req = http.expectOne('/api/v1/auth/refresh');
+    expect(req.request.body).toEqual({ refreshToken: 'token-viejo', recordar: true });
+    req.flush(respuesta(1));
+    expect(await p).toBe(true);
+    expect(guardado).toBe(MARCA_SESION);
+  });
+
+  it('restaurar sin sesión guardada no llama a la API', async () => {
     expect(await auth.restaurar()).toBe(false);
   });
 

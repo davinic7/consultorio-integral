@@ -79,9 +79,10 @@ Limitaciones conocidas:
 - **Límites:** 10 intentos de login por minuto por IP y 300 pedidos por minuto en general (`@nestjs/throttler`).
 - **No se usó `@nestjs/authentication` ni `@nestjs/authorization`:** están en versión 0.1, demasiado inmaduras para la base de seguridad. Se usa `@nestjs/jwt` (estable) con guards propios.
 - **Frontend:**
-  - El access token vive en memoria. El refresh token va en `localStorage`, y en la app móvil irá en el almacenamiento seguro del sistema.
+  - El access token vive en memoria.
+  - **Web:** el refresh token va en una cookie httpOnly (`ci_refresh`, `SameSite=Strict`, `Secure` en producción, solo para `/api/v1/auth`), así un XSS no puede leerlo. La web lo pide con el encabezado `X-Sesion: cookie` y la respuesta viene sin `refreshToken`. La cookie solo se acepta si el pedido trae ese encabezado (defensa contra CSRF). Con "Recordarme" dura 30 días; si no, hasta cerrar el navegador. En `localStorage`/`sessionStorage` queda solo una marca de que hay sesión. Un token guardado por la versión anterior se manda una vez y pasa a cookie.
+  - **App móvil:** no manda el encabezado; recibe el token en el cuerpo y lo guarda en el almacenamiento seguro del sistema.
   - Un interceptor renueva la sesión ante un 401 y reintenta; si varios pedidos fallan a la vez, comparten una sola renovación.
-  - **Pendiente para producción web:** mover el refresh token a una cookie httpOnly para que un XSS no pueda leerlo.
 
 ## 10. ABM de pacientes, profesionales y salas
 

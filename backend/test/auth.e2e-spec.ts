@@ -48,7 +48,12 @@ describe.skipIf(!url)('Auth y roles (e2e, PostgreSQL)', () => {
     );
 
     const plan = await prisma.plan.create({
-      data: { codigo: 'basico', nombre: 'Básico', precioMensual: 0, modulos: TODOS_LOS_MODULOS },
+      data: {
+        codigo: 'basico',
+        nombre: 'Básico',
+        precioMensual: 0,
+        modulos: TODOS_LOS_MODULOS,
+      },
     });
     centroA = (
       await prisma.centro.create({
@@ -192,6 +197,103 @@ describe.skipIf(!url)('Auth y roles (e2e, PostgreSQL)', () => {
         .post('/api/v1/auth/refresh')
         .send({ refreshToken: body.refreshToken })
         .expect(401);
+    });
+  });
+
+  describe('web: refresh token en cookie httpOnly', () => {
+    const WEB = { 'X-Sesion': 'cookie' };
+    /** Valor de la cookie ci_refresh en la respuesta, y el encabezado completo. */
+    function cookie(res: request.Response) {
+      const set = ([] as string[]).concat(res.headers['set-cookie'] ?? []);
+      const linea = set.find((c) => c.startsWith('ci_refresh=')) ?? '';
+      return { linea, valor: linea.split(';')[0].slice('ci_refresh='.length) };
+    }
+
+    it('login pone la cookie y no devuelve el token en el cuerpo', async () => {
+      const res = await login('prof@test.com', { recordar: true })
+        .set(WEB)
+        .expect(200);
+      expect(res.body.refreshToken).toBeUndefined();
+      expect(res.body.accessToken).toBeTruthy();
+      const { linea, valor } = cookie(res);
+      expect(valor.length).toBeGreaterThan(20);
+      expect(linea).toMatch(/HttpOnly/i);
+      expect(linea).toMatch(/SameSite=Strict/i);
+      expect(linea).toMatch(/Path=\/api\/v1\/auth/);
+      expect(linea).toMatch(/Max-Age=/);
+    });
+
+    it('sin "recordarme" la cookie dura hasta cerrar el navegador', async () => {
+      const res = await login('prof@test.com').set(WEB).expect(200);
+      expect(cookie(res).linea).not.toMatch(/Max-Age|Expires/i);
+    });
+
+    it('renueva con la cookie, la rota y logout la borra', async () => {
+      const r1 = await login('prof@test.com').set(WEB).expect(200);
+      const c1 = cookie(r1).valor;
+      const r2 = await http()
+        .post('/api/v1/auth/refresh')
+        .set(WEB)
+        .set('Cookie', `otra=1; ci_refresh=${c1}`)
+        .send({})
+        .expect(200);
+      const c2 = cookie(r2).valor;
+      expect(r2.body.refreshToken).toBeUndefined();
+      expect(c2).not.toBe(c1);
+
+      const salida = await http()
+        .post('/api/v1/auth/logout')
+        .set(WEB)
+        .set('Cookie', `ci_refresh=${c2}`)
+        .send({})
+        .expect(204);
+      expect(cookie(salida).linea).toMatch(/ci_refresh=;/);
+      await http()
+        .post('/api/v1/auth/refresh')
+        .send({ refreshToken: c2 })
+        .expect(401);
+    });
+
+    it('sin el encabezado X-Sesion la cookie no sirve (CSRF)', async () => {
+      const r = await login('prof@test.com').set(WEB).expect(200);
+      await http()
+        .post('/api/v1/auth/refresh')
+        .set('Cookie', `ci_refresh=${cookie(r).valor}`)
+        .send({})
+        .expect(401);
+    });
+
+    it('acepta un token viejo del cuerpo y lo pasa a cookie (migración)', async () => {
+      const { body } = await login('prof@test.com').expect(200);
+      const r = await http()
+        .post('/api/v1/auth/refresh')
+        .set(WEB)
+        .send({ refreshToken: body.refreshToken, recordar: true })
+        .expect(200);
+      expect(r.body.refreshToken).toBeUndefined();
+      expect(cookie(r).linea).toMatch(/Max-Age=/);
+    });
+
+    it('una cookie inválida responde 401 y se borra', async () => {
+      const r = await http()
+        .post('/api/v1/auth/refresh')
+        .set(WEB)
+        .set('Cookie', 'ci_refresh=token-inexistente-de-mas-de-veinte')
+        .send({})
+        .expect(401);
+      expect(cookie(r).linea).toMatch(/ci_refresh=;/);
+    });
+
+    it('cambiar de centro renueva la cookie', async () => {
+      const { body } = await login('multi@test.com').set(WEB).expect(200);
+      const r = await http()
+        .post('/api/v1/auth/centro')
+        .set(WEB)
+        .set(bearer(body.accessToken))
+        .send({ centroId: centroB })
+        .expect(200);
+      expect(r.body.refreshToken).toBeUndefined();
+      expect(cookie(r).valor.length).toBeGreaterThan(20);
     });
   });
 

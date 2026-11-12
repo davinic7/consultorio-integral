@@ -48,6 +48,7 @@ Los 10 pasos de [prototipo.md](prototipo.md) están hechos (versión 1.0).
 - **Comprobante de liquidación** (`/cobros/liquidacion/:profesionalId?mes=`): sesiones del mes, totales, retención y firmas; imprimir o PDF y resumen por WhatsApp.
 - **ARCA por profesional**: el centro elige si factura él o cada profesional con su CUIT y su certificado (`config_fiscal` por emisor, migración `emisor_por_profesional`). El profesional carga sus datos y emite lo suyo. Guía: [arca-paso-a-paso.md](arca-paso-a-paso.md).
 - **Reportes** (`/reportes`, módulo reportes): asistencia, facturado y cobrado por mes, profesional y cobertura; pacientes atendidos y nuevos.
+- **Sesión de la web en cookie httpOnly**: el refresh token ya no queda al alcance del JavaScript de la página (ver [decisiones.md](decisiones.md)). La app móvil sigue recibiéndolo en el cuerpo. Quien tenía sesión abierta pasa a la cookie sin tener que volver a entrar.
 - **Arranque en Render**: si falla el superadmin o los datos demo, solo avisa en el log y la API arranca igual.
 
 ## Pendientes chicos anotados
@@ -56,7 +57,6 @@ Los 10 pasos de [prototipo.md](prototipo.md) están hechos (versión 1.0).
 - Planes: el plan Profesional no incluye facturación ARCA; decidir si un profesional independiente la tiene en su plan.
 - Alta de centros por cuenta propia (registro público con plan y cobro del servicio): hoy solo el superadmin crea centros.
 - Obras sociales: leer órdenes y tokens desde fotos (la referencia usaba OCR en el navegador) y planilla de la orden en PDF.
-- Refresh token de la web en cookie httpOnly antes de producción.
 - Tests de frontend para las pantallas de salas, profesionales, pacientes, agenda, planilla y notas (hoy probadas a mano).
 - Lint del backend: Windows (Control de aplicaciones) bloquea `tsgolint.exe`, el ejecutable de las reglas con tipos. Se corre `oxlint` sin `--type-aware` hasta resolverlo.
 - `backend/AGENTS.md` (generado por NestJS, promociona su telemetría): decidir si se borra.

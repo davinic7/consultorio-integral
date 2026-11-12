@@ -329,6 +329,7 @@ Casos:
   → 201. Después, entrar a la app con `admin-prueba@demo.local` → Centro Prueba vacío.
 - [ ] Con un token de admin, `GET /api/v1/centros` → 403 (solo superadmin).
 - [ ] **Rotación del refresh token:** hacer login, copiar `refreshToken`, llamar dos veces `POST /api/v1/auth/refresh` con el **mismo** token → la primera responde 200 con un token nuevo; la segunda responde 401 y además invalida el token nuevo (detección de robo).
+- [ ] **Cookie de sesión en la web:** entrar a la app y, en las herramientas del navegador (Aplicación → Cookies), ver `ci_refresh` marcada HttpOnly; en `localStorage`, `ci.refreshToken` vale solo `cookie`. Recargar la página → la sesión sigue. Salir → la cookie desaparece. Sin tildar "Recordarme", al cerrar el navegador hay que volver a entrar.
 - [ ] **Usuarios del centro (admin):** `POST /api/v1/usuarios` con `{"email": "nuevo@demo.local", "nombre": "Nuevo", "rol": "recepcion", "password": "una-clave-de-prueba"}` → 201; esa cuenta ya puede entrar.
 
 ---
@@ -395,4 +396,4 @@ Lint: `npm run lint` en cada carpeta. En esta PC, Windows (Control de aplicacion
 - Recuperar la contraseña desde el login: no existe todavía; la cambia quien administra el centro.
 - Pantalla para administrar usuarios del centro: hoy solo por API.
 - Cambio de rol o baja de un usuario: se aplica en como mucho 15 minutos (vida del access token).
-- En la web el refresh token queda en `localStorage`: antes de producción, pasarlo a cookie httpOnly.
+- En la web el refresh token va en una cookie httpOnly; las pruebas con curl o Swagger usan el token en el cuerpo (sin el encabezado `X-Sesion`).

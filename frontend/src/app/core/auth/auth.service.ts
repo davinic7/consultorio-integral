@@ -1,11 +1,13 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { catchError, finalize, firstValueFrom, map, Observable, of, shareReplay, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import type { DatosSesion, RespuestaSesion } from './auth.models';
-import { TokenStorage } from './token-storage';
+import { MARCA_SESION, TokenStorage } from './token-storage';
 
 const API = `${environment.apiUrl}/auth`;
+/** Pide a la API el refresh token en una cookie httpOnly en vez de en el cuerpo. */
+const WEB = { headers: new HttpHeaders({ 'X-Sesion': 'cookie' }) };
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -31,35 +33,50 @@ export class AuthService {
 
   async login(email: string, password: string, centroId?: string): Promise<DatosSesion> {
     const r = await firstValueFrom(
-      this.http.post<RespuestaSesion>(`${API}/login`, { email, password, centroId }),
+      this.http.post<RespuestaSesion>(
+        `${API}/login`,
+        { email, password, centroId, recordar: this.storage.recuerda() },
+        WEB,
+      ),
     );
     return this.aplicar(r);
   }
 
   async cambiarCentro(centroId: string): Promise<DatosSesion> {
-    const r = await firstValueFrom(this.http.post<RespuestaSesion>(`${API}/centro`, { centroId }));
+    const r = await firstValueFrom(
+      this.http.post<RespuestaSesion>(
+        `${API}/centro`,
+        { centroId, recordar: this.storage.recuerda() },
+        WEB,
+      ),
+    );
     return this.aplicar(r);
   }
 
   async logout(): Promise<void> {
-    const refreshToken = this.storage.leer();
+    const viejo = this.tokenViejo();
     this.limpiar();
-    if (refreshToken) {
-      await firstValueFrom(
-        this.http.post(`${API}/logout`, { refreshToken }).pipe(catchError(() => of(null))),
-      );
-    }
+    // Siempre: la API borra la cookie aunque acá no quede marca de la sesión.
+    await firstValueFrom(
+      this.http
+        .post(`${API}/logout`, viejo ? { refreshToken: viejo } : {}, WEB)
+        .pipe(catchError(() => of(null))),
+    );
   }
 
   /**
-   * Renueva el access token con el refresh token guardado. Si varios pedidos
-   * lo necesitan a la vez, comparten una sola renovación.
+   * Renueva el access token con la cookie de sesión. Si varios pedidos lo
+   * necesitan a la vez, comparten una sola renovación.
    */
   refrescar(): Observable<boolean> {
-    const refreshToken = this.storage.leer();
-    if (!refreshToken) return of(false);
+    if (!this.storage.leer()) return of(false);
+    const viejo = this.tokenViejo();
     this.refreshEnCurso ??= this.http
-      .post<RespuestaSesion>(`${API}/refresh`, { refreshToken })
+      .post<RespuestaSesion>(
+        `${API}/refresh`,
+        { ...(viejo ? { refreshToken: viejo } : {}), recordar: this.storage.recuerda() },
+        WEB,
+      )
       .pipe(
         tap((r) => this.aplicar(r)),
         map(() => true),
@@ -73,7 +90,7 @@ export class AuthService {
     return this.refreshEnCurso;
   }
 
-  /** Al abrir la app: recupera la sesión si hay un refresh token guardado. */
+  /** Al abrir la app: recupera la sesión si quedó una abierta. */
   restaurar(): Promise<boolean> {
     return firstValueFrom(this.refrescar());
   }
@@ -85,9 +102,15 @@ export class AuthService {
     this._sesion.set(null);
   }
 
+  /** Refresh token guardado por una versión anterior de la web: se pasa a cookie. */
+  private tokenViejo(): string | null {
+    const v = this.storage.leer();
+    return v && v !== MARCA_SESION ? v : null;
+  }
+
   private aplicar(r: RespuestaSesion): DatosSesion {
     this.accessToken = r.accessToken;
-    this.storage.guardar(r.refreshToken);
+    this.storage.guardar();
     const datos: DatosSesion = {
       usuario: r.usuario,
       centro: r.centro,

@@ -48,5 +48,6 @@ export interface DatosSesion {
 export interface RespuestaSesion extends DatosSesion {
   accessToken: string;
   accessTokenExpiraEn: string;
-  refreshToken: string;
+  /** Solo para la app móvil: la web lo recibe en una cookie httpOnly. */
+  refreshToken?: string;
 }

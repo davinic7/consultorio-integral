@@ -1,17 +1,24 @@
 import { Injectable } from '@angular/core';
 
 const CLAVE = 'ci.refreshToken';
+/** Lo que se guarda ahora: solo "hay una sesión", no el token. */
+export const MARCA_SESION = 'cookie';
 
 /**
- * Dónde se guarda el refresh token entre visitas. En la web:
- * - "Recordarme en este equipo": localStorage (sobrevive a cerrar el navegador).
- * - Sin recordar: sessionStorage (la sesión termina al cerrar la pestaña).
+ * Marca de que hay una sesión abierta, para saber si al abrir la app vale la pena
+ * intentar renovarla. El refresh token de la web vive en una cookie httpOnly que
+ * pone la API: el JavaScript de la página nunca lo ve.
+ * - "Recordarme en este equipo": localStorage, y la cookie sobrevive a cerrar el navegador.
+ * - Sin recordar: sessionStorage, y la cookie termina al cerrar el navegador.
+ *
+ * Si encuentra un refresh token guardado por una versión anterior, `leer()` lo
+ * devuelve una vez para pasarlo a cookie.
  * En la app móvil (Capacitor) se reemplaza por almacenamiento seguro del sistema.
  * El access token nunca se guarda: vive solo en memoria.
  */
 @Injectable({ providedIn: 'root' })
 export class TokenStorage {
-  /** Al renovar el token se mantiene el lugar elegido al iniciar sesión. */
+  /** Al renovar la sesión se mantiene lo elegido al iniciar sesión. */
   private persistente = !this.de(sessionStorage);
 
   /** Lo elige la pantalla de login antes de iniciar sesión. */
@@ -19,16 +26,22 @@ export class TokenStorage {
     this.persistente = si;
   }
 
+  /** Si la sesión se recuerda en este equipo. */
+  recuerda(): boolean {
+    return this.persistente;
+  }
+
+  /** La marca de sesión, un token viejo para migrar, o null si no hay sesión. */
   leer(): string | null {
     return this.de(localStorage) ?? this.de(sessionStorage);
   }
 
-  guardar(token: string): void {
+  guardar(): void {
     this.borrar();
     try {
-      (this.persistente ? localStorage : sessionStorage).setItem(CLAVE, token);
+      (this.persistente ? localStorage : sessionStorage).setItem(CLAVE, MARCA_SESION);
     } catch {
-      // Sin almacenamiento (modo privado): la sesión dura lo que la pestaña.
+      // Sin almacenamiento (modo privado): igual vale la cookie mientras dure la pestaña.
     }
   }
 
