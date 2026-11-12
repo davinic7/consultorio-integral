@@ -9,6 +9,7 @@ import type {
   EmisorProfesional,
   Factura,
   PendienteFactura,
+  Reporte,
   Presentacion,
   ResultadoToken,
   CentroPlataforma,
@@ -503,6 +504,17 @@ export class FacturacionApi {
   pdf(id: string) {
     return firstValueFrom(
       this.http.get(`${API}/facturacion/facturas/${id}/pdf`, { responseType: 'blob' }),
+    );
+  }
+}
+
+@Injectable({ providedIn: 'root' })
+export class ReportesApi {
+  private readonly http = inject(HttpClient);
+
+  reporte(desde: string, hasta: string) {
+    return firstValueFrom(
+      this.http.get<Reporte>(`${API}/reportes`, { params: params({ desde, hasta }) }),
     );
   }
 }

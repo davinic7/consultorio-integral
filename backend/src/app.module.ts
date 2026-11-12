@@ -9,6 +9,7 @@ import { CentrosModule } from './centros/centros.module.js';
 import { CobrosModule } from './cobros/cobros.module.js';
 import { validateEnv } from './config/env.js';
 import { FacturacionModule } from './facturacion/facturacion.js';
+import { ReportesModule } from './reportes/reportes.js';
 import { FinanciadoresModule } from './financiadores/financiadores.js';
 import { HealthModule } from './health/health.module.js';
 import { NotasModule } from './notas/notas.js';
@@ -41,6 +42,7 @@ import { UsuariosModule } from './usuarios/usuarios.module.js';
     NotasModule,
     CobrosModule,
     FacturacionModule,
+    ReportesModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

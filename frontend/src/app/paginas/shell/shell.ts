@@ -81,6 +81,14 @@ const MENU: ItemMenu[] = [
     abajo: false,
     modulo: 'facturacion_arca',
   },
+  {
+    ruta: '/reportes',
+    texto: 'Reportes',
+    icono: 'reportes',
+    roles: TODOS,
+    abajo: false,
+    modulo: 'reportes',
+  },
   { ruta: '/usuarios', texto: 'Usuarios', icono: 'usuarios', roles: ['admin'], abajo: false },
 ];
 

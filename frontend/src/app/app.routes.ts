@@ -63,6 +63,12 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'reportes',
+        canActivate: [conCentro, moduloGuard('reportes')],
+        title: 'Reportes · Centro Integral',
+        loadComponent: () => import('./paginas/reportes/reportes').then((m) => m.Reportes),
+      },
+      {
         path: 'facturacion',
         // El profesional entra si el centro eligió que factura cada uno (si no, la pantalla lo avisa).
         canActivate: [

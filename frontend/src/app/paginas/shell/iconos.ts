@@ -20,6 +20,7 @@ export const ICONOS = {
     '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/>',
   presentacion: '<path d="M8 3h8l4 4v14H4V3h4z"/><path d="M8 12l3 3 5-6"/>',
   facturacion: '<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6M9 16h3"/>',
+  reportes: '<path d="M4 20V4M4 20h16"/><path d="M8 16v-4M12 16V8M16 16v-6"/>',
   usuarios:
     '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/><path d="m16 4 1.5 1.5L20 3"/>',
   mas: '<path d="M4 7h16M4 12h16M4 17h16"/>',

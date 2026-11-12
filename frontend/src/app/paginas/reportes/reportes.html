@@ -1,0 +1,182 @@
+<main class="oc-contenido">
+  <div class="encabezado">
+    <div>
+      <div class="oc-etiqueta">{{ reporte()?.soloProfesional ? 'Tus números' : 'Centro' }}</div>
+      <h1>Reportes</h1>
+      <p class="oc-suave">{{ rango() }}</p>
+    </div>
+    <div class="oc-segmentado" role="group" aria-label="Período">
+      @for (n of opciones; track n) {
+        <button type="button" [attr.aria-pressed]="cantidad() === n" (click)="elegir(n)">
+          {{ n }} meses
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (error(); as e) {
+    <p class="oc-alerta oc-alerta--error" role="alert">{{ e }}</p>
+  }
+
+  @if (cargando() && !reporte()) {
+    <p class="oc-suave">Cargando…</p>
+  } @else if (reporte(); as r) {
+    <section class="tiles" aria-label="Resumen del período">
+      <div class="oc-tarjeta tile">
+        <span class="tile__titulo">Sesiones atendidas</span>
+        <span class="tile__valor oc-mono">{{ r.total.presentes }}</span>
+        <span class="oc-suave tile__nota">de {{ r.total.turnos }} turnos</span>
+      </div>
+      <div class="oc-tarjeta tile">
+        <span class="tile__titulo">Asistencia</span>
+        <span class="tile__valor oc-mono">{{ porcentaje(r.total.asistencia) }}</span>
+        <span class="oc-suave tile__nota">
+          {{ r.total.ausentesSinAviso }} faltas sin aviso · {{ r.total.ausentesConAviso }} con aviso
+        </span>
+      </div>
+      <div class="oc-tarjeta tile">
+        <span class="tile__titulo">Facturado</span>
+        <span class="tile__valor oc-mono">{{ plata(r.total.facturado) }}</span>
+        <span class="oc-suave tile__nota">valor de las sesiones</span>
+      </div>
+      <div class="oc-tarjeta tile">
+        <span class="tile__titulo">Cobrado</span>
+        <span class="tile__valor oc-mono">{{ plata(r.total.cobrado) }}</span>
+        <span class="oc-suave tile__nota">
+          falta {{ plata(r.total.facturado - r.total.cobrado) }}
+        </span>
+      </div>
+      <div class="oc-tarjeta tile">
+        <span class="tile__titulo">Pacientes atendidos</span>
+        <span class="tile__valor oc-mono">{{ r.total.pacientes }}</span>
+        @if (r.total.pacientesNuevos !== null) {
+          <span class="oc-suave tile__nota">{{ r.total.pacientesNuevos }} nuevos</span>
+        }
+      </div>
+    </section>
+
+    <div class="graficos">
+      @for (
+        g of [
+          { titulo: 'Sesiones atendidas por mes', barras: barrasSesiones() },
+          { titulo: 'Facturado por mes', barras: barrasFacturado() },
+        ];
+        track g.titulo
+      ) {
+        <section class="oc-tarjeta grafico">
+          <h2>{{ g.titulo }}</h2>
+          <div class="barras" role="img" [attr.aria-label]="g.titulo + ': ver la tabla Por mes'">
+            @for (b of g.barras; track b.mes) {
+              <div class="barras__col" [title]="nombreMes(b.mes) + ': ' + b.texto">
+                <span class="barras__valor oc-mono">{{ b.valor ? b.texto : '' }}</span>
+                <span class="barras__pista">
+                  <span class="barras__barra" [style.height.%]="b.alto"></span>
+                </span>
+                <span class="barras__mes">{{ b.etiqueta }}</span>
+              </div>
+            }
+          </div>
+        </section>
+      }
+    </div>
+
+    <section aria-labelledby="rep-mes">
+      <h2 id="rep-mes">Por mes</h2>
+      <div class="oc-tabla-caja">
+        <table class="oc-tabla">
+          <thead>
+            <tr>
+              <th>Mes</th>
+              <th class="num">Turnos</th>
+              <th class="num">Atendidas</th>
+              <th class="num">Faltas</th>
+              <th class="num">Asistencia</th>
+              <th class="num">Pacientes</th>
+              <th class="num">Facturado</th>
+              <th class="num">Cobrado</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (m of r.meses; track m.mes) {
+              <tr>
+                <td>{{ nombreMes(m.mes) }}</td>
+                <td class="num oc-mono">{{ m.turnos }}</td>
+                <td class="num oc-mono">{{ m.presentes }}</td>
+                <td class="num oc-mono">{{ m.ausentesConAviso + m.ausentesSinAviso }}</td>
+                <td class="num oc-mono">{{ porcentaje(m.asistencia) }}</td>
+                <td class="num oc-mono">{{ m.pacientes }}</td>
+                <td class="num oc-mono">{{ plata(m.facturado) }}</td>
+                <td class="num oc-mono">{{ plata(m.cobrado) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    @if (!r.soloProfesional) {
+      <section aria-labelledby="rep-prof">
+        <h2 id="rep-prof">Por profesional</h2>
+        <div class="oc-tabla-caja">
+          <table class="oc-tabla">
+            <thead>
+              <tr>
+                <th>Profesional</th>
+                <th class="num">Atendidas</th>
+                <th class="num">Asistencia</th>
+                <th class="num">Facturado</th>
+                <th class="num">Cobrado</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (p of r.porProfesional; track p.profesional.id) {
+                <tr>
+                  <td>
+                    {{ p.profesional.apellido }}, {{ p.profesional.nombre }}
+                    <span class="oc-suave">· {{ p.profesional.disciplina }}</span>
+                  </td>
+                  <td class="num oc-mono">{{ p.presentes }}</td>
+                  <td class="num oc-mono">{{ porcentaje(p.asistencia) }}</td>
+                  <td class="num oc-mono">{{ plata(p.facturado) }}</td>
+                  <td class="num oc-mono">{{ plata(p.cobrado) }}</td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="5" class="oc-suave">Sin turnos en el período.</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+    }
+
+    <section aria-labelledby="rep-cob">
+      <h2 id="rep-cob">Por cobertura</h2>
+      <div class="oc-tabla-caja">
+        <table class="oc-tabla">
+          <thead>
+            <tr>
+              <th>Cobertura</th>
+              <th class="num">Sesiones</th>
+              <th class="num">Facturado</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of r.porCobertura; track c.financiador?.id ?? 'particular') {
+              <tr>
+                <td>{{ c.financiador?.nombre ?? 'Particular' }}</td>
+                <td class="num oc-mono">{{ c.sesiones }}</td>
+                <td class="num oc-mono">{{ plata(c.facturado) }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="3" class="oc-suave">Sin sesiones registradas en el período.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+</main>

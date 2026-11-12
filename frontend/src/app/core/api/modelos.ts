@@ -436,6 +436,44 @@ export interface ConfigFiscal {
   certificadoVence: string | null;
 }
 
+// ───────── Reportes ─────────
+
+interface ConteoTurnos {
+  turnos: number;
+  presentes: number;
+  ausentesConAviso: number;
+  ausentesSinAviso: number;
+  cancelados: number;
+  pendientes: number;
+  /** % de presentes sobre los turnos que tenían que ocurrir; null sin datos. */
+  asistencia: number | null;
+}
+
+export interface Reporte {
+  desde: string;
+  hasta: string;
+  /** Es el reporte de un profesional: solo lo suyo. */
+  soloProfesional: boolean;
+  total: ConteoTurnos & {
+    facturado: number;
+    cobrado: number;
+    pacientes: number;
+    /** null para un profesional. */
+    pacientesNuevos: number | null;
+  };
+  meses: (ConteoTurnos & { mes: string; pacientes: number; facturado: number; cobrado: number })[];
+  porProfesional: (ConteoTurnos & {
+    profesional: ProfesionalResumen;
+    facturado: number;
+    cobrado: number;
+  })[];
+  porCobertura: {
+    financiador: { id: string; nombre: string } | null;
+    sesiones: number;
+    facturado: number;
+  }[];
+}
+
 /** Profesional y el estado de sus datos fiscales (si factura cada uno). */
 export interface EmisorProfesional {
   profesional: ProfesionalResumen;
