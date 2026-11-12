@@ -111,5 +111,11 @@ export const ESTADOS_MARCABLES = [
 
 export const marcarAsistenciaSchema = z.object({
   estado: z.enum(ESTADOS_MARCABLES),
+  /**
+   * Ausente con aviso: si avisó con menos anticipación que la tolerancia del
+   * profesional (cuenta como faltazo si su regla está activa). Sin enviar, se
+   * calcula con la hora de marcar si es antes del turno; después, a tiempo.
+   */
+  avisoTarde: z.boolean().optional(),
 });
 export type MarcarAsistenciaDto = z.infer<typeof marcarAsistenciaSchema>;

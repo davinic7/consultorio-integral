@@ -7,6 +7,11 @@ import {
 } from '@nestjs/common';
 import type { UsuarioAutenticado } from '../auth/auth.types.js';
 import { AvisosService } from '../avisos/avisos.js';
+import {
+  avisoTardeAlMarcar,
+  esFaltazo,
+  type ReglaFaltazo,
+} from '../cobros/faltazo.js';
 import { PrestacionesService } from '../cobros/prestaciones.service.js';
 import {
   aInstante,
@@ -321,8 +326,9 @@ export class TurnosService {
    * Marca la asistencia (o la vuelve a pendiente para corregirla). Se puede
    * corregir hasta que se cierre la liquidación del mes de ese profesional, y
    * cada cambio queda registrado con quién y cuándo. "Presente" crea la
-   * prestación para cobrar; sacarlo de presente la borra (si no tiene pagos ni
-   * factura).
+   * prestación para cobrar; un faltazo (según la regla del profesional, solo a
+   * particulares) crea un cobro pendiente. Cambiar de estado borra lo que había
+   * (si no tiene pagos ni factura).
    */
   async marcarAsistencia(
     centroId: string,
@@ -349,10 +355,20 @@ export class TurnosService {
       );
     }
     await this.exigirMesAbierto(a, actual);
-    const dejaDeEstarPresente =
-      actual.estadoAsistencia === EstadoAsistencia.presente;
-    if (dejaDeEstarPresente)
+    // Presente o ausente pueden tener prestación (sesión o faltazo).
+    const teniaCobro = actual.estadoAsistencia !== EstadoAsistencia.pendiente;
+    if (teniaCobro)
       await this.prestaciones.exigirQuitable(this.db(centroId), id);
+    const regla = await this.reglaFaltazo(centroId, actual.profesionalId);
+    const avisoTarde =
+      estado === EstadoAsistencia.ausente_con_aviso
+        ? avisoTardeAlMarcar(
+            actual.inicio,
+            new Date(),
+            regla.toleranciaHoras,
+            dto.avisoTarde,
+          )
+        : null;
 
     const turno = await this.db(centroId).$transaction(async (tx) => {
       await tx.cambioAsistencia.create({
@@ -363,12 +379,14 @@ export class TurnosService {
           usuarioId: a.usuarioId,
         }),
       });
-      if (dejaDeEstarPresente) await this.prestaciones.quitarDeTurno(tx, id);
+      if (teniaCobro) await this.prestaciones.quitarDeTurno(tx, id);
       if (estado === EstadoAsistencia.presente)
         await this.prestaciones.crearParaTurno(tx, actual, a.zona);
+      else if (esFaltazo(regla, estado, avisoTarde))
+        await this.prestaciones.crearFaltazo(tx, actual, regla, a.zona);
       return tx.turno.update({
         where: { id },
-        data: { estadoAsistencia: estado },
+        data: { estadoAsistencia: estado, avisoTarde },
         include: INCLUDE,
       });
     });
@@ -561,6 +579,27 @@ export class TurnosService {
   }
 
   /** Carga un turno; un profesional solo puede acceder a los suyos. */
+  private async reglaFaltazo(
+    centroId: string,
+    profesionalId: string,
+  ): Promise<ReglaFaltazo> {
+    const p = await this.db(centroId).profesional.findUniqueOrThrow({
+      where: { id: profesionalId },
+      select: {
+        faltazoActivo: true,
+        faltazoToleranciaHoras: true,
+        faltazoModo: true,
+        faltazoMonto: true,
+      },
+    });
+    return {
+      activo: p.faltazoActivo,
+      toleranciaHoras: p.faltazoToleranciaHoras,
+      modo: p.faltazoModo,
+      monto: p.faltazoMonto,
+    };
+  }
+
   private async cargarPropio(a: Actor, id: string): Promise<TurnoCompleto> {
     const t = await this.db(a.centroId).turno.findUnique({
       where: { id },

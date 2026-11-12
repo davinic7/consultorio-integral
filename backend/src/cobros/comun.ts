@@ -75,6 +75,12 @@ export function vistaPrestacion(
   return {
     id: p.id,
     turnoId: p.turnoId,
+    /** "sesion" o "faltazo". */
+    tipo: p.tipo,
+    /** Faltazo anulado: no se cobra ni se liquida. */
+    anulada: p.anuladaEn
+      ? { en: p.anuladaEn.toISOString(), motivo: p.motivoAnulacion }
+      : null,
     fecha: f,
     hora: aLocal(p.turno.inicio, zona).hora,
     paciente: p.paciente,
@@ -91,16 +97,18 @@ export function vistaPrestacion(
     saldo: num(cobro.saldo),
     estadoCobro: cobro.estado,
     pagos: p.pagos.map(vistaPago),
-    avisos: avisosDe({
-      // Para la orden cuenta la fecha que se declara, si ya está.
-      fecha: aFechaSolo(p.fechaDeclarada) ?? f,
-      monto: p.monto,
-      facturada: p.facturada,
-      token: p.token,
-      financiador: p.financiador,
-      orden,
-      estadoCobro: cobro.estado,
-    }),
+    avisos: p.anuladaEn
+      ? []
+      : avisosDe({
+          // Para la orden cuenta la fecha que se declara, si ya está.
+          fecha: aFechaSolo(p.fechaDeclarada) ?? f,
+          monto: p.monto,
+          facturada: p.facturada,
+          token: p.token,
+          financiador: p.financiador,
+          orden,
+          estadoCobro: cobro.estado,
+        }),
     /** La liquidación del mes está cerrada: no se cambian monto ni financiador. */
     cerrada,
   };

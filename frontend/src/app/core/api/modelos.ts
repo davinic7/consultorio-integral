@@ -38,6 +38,16 @@ export interface Profesional {
   matricula: string | null;
   usuarioId: string | null;
   activo: boolean;
+  /** Regla de faltazo: si está activa y la tolerancia (para preguntar al marcar). */
+  faltazo?: { activo: boolean; toleranciaHoras: number };
+}
+
+/** Regla de faltazo de un profesional. */
+export interface ReglaFaltazo {
+  activo: boolean;
+  toleranciaHoras: number;
+  modo: 'completa' | 'mitad' | 'fijo';
+  monto: number | null;
 }
 
 export type ProfesionalResumen = Pick<Profesional, 'id' | 'nombre' | 'apellido' | 'disciplina'>;
@@ -256,6 +266,10 @@ export interface Pago {
 export interface Prestacion {
   id: string;
   turnoId: string;
+  /** Sesión atendida o faltazo cobrado por la regla del profesional. */
+  tipo: 'sesion' | 'faltazo';
+  /** Faltazo anulado: no se cobra ni se liquida. */
+  anulada: { en: string; motivo: string | null } | null;
   fecha: string;
   hora: string;
   paciente: { id: string; nombre: string; apellido: string };
@@ -367,6 +381,9 @@ export type DatosAcuerdo = Omit<AcuerdoAlquiler, 'id' | 'vigenteDesde' | 'creado
 export interface LiquidacionProfesional {
   profesional: ProfesionalResumen;
   sesiones: number;
+  /** Faltazos cobrables del mes (incluidos en lo facturado). */
+  faltazos: number;
+  montoFaltazos: number;
   facturado: number;
   cobrado: number;
   /** Lo que el profesional le debe al centro por su acuerdo de alquiler. */
@@ -523,8 +540,12 @@ export interface EmisorProfesional {
 export interface PendienteFactura {
   paciente: { id: string; nombre: string; apellido: string; dni: string | null };
   sesiones: number;
+  /** Faltazos cobrados sin facturar (se suman solo si se pide). */
+  faltazos: number;
+  totalFaltazos: number;
   prestacionIds: string[];
   items: { cantidad: number; precio: number }[];
+  itemsFaltazos: { cantidad: number; precio: number }[];
   total: number;
   impagas: number;
   sinDni: boolean;

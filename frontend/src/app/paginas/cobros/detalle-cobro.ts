@@ -53,6 +53,8 @@ export class DetalleCobro {
   protected pago = { medio: 'efectivo' as MedioPago, monto: null as number | null, fecha: '' };
   protected token = '';
   protected montoManual: number | null = null;
+  /** Motivo para anular un faltazo. */
+  protected motivo = '';
 
   protected readonly plata = plata;
   protected readonly medios = MEDIOS;
@@ -119,6 +121,13 @@ export class DetalleCobro {
     this.pago = { medio: p.financiador ? 'transferencia' : 'efectivo', monto: null, fecha: '' };
     this.token = p.token ?? '';
     this.montoManual = p.monto;
+  }
+
+  protected async anular(p: Prestacion): Promise<void> {
+    const motivo = this.motivo.trim();
+    if (motivo.length < 3) return;
+    await this.hacer(() => this.api.anular(p.id, motivo));
+    this.motivo = '';
   }
 
   private async hacer(op: () => Promise<Prestacion>): Promise<void> {

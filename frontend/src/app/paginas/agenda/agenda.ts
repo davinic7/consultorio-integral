@@ -16,7 +16,12 @@ import type {
   Sala,
   Turno,
 } from '../../core/api/modelos';
-import { ESTADOS_MARCABLES, NOMBRE_ESTADO, sePuedeMarcar } from '../../core/asistencia';
+import {
+  ESTADOS_MARCABLES,
+  NOMBRE_ESTADO,
+  sePuedeMarcar,
+  preguntarAvisoTarde,
+} from '../../core/asistencia';
 import { colorDisciplina, type ColorDisciplina } from '../../core/disciplina';
 import { AuthService } from '../../core/auth/auth.service';
 import { tieneModulo } from '../../core/auth/modulos';
@@ -290,7 +295,12 @@ export class Agenda implements OnInit {
     this.guardando.set(true);
     this.errorPanel.set(null);
     try {
-      const actualizado = await this.turnosApi.marcarAsistencia(t.id, estado);
+      const regla = this.profesionales().find((p) => p.id === t.profesional.id)?.faltazo;
+      const actualizado = await this.turnosApi.marcarAsistencia(
+        t.id,
+        estado,
+        preguntarAvisoTarde(estado, regla),
+      );
       this.seleccionado.set(actualizado);
       this.turnos.update((lista) => lista.map((x) => (x.id === t.id ? actualizado : x)));
     } catch (e) {

@@ -439,6 +439,10 @@
           <dl class="cobros__liq-datos">
             <dt>Sesiones</dt>
             <dd class="oc-mono">{{ l.sesiones }}</dd>
+            @if (l.faltazos) {
+              <dt>Faltazos cobrables ({{ l.faltazos }})</dt>
+              <dd class="oc-mono">{{ plata(l.montoFaltazos) }}</dd>
+            }
             <dt>Facturado</dt>
             <dd class="oc-mono">{{ plata(l.facturado) }}</dd>
             @for (c of l.componentes; track $index) {

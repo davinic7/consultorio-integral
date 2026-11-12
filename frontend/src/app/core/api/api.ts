@@ -20,6 +20,7 @@ import type {
   LiquidacionProfesional,
   AcuerdoAlquiler,
   DatosAcuerdo,
+  ReglaFaltazo,
   MedioPago,
   Orden,
   Precio,
@@ -183,8 +184,11 @@ export class TurnosApi {
       this.http.post<Turno>(`${API}/turnos/${id}/cancelar`, { motivo: motivo || undefined }),
     );
   }
-  marcarAsistencia(id: string, estado: EstadoMarcable) {
-    return firstValueFrom(this.http.post<Turno>(`${API}/turnos/${id}/asistencia`, { estado }));
+  /** `avisoTarde`: ausente con aviso que llegó tarde (cuenta como faltazo si la regla está activa). */
+  marcarAsistencia(id: string, estado: EstadoMarcable, avisoTarde?: boolean) {
+    return firstValueFrom(
+      this.http.post<Turno>(`${API}/turnos/${id}/asistencia`, { estado, avisoTarde }),
+    );
   }
   cambiosAsistencia(id: string) {
     return firstValueFrom(
@@ -297,6 +301,12 @@ export class CobrosApi {
       this.http.post<{ creadas: number; omitidas: number }>(`${API}/prestaciones/generar`, { mes }),
     );
   }
+  /** Anula un faltazo con motivo. */
+  anular(prestacionId: string, motivo: string) {
+    return firstValueFrom(
+      this.http.post<Prestacion>(`${API}/prestaciones/${prestacionId}/anular`, { motivo }),
+    );
+  }
   pagar(prestacionId: string, datos: DatosPago) {
     return firstValueFrom(
       this.http.post<Prestacion>(`${API}/prestaciones/${prestacionId}/pagos`, datos),
@@ -351,6 +361,23 @@ export class LiquidacionesApi {
   reabrir(id: string) {
     return firstValueFrom(
       this.http.post<LiquidacionProfesional>(`${API}/liquidaciones/${id}/reabrir`, {}),
+    );
+  }
+}
+
+/** Regla de faltazo de un profesional (la decide él o la administración). */
+@Injectable({ providedIn: 'root' })
+export class ReglaFaltazoApi {
+  private readonly http = inject(HttpClient);
+
+  obtener(profesionalId: string) {
+    return firstValueFrom(
+      this.http.get<ReglaFaltazo>(`${API}/profesionales/${profesionalId}/faltazo`),
+    );
+  }
+  guardar(profesionalId: string, regla: ReglaFaltazo) {
+    return firstValueFrom(
+      this.http.put<ReglaFaltazo>(`${API}/profesionales/${profesionalId}/faltazo`, regla),
     );
   }
 }
@@ -533,14 +560,18 @@ export class FacturacionApi {
       ),
     );
   }
-  pendientes(mes: string, profesionalId?: string) {
+  pendientes(mes: string, profesionalId?: string, incluirFaltazos = false) {
     return firstValueFrom(
       this.http.get<PendienteFactura[]>(`${API}/facturacion/pendientes`, {
-        params: params({ mes, profesionalId }),
+        params: params({
+          mes,
+          profesionalId,
+          incluirFaltazos: incluirFaltazos ? 'true' : undefined,
+        }),
       }),
     );
   }
-  emitir(mes: string, pacienteIds: string[], profesionalId?: string) {
+  emitir(mes: string, pacienteIds: string[], profesionalId?: string, incluirFaltazos = false) {
     return firstValueFrom(
       this.http.post<{
         emitidas: number;
@@ -548,6 +579,7 @@ export class FacturacionApi {
       }>(`${API}/facturacion/emitir`, {
         mes,
         pacienteIds,
+        incluirFaltazos,
         ...(profesionalId ? { profesionalId } : {}),
       }),
     );

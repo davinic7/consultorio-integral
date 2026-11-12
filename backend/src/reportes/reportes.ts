@@ -118,6 +118,7 @@ export class ReportesService {
     });
     const prestaciones = await db.prestacion.findMany({
       where: {
+        anuladaEn: null,
         periodo: { gte: periodoDe(dto.desde), lte: periodoDe(dto.hasta) },
         ...filtroProf,
       },

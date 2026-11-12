@@ -64,7 +64,7 @@ describe('Facturacion', () => {
     api.config.mockResolvedValue(config());
     await crear('admin');
     expect(api.emisores).not.toHaveBeenCalled();
-    expect(api.pendientes).toHaveBeenCalledWith(expect.any(String), undefined);
+    expect(api.pendientes).toHaveBeenCalledWith(expect.any(String), undefined, false);
   });
 
   it('si factura cada profesional, admin elige el emisor y se pide con su id', async () => {
@@ -83,7 +83,7 @@ describe('Facturacion', () => {
     ]);
     const el = await crear('admin');
     expect(api.config).toHaveBeenCalledWith('p1');
-    expect(api.pendientes).toHaveBeenCalledWith(expect.any(String), 'p1');
+    expect(api.pendientes).toHaveBeenCalledWith(expect.any(String), 'p1', false);
     expect(api.facturas).toHaveBeenCalledWith(expect.any(String), 'p1');
     expect(el.textContent).toContain('Profesional que factura');
     expect(el.textContent).toContain('Díaz, Laura');
@@ -93,7 +93,7 @@ describe('Facturacion', () => {
     api.config.mockResolvedValue(config({ profesionalId: 'p1', facturaCadaProfesional: true }));
     const el = await crear('profesional');
     expect(api.emisores).not.toHaveBeenCalled();
-    expect(api.pendientes).toHaveBeenCalledWith(expect.any(String), undefined);
+    expect(api.pendientes).toHaveBeenCalledWith(expect.any(String), undefined, false);
     expect(el.textContent).toContain('con tu propio CUIT');
   });
 

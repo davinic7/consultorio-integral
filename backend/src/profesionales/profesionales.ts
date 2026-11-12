@@ -26,6 +26,10 @@ import { Prisma, Rol, type Profesional } from '../generated/prisma/client.js';
 import { sinCentro } from '../prisma/centro.js';
 import { LimitesPlan } from '../planes/planes.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import {
+  ReglaFaltazoController,
+  ReglaFaltazoService,
+} from './faltazo-regla.js';
 
 // ───────── Schemas ─────────
 
@@ -57,6 +61,8 @@ export interface ProfesionalVista {
   matricula: string | null;
   usuarioId: string | null;
   activo: boolean;
+  /** Regla de faltazo: si está activa y la tolerancia (para preguntar al marcar). */
+  faltazo: { activo: boolean; toleranciaHoras: number };
 }
 
 // ───────── Servicio ─────────
@@ -152,6 +158,10 @@ function vista(p: Profesional): ProfesionalVista {
     matricula: p.matricula,
     usuarioId: p.usuarioId,
     activo: p.activo,
+    faltazo: {
+      activo: p.faltazoActivo,
+      toleranciaHoras: p.faltazoToleranciaHoras,
+    },
   };
 }
 
@@ -209,8 +219,8 @@ export class ProfesionalesController {
 }
 
 @Module({
-  controllers: [ProfesionalesController],
-  providers: [ProfesionalesService],
+  controllers: [ProfesionalesController, ReglaFaltazoController],
+  providers: [ProfesionalesService, ReglaFaltazoService],
   exports: [ProfesionalesService],
 })
 export class ProfesionalesModule {}

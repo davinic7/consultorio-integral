@@ -59,6 +59,10 @@
     </form>
   }
 
+  @if (faltazoDe(); as p) {
+    <app-regla-faltazo [profesional]="p" (cerrado)="faltazoDe.set(null)" (guardada)="cargar()" />
+  }
+
   @if (acuerdoDe(); as p) {
     <app-acuerdo-profesional [profesional]="p" (cerrado)="acuerdoDe.set(null)" />
   }
@@ -90,15 +94,22 @@
               }
             </div>
           </div>
-          @if (esAdmin()) {
+          @if (esAdmin() || puedeVerFaltazo(p)) {
             <div class="lista__acciones">
-              <button type="button" class="enlace" (click)="editar(p)">Editar</button>
+              @if (puedeVerFaltazo(p)) {
+                <button type="button" class="enlace" (click)="verFaltazo(p)">Faltazos</button>
+              }
+              @if (esAdmin()) {
+                <button type="button" class="enlace" (click)="editar(p)">Editar</button>
+              }
               @if (conAcuerdos()) {
                 <button type="button" class="enlace" (click)="verAcuerdo(p)">Acuerdo</button>
               }
-              <button type="button" class="enlace" (click)="alternarActivo(p)">
-                {{ p.activo ? 'Dar de baja' : 'Reactivar' }}
-              </button>
+              @if (esAdmin()) {
+                <button type="button" class="enlace" (click)="alternarActivo(p)">
+                  {{ p.activo ? 'Dar de baja' : 'Reactivar' }}
+                </button>
+              }
             </div>
           }
         </li>

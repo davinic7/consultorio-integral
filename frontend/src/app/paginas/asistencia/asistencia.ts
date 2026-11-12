@@ -1,8 +1,8 @@
 import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { mensajeDeError, TurnosApi } from '../../core/api/api';
-import type { EstadoMarcable, EstadoTurno, Turno } from '../../core/api/modelos';
-import { NOMBRE_ESTADO, sePuedeMarcar } from '../../core/asistencia';
+import { mensajeDeError, ProfesionalesApi, TurnosApi } from '../../core/api/api';
+import type { EstadoMarcable, EstadoTurno, Profesional, Turno } from '../../core/api/modelos';
+import { NOMBRE_ESTADO, preguntarAvisoTarde, sePuedeMarcar } from '../../core/asistencia';
 import { AuthService } from '../../core/auth/auth.service';
 import { colorDisciplina, iniciales } from '../../core/disciplina';
 import { ahoraEn, diaSemana, NOMBRE_DIA, sumarDias } from '../../core/fechas';
@@ -52,6 +52,9 @@ const CLASE: Record<EstadoTurno, string> = {
 })
 export class Asistencia {
   private readonly api = inject(TurnosApi);
+  private readonly profesionalesApi = inject(ProfesionalesApi);
+  /** Para saber si la regla de faltazo de cada uno está activa. */
+  private readonly profesionales = signal<Profesional[]>([]);
   private readonly auth = inject(AuthService);
   private readonly zona = computed(() => this.auth.sesion()?.centro?.zonaHoraria);
 
@@ -123,6 +126,10 @@ export class Asistencia {
   });
 
   constructor() {
+    this.profesionalesApi
+      .listar()
+      .then((p) => this.profesionales.set(p))
+      .catch(() => this.profesionales.set([]));
     effect(() => {
       const fecha = this.fecha();
       if (this.auth.sesion()?.centro) untracked(() => void this.cargar(fecha));
@@ -143,7 +150,12 @@ export class Asistencia {
     this.guardando.set(t.id);
     this.error.set(null);
     try {
-      const actualizado = await this.api.marcarAsistencia(t.id, nuevo);
+      const regla = this.profesionales().find((p) => p.id === t.profesional.id)?.faltazo;
+      const actualizado = await this.api.marcarAsistencia(
+        t.id,
+        nuevo,
+        preguntarAvisoTarde(nuevo, regla),
+      );
       this.turnos.update((lista) => lista.map((x) => (x.id === t.id ? actualizado : x)));
     } catch (e) {
       this.error.set(mensajeDeError(e));

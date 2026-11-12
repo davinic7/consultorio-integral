@@ -138,7 +138,12 @@ export class Facturacion {
   protected readonly nombreModo = NOMBRE_MODO;
   protected readonly modos = Object.keys(NOMBRE_MODO) as ModoArca[];
   protected readonly titulo = computed(() => nombreMes(this.mes()));
-  protected readonly paraFacturar = computed(() => this.pendientes().filter((p) => p.sesiones > 0));
+  /** Sumar los faltazos cobrados a las facturas (lo decide quien factura). */
+  protected readonly incluirFaltazos = signal(false);
+  protected readonly conFaltazos = computed(() => this.pendientes().some((p) => p.faltazos > 0));
+  protected readonly paraFacturar = computed(() =>
+    this.pendientes().filter((p) => p.prestacionIds.length > 0),
+  );
   protected readonly conAvisos = computed(() => this.pendientes().filter((p) => p.impagas > 0));
   protected readonly totalElegido = computed(() =>
     this.paraFacturar()
@@ -199,6 +204,11 @@ export class Facturacion {
     this.mes.update((m) => sumarMes(m, n));
   }
 
+  protected alternarFaltazos(si: boolean): void {
+    this.incluirFaltazos.set(si);
+    void this.cargar(this.mes());
+  }
+
   protected alternar(id: string): void {
     this.elegidos.update((s) => {
       const n = new Set(s);
@@ -220,7 +230,7 @@ export class Facturacion {
     )
       return;
     await this.hacer(async () => {
-      const r = await this.api.emitir(this.mes(), ids, this.prof());
+      const r = await this.api.emitir(this.mes(), ids, this.prof(), this.incluirFaltazos());
       const errores = r.resultados.filter((x) => !x.ok);
       this.mensaje.set(
         r.emitidas === 1 ? 'Se emitió 1 factura.' : `Se emitieron ${r.emitidas} facturas.`,
@@ -396,7 +406,7 @@ export class Facturacion {
     }
     try {
       const [pendientes, facturas] = await Promise.all([
-        this.api.pendientes(mes, this.prof()),
+        this.api.pendientes(mes, this.prof(), this.incluirFaltazos()),
         this.api.facturas(mes, this.prof()),
       ]);
       if (mes !== this.mes()) return;
@@ -404,7 +414,9 @@ export class Facturacion {
       this.facturas.set(facturas);
       // Por defecto se eligen los que tienen DNI.
       this.elegidos.set(
-        new Set(pendientes.filter((p) => p.sesiones && !p.sinDni).map((p) => p.paciente.id)),
+        new Set(
+          pendientes.filter((p) => p.prestacionIds.length && !p.sinDni).map((p) => p.paciente.id),
+        ),
       );
     } catch (e) {
       this.error.set(mensajeDeError(e, 'No se pudo cargar la facturación del mes.'));

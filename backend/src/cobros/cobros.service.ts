@@ -33,7 +33,7 @@ export class CobrosService {
     const alcance = await alcanceDe(db, quien);
     const [filas, totales] = await Promise.all([
       db.prestacion.findMany({
-        where: { ...alcance, periodo: periodoDe(mes) },
+        where: { ...alcance, periodo: periodoDe(mes), anuladaEn: null },
         select: { monto: true, pagos: true },
       }),
       this.liquidaciones.calcular(db, centroId, mes, alcance),
@@ -101,7 +101,7 @@ export class CobrosService {
     ]);
     const [filas, sinPrestacion] = await Promise.all([
       db.prestacion.findMany({
-        where: { ...alcance, periodo: periodoDe(mes) },
+        where: { ...alcance, periodo: periodoDe(mes), anuladaEn: null },
         include: INCLUDE_PRESTACION,
         orderBy: [{ fecha: 'asc' }, { turno: { inicio: 'asc' } }],
       }),
@@ -137,7 +137,8 @@ export class CobrosService {
     };
     for (const [i, v] of vistas.entries()) {
       const f = fila(v.profesional);
-      f.presentes++;
+      // Un faltazo se cobra, pero no es una sesión presente.
+      if (v.tipo === 'sesion') f.presentes++;
       f.prestaciones++;
       if (v.facturada) f.facturadas++;
       if (v.estadoCobro === 'cobrada') f.cobradas++;

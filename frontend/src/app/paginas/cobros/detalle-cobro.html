@@ -25,6 +25,14 @@
       </button>
     </div>
 
+    @if (p.tipo === 'faltazo') {
+      <p class="oc-alerta oc-alerta--aviso detalle__nota">
+        Faltazo: el paciente no vino o avisó tarde, según la regla del profesional.
+        @if (p.anulada; as a) {
+          <br /><b>Anulado</b>{{ a.motivo ? ': ' + a.motivo : '' }}.
+        }
+      </p>
+    }
     <dl class="detalle__datos">
       <dt>Monto</dt>
       <dd class="oc-mono">{{ plata(p.monto) }}{{ p.montoManual ? ' (a mano)' : '' }}</dd>
@@ -41,6 +49,26 @@
         <dd>{{ p.orden ? p.orden.numero : 'Sin orden' }}</dd>
       }
     </dl>
+    @if (p.tipo === 'faltazo' && !p.anulada && !p.facturada && !p.pagos.length) {
+      <form class="detalle__nota" (ngSubmit)="anular(p)">
+        <label class="oc-campo">
+          <span>Anular el faltazo (motivo)</span>
+          <input
+            name="motivo"
+            [(ngModel)]="motivo"
+            maxlength="200"
+            placeholder="Ej. avisó por WhatsApp a tiempo"
+          />
+        </label>
+        <button
+          type="submit"
+          class="oc-btn oc-btn--chico"
+          [disabled]="ocupado() || motivo.trim().length < 3"
+        >
+          Anular faltazo
+        </button>
+      </form>
+    }
     @if (p.avisos.length) {
       <div class="detalle__avisos">
         @for (a of p.avisos; track a) {

@@ -8,6 +8,8 @@ import { ComprobanteLiquidacion, textoComprobante } from './comprobante-liquidac
 const LIQ: LiquidacionProfesional = {
   profesional: { id: 'p1', nombre: 'Laura', apellido: 'Díaz', disciplina: 'Psicología' },
   sesiones: 2,
+  faltazos: 0,
+  montoFaltazos: 0,
   facturado: 30000,
   cobrado: 30000,
   alquiler: 9000,

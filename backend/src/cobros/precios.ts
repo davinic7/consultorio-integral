@@ -123,6 +123,9 @@ export class PreciosService {
         fecha: { gte: desde },
         montoManual: false,
         facturada: false,
+        // Los faltazos guardan el monto de la regla del profesional.
+        tipo: 'sesion',
+        anuladaEn: null,
         pagos: { none: {} },
       },
       select: {

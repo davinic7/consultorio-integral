@@ -6,10 +6,11 @@ import { AuthService } from '../../core/auth/auth.service';
 import { tieneModulo } from '../../core/auth/modulos';
 import { puede } from '../../core/auth/roles';
 import { AcuerdoProfesional } from './acuerdo-profesional';
+import { ReglaFaltazoForm } from './regla-faltazo';
 
 @Component({
   selector: 'app-profesionales',
-  imports: [ReactiveFormsModule, AcuerdoProfesional],
+  imports: [ReactiveFormsModule, AcuerdoProfesional, ReglaFaltazoForm],
   templateUrl: './profesionales.html',
 })
 export class Profesionales implements OnInit {
@@ -22,6 +23,14 @@ export class Profesionales implements OnInit {
   protected readonly conAcuerdos = computed(
     () => this.esAdmin() && tieneModulo(this.auth.sesion(), 'liquidacion'),
   );
+  /** Profesional cuya regla de faltazo se está viendo. */
+  protected readonly faltazoDe = signal<Profesional | null>(null);
+  /** La regla la cambia la administración o el propio profesional (con el módulo de cobros). */
+  protected puedeVerFaltazo(p: Profesional): boolean {
+    const s = this.auth.sesion();
+    if (!tieneModulo(s, 'cobros')) return false;
+    return this.esAdmin() || (!!p.usuarioId && p.usuarioId === s?.usuario.id);
+  }
   /** Profesional cuyo acuerdo de alquiler se está viendo. */
   protected readonly acuerdoDe = signal<Profesional | null>(null);
   protected readonly profesionales = signal<Profesional[]>([]);
@@ -99,8 +108,15 @@ export class Profesionales implements OnInit {
     this.error.set(null);
   }
 
+  protected verFaltazo(p: Profesional): void {
+    this.formAbierto.set(false);
+    this.acuerdoDe.set(null);
+    this.faltazoDe.set(p);
+  }
+
   protected verAcuerdo(p: Profesional): void {
     this.formAbierto.set(false);
+    this.faltazoDe.set(null);
     this.acuerdoDe.set(p);
   }
 

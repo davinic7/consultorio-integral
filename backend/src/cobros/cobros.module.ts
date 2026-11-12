@@ -44,6 +44,10 @@ import { AcuerdosController, AcuerdosService } from './acuerdos.js';
 import { PresentacionController, PresentacionService } from './presentacion.js';
 import { PrestacionesService } from './prestaciones.service.js';
 
+const anularSchema = z.object({
+  motivo: z.string().trim().min(3).max(200),
+});
+
 /**
  * Sesiones asistidas (prestaciones) con su cobertura, monto, orden, token y
  * pagos. Las ven admin y recepción (todas) y cada profesional (las suyas); las
@@ -99,6 +103,20 @@ export class PrestacionesController {
     @Body({ schema: actualizarPrestacionSchema }) dto: ActualizarPrestacionDto,
   ) {
     return this.prestaciones.actualizar(centroId, id, dto);
+  }
+
+  /** Anula un faltazo con motivo (recepción, administración o el profesional, el suyo). */
+  @Post(':id/anular')
+  @HttpCode(HttpStatus.OK)
+  @Roles(Rol.admin, Rol.recepcion, Rol.profesional)
+  @ApiBodyZod(anularSchema)
+  anular(
+    @CentroActual() centroId: string,
+    @UsuarioActual() quien: UsuarioAutenticado,
+    @Param('id', { schema: idParam }) id: string,
+    @Body({ schema: anularSchema }) dto: z.infer<typeof anularSchema>,
+  ) {
+    return this.prestaciones.anular(centroId, quien, id, dto.motivo);
   }
 
   /** Registra un pago (por defecto, el saldo, hoy y cobrado). Devuelve la prestación. */

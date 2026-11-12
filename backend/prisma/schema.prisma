@@ -84,6 +84,23 @@ enum MedioPago {
   @@map("medio_pago")
 }
 
+/// Qué se cobra por un faltazo (regla de cada profesional).
+enum ModoFaltazo {
+  completa
+  mitad
+  fijo
+
+  @@map("modo_faltazo")
+}
+
+/// Sesión atendida, o faltazo cobrado por la regla del profesional.
+enum TipoPrestacion {
+  sesion
+  faltazo
+
+  @@map("tipo_prestacion")
+}
+
 enum EstadoPago {
   pendiente
   cobrado
@@ -195,13 +212,14 @@ model Usuario {
   creadoEn      DateTime @default(now()) @map("creado_en") @db.Timestamptz(3)
   actualizadoEn DateTime @updatedAt @map("actualizado_en") @db.Timestamptz(3)
 
-  miembros          Miembro[]
-  profesionales     Profesional[]
-  sesiones          Sesion[]
-  turnosCreados     Turno[]            @relation("TurnosCreados")
-  avisosRecibidos   Aviso[]            @relation("AvisosRecibidos")
-  avisosEnviados    Aviso[]            @relation("AvisosEnviados")
-  cambiosAsistencia CambioAsistencia[]
+  miembros             Miembro[]
+  profesionales        Profesional[]
+  sesiones             Sesion[]
+  prestacionesAnuladas Prestacion[]       @relation("PrestacionesAnuladas")
+  turnosCreados        Turno[]            @relation("TurnosCreados")
+  avisosRecibidos      Aviso[]            @relation("AvisosRecibidos")
+  avisosEnviados       Aviso[]            @relation("AvisosEnviados")
+  cambiosAsistencia    CambioAsistencia[]
 
   @@map("usuarios")
 }
@@ -263,17 +281,24 @@ model Profesional {
   /// profesional (0 a 100). El resto es la retención del centro.
   activo     Boolean @default(true)
 
-  centro        Centro                @relation(fields: [centroId], references: [id], onDelete: Cascade)
-  usuario       Usuario?              @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
-  pacientes     PacienteProfesional[]
-  recurrencias  Recurrencia[]
-  turnos        Turno[]
-  liquidaciones Liquidacion[]
-  acuerdos      AcuerdoAlquiler[]
-  prestaciones  Prestacion[]
-  notasSesion   NotaSesion[]
-  configFiscal  ConfigFiscal?
-  facturas      Factura[]
+  centro                 Centro                @relation(fields: [centroId], references: [id], onDelete: Cascade)
+  usuario                Usuario?              @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+  pacientes              PacienteProfesional[]
+  recurrencias           Recurrencia[]
+  turnos                 Turno[]
+  /// Regla de faltazo del profesional (apagada por defecto). Solo particulares.
+  faltazoActivo          Boolean               @default(false) @map("faltazo_activo")
+  /// Avisar con menos de estas horas cuenta como faltazo.
+  faltazoToleranciaHoras Int                   @default(24) @map("faltazo_tolerancia_horas") @db.SmallInt
+  faltazoModo            ModoFaltazo           @default(completa) @map("faltazo_modo")
+  /// Monto del faltazo con modo "fijo".
+  faltazoMonto           Decimal?              @map("faltazo_monto") @db.Decimal(12, 2)
+  liquidaciones          Liquidacion[]
+  acuerdos               AcuerdoAlquiler[]
+  prestaciones           Prestacion[]
+  notasSesion            NotaSesion[]
+  configFiscal           ConfigFiscal?
+  facturas               Factura[]
 
   @@unique([centroId, id])
   @@unique([centroId, usuarioId])
@@ -417,6 +442,8 @@ model Turno {
   fin              DateTime         @db.Timestamptz(0)
   recurrenciaId    String?          @map("recurrencia_id") @db.Uuid
   estadoAsistencia EstadoAsistencia @default(pendiente) @map("estado_asistencia")
+  /// Ausente con aviso: si avisó con menos anticipación que la tolerancia del profesional.
+  avisoTarde       Boolean?         @map("aviso_tarde")
   observaciones    String?          @db.VarChar(500)
   creadoEn         DateTime         @default(now()) @map("creado_en") @db.Timestamptz(3)
   actualizadoEn    DateTime         @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(3)
@@ -497,34 +524,40 @@ model CambioAsistencia {
 /// Sesión asistida que se cobra o factura. Una por turno presente: se crea al
 /// marcar "presente" y se borra si la asistencia se corrige (sin pagos ni factura).
 model Prestacion {
-  id             String    @id @default(uuid(7)) @db.Uuid
-  centroId       String    @map("centro_id") @db.Uuid
-  turnoId        String    @map("turno_id") @db.Uuid
+  id              String         @id @default(uuid(7)) @db.Uuid
+  centroId        String         @map("centro_id") @db.Uuid
+  turnoId         String         @map("turno_id") @db.Uuid
+  tipo            TipoPrestacion @default(sesion)
   /// Copiados del turno para filtrar y liquidar sin pasar por turnos.
-  pacienteId     String    @map("paciente_id") @db.Uuid
-  profesionalId  String    @map("profesional_id") @db.Uuid
+  pacienteId      String         @map("paciente_id") @db.Uuid
+  profesionalId   String         @map("profesional_id") @db.Uuid
   /// Quién paga. null: particular.
-  financiadorId  String?   @map("financiador_id") @db.Uuid
+  financiadorId   String?        @map("financiador_id") @db.Uuid
   /// Día de la sesión en la zona del centro.
-  fecha          DateTime  @db.Date
+  fecha           DateTime       @db.Date
   /// Primer día del mes al que corresponde (ej. 2026-11-01).
-  periodo        DateTime  @db.Date
-  monto          Decimal   @db.Decimal(12, 2)
+  periodo         DateTime       @db.Date
+  monto           Decimal        @db.Decimal(12, 2)
   /// El monto se cargó a mano: los cambios de precio no lo tocan.
-  montoManual    Boolean   @default(false) @map("monto_manual")
+  montoManual     Boolean        @default(false) @map("monto_manual")
   /// Presentada a la obra social o con factura emitida.
-  facturada      Boolean   @default(false)
+  facturada       Boolean        @default(false)
   /// Orden de autorización que cubre la sesión (si el financiador la pide).
-  ordenId        String?   @map("orden_id") @db.Uuid
+  ordenId         String?        @map("orden_id") @db.Uuid
   /// Token que da el paciente en cada sesión (si el financiador lo pide).
-  token          String?   @db.VarChar(20)
+  token           String?        @db.VarChar(20)
   /// Fecha que se declara a la obra social (puede diferir de la real por sus reglas).
-  fechaDeclarada DateTime? @map("fecha_declarada") @db.Date
+  fechaDeclarada  DateTime?      @map("fecha_declarada") @db.Date
   /// Factura electrónica que la incluye (particulares).
-  facturaId      String?   @map("factura_id") @db.Uuid
-  creadaEn       DateTime  @default(now()) @map("creada_en") @db.Timestamptz(3)
+  facturaId       String?        @map("factura_id") @db.Uuid
+  creadaEn        DateTime       @default(now()) @map("creada_en") @db.Timestamptz(3)
+  /// Faltazo anulado (por recepción, el profesional o la administración): no se cobra ni se liquida.
+  anuladaEn       DateTime?      @map("anulada_en") @db.Timestamptz(3)
+  anuladaPorId    String?        @map("anulada_por_id") @db.Uuid
+  motivoAnulacion String?        @map("motivo_anulacion") @db.VarChar(200)
 
   centro      Centro       @relation(fields: [centroId], references: [id], onDelete: Cascade)
+  anuladaPor  Usuario?     @relation("PrestacionesAnuladas", fields: [anuladaPorId], references: [id], onDelete: SetNull)
   turno       Turno        @relation(fields: [centroId, turnoId], references: [centroId, id], onDelete: Restrict)
   paciente    Paciente     @relation(fields: [centroId, pacienteId], references: [centroId, id], onDelete: Restrict)
   profesional Profesional  @relation(fields: [centroId, profesionalId], references: [centroId, id], onDelete: Restrict)

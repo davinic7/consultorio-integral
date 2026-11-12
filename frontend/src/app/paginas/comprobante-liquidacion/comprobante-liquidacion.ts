@@ -19,6 +19,7 @@ export function textoComprobante(centro: string, mes: string, l: LiquidacionProf
     `${centro} · Liquidación de ${nombreMes(mes)}`,
     `${l.profesional.nombre} ${l.profesional.apellido} (${l.profesional.disciplina})`,
     `Sesiones: ${l.sesiones}`,
+    ...(l.faltazos ? [`Faltazos cobrables (${l.faltazos}): ${plata(l.montoFaltazos)}`] : []),
     `Facturado: ${plata(l.facturado)}`,
     ...l.componentes.map((c) => `Alquiler · ${textoComponente(c)}: − ${plata(c.monto)}`),
     `Alquiler total: ${plata(l.alquiler)}`,
@@ -195,6 +196,10 @@ export function textoComprobante(centro: string, mes: string, l: LiquidacionProf
         <dl class="totales">
           <dt>Sesiones</dt>
           <dd class="oc-mono">{{ l.sesiones }}</dd>
+          @if (l.faltazos) {
+            <dt>Faltazos cobrables ({{ l.faltazos }})</dt>
+            <dd class="oc-mono">{{ plata(l.montoFaltazos) }}</dd>
+          }
           <dt>Facturado</dt>
           <dd class="oc-mono">{{ plata(l.facturado) }}</dd>
           @for (c of l.componentes; track $index) {

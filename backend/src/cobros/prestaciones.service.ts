@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -15,6 +16,7 @@ import {
   EstadoAsistencia,
   EstadoPago,
   Prisma,
+  TipoPrestacion,
 } from '../generated/prisma/client.js';
 import { sinCentro, type ClienteDeCentro } from '../prisma/centro.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -37,6 +39,7 @@ import {
   type DbCobros,
   type PrestacionCompleta,
 } from './comun.js';
+import { montoFaltazo, type ReglaFaltazo } from './faltazo.js';
 import { CERO, num, sumar, type Decimal } from './reglas.js';
 
 const dia = (fecha: string) => new Date(`${fecha}T00:00:00Z`);
@@ -118,6 +121,85 @@ export class PrestacionesService {
             : null,
       }),
     });
+  }
+
+  /**
+   * Faltazo cobrable de un turno (lo decide quien marca según la regla del
+   * profesional): solo a pacientes particulares, nunca a una obra social. El
+   * monto sale de la regla sobre el precio particular vigente ese día.
+   */
+  async crearFaltazo(
+    tx: DbCobros,
+    turno: {
+      id: string;
+      pacienteId: string;
+      profesionalId: string;
+      inicio: Date;
+    },
+    regla: ReglaFaltazo,
+    zona: string,
+  ): Promise<void> {
+    const existe = await tx.prestacion.count({ where: { turnoId: turno.id } });
+    if (existe) return;
+    const paciente = await tx.paciente.findUniqueOrThrow({
+      where: { id: turno.pacienteId },
+      select: { financiadorId: true },
+    });
+    if (paciente.financiadorId) return;
+    const fecha = aLocal(turno.inicio, zona).fecha;
+    const precio = await precioVigente(tx, turno.pacienteId, null, dia(fecha));
+    await tx.prestacion.create({
+      data: sinCentro<Prisma.PrestacionUncheckedCreateInput>({
+        turnoId: turno.id,
+        tipo: TipoPrestacion.faltazo,
+        pacienteId: turno.pacienteId,
+        profesionalId: turno.profesionalId,
+        financiadorId: null,
+        fecha: dia(fecha),
+        periodo: periodoDe(fecha.slice(0, 7)),
+        monto: montoFaltazo(regla, precio),
+      }),
+    });
+  }
+
+  /**
+   * Anula un faltazo (recepción, la administración o el profesional, el suyo),
+   * con motivo. Deja de cobrarse y de entrar en la liquidación. No se puede si
+   * tiene pagos, está facturado o el mes ya está liquidado.
+   */
+  async anular(
+    centroId: string,
+    quien: UsuarioAutenticado,
+    id: string,
+    motivo: string,
+  ) {
+    const db = this.db(centroId);
+    const p = await this.cargar(db, id);
+    const alcance = await alcanceDe(db, quien);
+    if (alcance.profesionalId && alcance.profesionalId !== p.profesionalId)
+      throw new ForbiddenException('Solo podés anular tus faltazos');
+    if (p.tipo !== TipoPrestacion.faltazo)
+      throw new BadRequestException('Solo se anulan faltazos');
+    if (p.anuladaEn) throw new ConflictException('El faltazo ya está anulado');
+    if (p.pagos.some((x) => x.estado !== EstadoPago.rechazado))
+      throw new ConflictException(
+        'El faltazo tiene pagos registrados: borralos antes de anularlo',
+      );
+    if (p.facturada || p.facturaId)
+      throw new ConflictException('El faltazo ya está facturado');
+    if (await this.estaCerrada(db, p.profesionalId, p.periodo))
+      throw new ConflictException(
+        'La liquidación de ese mes ya está cerrada: no se puede anular',
+      );
+    await db.prestacion.update({
+      where: { id },
+      data: {
+        anuladaEn: new Date(),
+        anuladaPorId: quien.usuarioId,
+        motivoAnulacion: motivo,
+      },
+    });
+    return this.vista(db, centroId, id);
   }
 
   /** Antes de sacar un turno de "presente": su prestación no puede tener pagos ni estar facturada. */
@@ -348,6 +430,8 @@ export class PrestacionesService {
   ) {
     const db = this.db(centroId);
     const p = await this.cargar(db, prestacionId);
+    if (p.anuladaEn)
+      throw new ConflictException('El faltazo está anulado: no se cobra');
     const libre = disponible(p);
     const monto =
       dto.monto !== undefined ? new Prisma.Decimal(dto.monto) : libre;
@@ -370,10 +454,12 @@ export class PrestacionesService {
     const db = this.db(centroId);
     const prestaciones = await db.prestacion.findMany({
       where: { id: { in: dto.prestacionIds } },
-      select: { id: true, monto: true, pagos: true },
+      select: { id: true, monto: true, pagos: true, anuladaEn: true },
     });
     if (prestaciones.length !== new Set(dto.prestacionIds).size)
       throw new NotFoundException('Alguna de las sesiones no existe');
+    if (prestaciones.some((p) => p.anuladaEn))
+      throw new ConflictException('Hay faltazos anulados en la selección');
     const fecha = dia(dto.fecha ?? (await this.hoy(centroId)));
     const pagos = prestaciones
       .map((p) => ({ prestacionId: p.id, monto: disponible(p) }))

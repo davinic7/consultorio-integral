@@ -25,6 +25,7 @@ import {
   Modulo,
   Prisma,
   Rol,
+  TipoPrestacion,
 } from '../generated/prisma/client.js';
 import type { ClienteDeCentro } from '../prisma/centro.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -63,6 +64,9 @@ export interface TotalesProfesional {
     disciplina: string;
   };
   sesiones: number;
+  /** Faltazos cobrables del mes (incluidos en lo facturado). */
+  faltazos: number;
+  montoFaltazos: Decimal;
   bruto: Decimal;
   cobrado: Decimal;
   /** Lo que el profesional le debe al centro por el alquiler del mes. */
@@ -101,6 +105,8 @@ function vistaTotales(t: TotalesProfesional) {
   return {
     profesional: t.profesional,
     sesiones: t.sesiones,
+    faltazos: t.faltazos,
+    montoFaltazos: num(t.montoFaltazos),
     facturado: num(t.bruto),
     cobrado: num(t.cobrado),
     alquiler: num(t.alquiler),
@@ -164,8 +170,13 @@ export class LiquidacionesService {
     const [prestaciones, liquidaciones, sinMarcar, sinPrestacion] =
       await Promise.all([
         db.prestacion.findMany({
-          where: { ...alcance, periodo },
-          select: { profesionalId: true, monto: true, pagos: true },
+          where: { ...alcance, periodo, anuladaEn: null },
+          select: {
+            profesionalId: true,
+            monto: true,
+            pagos: true,
+            tipo: true,
+          },
         }),
         db.liquidacion.findMany({ where: { ...alcance, periodo } }),
         db.turno.groupBy({
@@ -273,7 +284,10 @@ export class LiquidacionesService {
         } else {
           const acuerdo =
             acuerdos.find((a) => a.profesionalId === prof.id) ?? null;
-          sesiones = suyas.length;
+          // Faltazos: suman a lo facturado, pero no son sesiones atendidas.
+          sesiones = suyas.filter(
+            (p) => p.tipo === TipoPrestacion.sesion,
+          ).length;
           bruto = sumar(suyas.map((p) => p.monto));
           calculo = calcularAlquiler(acuerdo, {
             facturado: bruto,
@@ -288,9 +302,12 @@ export class LiquidacionesService {
             nota: acuerdo.nota,
           };
         }
+        const faltazos = suyas.filter((p) => p.tipo === TipoPrestacion.faltazo);
         return {
           profesional: { id, nombre, apellido, disciplina },
           sesiones,
+          faltazos: faltazos.length,
+          montoFaltazos: sumar(faltazos.map((p) => p.monto)),
           bruto,
           cobrado,
           alquiler: calculo.alquiler,

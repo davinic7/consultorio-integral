@@ -23,7 +23,12 @@ import { z } from 'zod';
 import type { UsuarioAutenticado } from '../auth/auth.types.js';
 import { CentroActual, Roles, UsuarioActual } from '../auth/decoradores.js';
 import { cobroDe, num, sumar, type Decimal } from '../cobros/reglas.js';
-import { aFechaSolo, idParam, textoOpcional } from '../common/comunes.js';
+import {
+  aFechaSolo,
+  boolQuery,
+  idParam,
+  textoOpcional,
+} from '../common/comunes.js';
 import {
   aLocal,
   diasDelMes,
@@ -39,6 +44,7 @@ import {
   Modulo,
   Prisma,
   Rol,
+  TipoPrestacion,
   type ConfigFiscal,
 } from '../generated/prisma/client.js';
 import { CifradoService } from '../notas/cifrado.js';
@@ -78,6 +84,8 @@ const certificadoSchema = z.object({
 const emitirSchema = z.object({
   mes: mesTexto,
   pacienteIds: z.array(z.uuid()).min(1).max(300),
+  /** Sumar los faltazos cobrados a la factura (lo decide quien factura). */
+  incluirFaltazos: z.boolean().default(false),
   /** Emisor, si factura cada profesional (un profesional lo omite: es él). */
   profesionalId: z.uuid().optional(),
 });
@@ -86,7 +94,11 @@ const emisorSchema = z.object({ profesionalId: z.uuid().optional() });
 const mesSchema = z.object({
   mes: mesTexto,
   profesionalId: z.uuid().optional(),
+  /** En pendientes: sumar los faltazos cobrados al total a facturar. */
+  incluirFaltazos: boolQuery.optional(),
 });
+/** Descripción del ítem de un faltazo en la factura. */
+const TEXTO_FALTAZO = 'Sesión no asistida (faltazo)';
 const enviadaSchema = z.object({ enviada: z.boolean() });
 
 const CONTEXTO_CLAVE = 'arca-clave';
@@ -324,17 +336,28 @@ export class FacturacionService {
     quien: UsuarioAutenticado,
     mes: string,
     profesionalId?: string,
+    incluirFaltazos = false,
   ) {
     const e = await this.emisorParaFacturar(centroId, quien, profesionalId);
-    return this.pendientesDe(centroId, mes, e);
+    return this.pendientesDe(centroId, mes, e, incluirFaltazos);
   }
 
-  private async pendientesDe(centroId: string, mes: string, e: Emisor) {
+  /**
+   * Por paciente: sesiones cobradas sin facturar y, aparte, los faltazos
+   * cobrados. Los faltazos se suman a la factura solo si se pide.
+   */
+  private async pendientesDe(
+    centroId: string,
+    mes: string,
+    e: Emisor,
+    incluirFaltazos = false,
+  ) {
     const filas = await this.db(centroId).prestacion.findMany({
       where: {
         periodo: periodoDe(mes),
         financiadorId: null,
         facturaId: null,
+        anuladaEn: null,
         ...(e.profesionalId ? { profesionalId: e.profesionalId } : {}),
       },
       include: {
@@ -350,6 +373,7 @@ export class FacturacionService {
       {
         paciente: (typeof filas)[number]['paciente'];
         cobradas: typeof filas;
+        faltazos: typeof filas;
         impagas: number;
       }
     >();
@@ -357,23 +381,36 @@ export class FacturacionService {
       const g = porPaciente.get(p.pacienteId) ?? {
         paciente: p.paciente,
         cobradas: [],
+        faltazos: [],
         impagas: 0,
       };
       porPaciente.set(p.pacienteId, g);
-      if (cobroDe(p.monto, p.pagos).estado === 'cobrada') g.cobradas.push(p);
-      else g.impagas++;
+      if (cobroDe(p.monto, p.pagos).estado !== 'cobrada') g.impagas++;
+      else if (p.tipo === TipoPrestacion.faltazo) g.faltazos.push(p);
+      else g.cobradas.push(p);
     }
     return [...porPaciente.values()]
       .sort((a, b) => a.paciente.apellido.localeCompare(b.paciente.apellido))
-      .map((g) => ({
-        paciente: g.paciente,
-        sesiones: g.cobradas.length,
-        prestacionIds: g.cobradas.map((p) => p.id),
-        items: agrupar(g.cobradas.map((p) => p.monto)),
-        total: num(sumar(g.cobradas.map((p) => p.monto))),
-        impagas: g.impagas,
-        sinDni: !g.paciente.dni,
-      }));
+      .map((g) => {
+        const facturables = incluirFaltazos
+          ? [...g.cobradas, ...g.faltazos]
+          : g.cobradas;
+        return {
+          paciente: g.paciente,
+          sesiones: g.cobradas.length,
+          /** Faltazos cobrados sin facturar (se suman solo si se pide). */
+          faltazos: g.faltazos.length,
+          totalFaltazos: num(sumar(g.faltazos.map((p) => p.monto))),
+          prestacionIds: facturables.map((p) => p.id),
+          items: agrupar(g.cobradas.map((p) => p.monto)),
+          itemsFaltazos: incluirFaltazos
+            ? agrupar(g.faltazos.map((p) => p.monto))
+            : [],
+          total: num(sumar(facturables.map((p) => p.monto))),
+          impagas: g.impagas,
+          sinDni: !g.paciente.dni,
+        };
+      });
   }
 
   /** Emite una factura por paciente elegido. Si ARCA no responde, corta ahí. */
@@ -383,6 +420,7 @@ export class FacturacionService {
     mes: string,
     pacienteIds: string[],
     profesionalId?: string,
+    incluirFaltazos = false,
   ) {
     const e = await this.emisorParaFacturar(centroId, quien, profesionalId);
     const c = e.config;
@@ -398,8 +436,10 @@ export class FacturacionService {
     const zona = await this.zona(centroId);
     const hoy = aLocal(new Date(), zona).fecha;
     const { primero, ultimo } = diasDelMes(mes);
-    const elegidos = (await this.pendientesDe(centroId, mes, e)).filter(
-      (g) => g.sesiones > 0 && pacienteIds.includes(g.paciente.id),
+    const elegidos = (
+      await this.pendientesDe(centroId, mes, e, incluirFaltazos)
+    ).filter(
+      (g) => g.prestacionIds.length > 0 && pacienteIds.includes(g.paciente.id),
     );
     const resultados: {
       pacienteId: string;
@@ -443,7 +483,13 @@ export class FacturacionService {
             docTipo: doc ? 96 : 99,
             docNro: doc || '0',
             total: g.total,
-            detalle: g.items.map((it) => ({ descripcion: c.textoItem, ...it })),
+            detalle: [
+              ...g.items.map((it) => ({ descripcion: c.textoItem, ...it })),
+              ...g.itemsFaltazos.map((it) => ({
+                descripcion: TEXTO_FALTAZO,
+                ...it,
+              })),
+            ],
             cae: r.ok ? r.cae : null,
             caeVence: r.ok ? dia(r.caeVence) : null,
             modo: c.modo,
@@ -932,7 +978,13 @@ export class FacturacionController {
     @UsuarioActual() quien: UsuarioAutenticado,
     @Query({ schema: mesSchema }) q: z.infer<typeof mesSchema>,
   ) {
-    return this.facturacion.pendientes(centroId, quien, q.mes, q.profesionalId);
+    return this.facturacion.pendientes(
+      centroId,
+      quien,
+      q.mes,
+      q.profesionalId,
+      q.incluirFaltazos ?? false,
+    );
   }
 
   @Post('emitir')
@@ -949,6 +1001,7 @@ export class FacturacionController {
       dto.mes,
       dto.pacienteIds,
       dto.profesionalId,
+      dto.incluirFaltazos,
     );
   }
 

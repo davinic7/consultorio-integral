@@ -117,6 +117,16 @@
           Se factura a cada paciente particular lo ya cobrado del mes. Las sesiones de obras
           sociales se presentan desde "Presentación a obras sociales".
         </p>
+        @if (conFaltazos() || incluirFaltazos()) {
+          <label class="oc-check">
+            <input
+              type="checkbox"
+              [checked]="incluirFaltazos()"
+              (change)="alternarFaltazos($any($event.target).checked)"
+            />
+            Incluir los faltazos cobrados en las facturas
+          </label>
+        }
         <div class="oc-tabla-caja">
           <table class="oc-tabla">
             <thead>
@@ -152,6 +162,16 @@
                   <td class="oc-mono">
                     @for (it of p.items; track it.precio) {
                       <div>{{ it.cantidad }} × {{ plata(it.precio) }}</div>
+                    }
+                    @for (it of p.itemsFaltazos; track it.precio) {
+                      <div>{{ it.cantidad }} faltazo × {{ plata(it.precio) }}</div>
+                    }
+                    @if (p.faltazos && !incluirFaltazos()) {
+                      <div class="oc-suave">
+                        + {{ p.faltazos }} faltazo{{ p.faltazos === 1 ? '' : 's' }} sin incluir ({{
+                          plata(p.totalFaltazos)
+                        }})
+                      </div>
                     }
                   </td>
                   <td class="num oc-mono">
