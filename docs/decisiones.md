@@ -207,3 +207,16 @@ Limitaciones conocidas:
 - No se usa el reconocimiento de voz del navegador (Chrome y Safari mandan el audio a Google o Apple).
 - Más adelante, en la app móvil nativa, se puede sumar el reconocimiento del propio teléfono **sin conexión** (solo si el equipo garantiza que es en el dispositivo).
 - Costo: el servicio de Render necesita más memoria que el plan gratis (a confirmar con una prueba).
+
+## 20. Expediente: nada clínico legible en el dispositivo
+
+Decisión del responsable del proyecto (12/11/2026): el teléfono puede quedar en manos de otra persona, así que eso pesa más que la comodidad. En el dispositivo no queda audio ni texto clínico que se pueda leer.
+
+- **Borradores en el servidor.** Lo que se está escribiendo, y lo que vuelve del dictado para revisar, se guarda en `borradores_nota`: uno por profesional y paciente, cifrado con la clave de datos del centro (con un contexto distinto al de las notas, así un texto no se puede pasar de una tabla a la otra) y visible solo para su autor. Se borra al guardar la evolución, al descartarlo o si nadie lo toca en **30 días**: al leerlo, al arrancar la API y una vez por día. Sin señal, lo que se escribe queda en memoria hasta que vuelve la conexión.
+- **Un borrador no impide borrar su turno.** La relación usa `ON DELETE SET NULL ("turno_id")` (PostgreSQL 15 o más): el borrador queda sin turno y sigue siendo del paciente. Hoy la app nunca borra turnos, los cancela; solo pasaría al borrar un centro entero. Prisma avisa por usar `SetNull` con `centroId` obligatorio: es esperado, porque la base pone en null solo `turno_id`.
+- **Cola sin señal del dictado: clave pública del usuario** (se implementa en el paso 3).
+  - Cada usuario de cada centro tiene un par de claves generado al azar y con versión. La privada se guarda en la base cifrada con la clave de datos del centro, que a su vez protege la clave maestra, igual que la clave privada de ARCA. Nunca sale del servidor.
+  - El teléfono recibe solo la clave pública y con ella cifra cada grabación: ni el teléfono ni quien lo tenga puede abrirla. Al volver la señal, la grabación se sube cifrada y el servidor la abre en memoria para transcribirla. Apenas se transcribe bien, se borra del dispositivo.
+  - El par de un usuario se puede renovar (por ejemplo, si pierde el teléfono) sin tocar a los demás. Los pares anteriores se conservan para abrir lo que quedó pendiente; lo nuevo se cifra con el vigente.
+  - Solo el cifrado estándar del navegador (WebCrypto): ECDH o RSA-OAEP para la clave y AES-GCM para el audio, sin librerías externas.
+  - Costos: la grabación se guarda ya convertida a WAV (unos 1,9 MB por minuto), porque el teléfono no puede volver a abrirla; y con la app cerrada, la lista de pendientes no muestra el nombre del paciente (en el dispositivo quedan solo su id, la fecha y la duración).

@@ -435,4 +435,251 @@ describe.skipIf(!url)('Asistencia y notas cifradas (e2e)', () => {
       expect(res.body[0].texto).toMatch(/No se pudo descifrar/);
     });
   });
+
+  describe('expediente', () => {
+    const ruta = (sufijo = '') =>
+      `/api/v1/pacientes/${ids.juan}/notas${sufijo}`;
+
+    it('guarda si la evolución fue dictada y la fecha de edición del texto', async () => {
+      const res = await http()
+        .post(ruta())
+        .set(como('prof1@a.com'))
+        .send({ texto: 'Dictada y revisada', origen: 'dictada' })
+        .expect(201);
+      expect(res.body).toMatchObject({ origen: 'dictada', editadaEn: null });
+      // Cambiar quién la ve no cuenta como edición.
+      const visibilidad = await http()
+        .patch(`/api/v1/notas/${res.body.id}`)
+        .set(como('prof1@a.com'))
+        .send({ compartida: true })
+        .expect(200);
+      expect(visibilidad.body.editadaEn).toBeNull();
+      const texto = await http()
+        .patch(`/api/v1/notas/${res.body.id}`)
+        .set(como('prof1@a.com'))
+        .send({ texto: 'Dictada, revisada y corregida' })
+        .expect(200);
+      expect(texto.body.editadaEn).toEqual(expect.any(String));
+      const escrita = await http()
+        .post(ruta())
+        .set(como('prof1@a.com'))
+        .send({ texto: 'Escrita con el teclado' })
+        .expect(201);
+      expect(escrita.body.origen).toBe('escrita');
+    });
+
+    it('rechaza un origen desconocido', async () => {
+      await http()
+        .post(ruta())
+        .set(como('prof1@a.com'))
+        .send({ texto: 'x', origen: 'grabada' })
+        .expect(400);
+    });
+
+    it('ofrece mis sesiones recientes con el paciente, con la de hoy primero', async () => {
+      const { zonaHoraria } = await prisma.centro.findUniqueOrThrow({
+        where: { id: ids.centroA },
+        select: { zonaHoraria: true },
+      });
+      const hoy = new Intl.DateTimeFormat('en-CA', {
+        timeZone: zonaHoraria,
+      }).format(new Date());
+      const deHoy = (
+        await http()
+          .post('/api/v1/turnos')
+          .set(como('admin@a.com'))
+          .send({
+            pacienteId: ids.juan,
+            profesionalId: ids.p1,
+            fecha: hoy,
+            hora: '09:00',
+            duracionMin: 45,
+          })
+          .expect(201)
+      ).body.id as string;
+      const res = await http()
+        .get(ruta('/sesiones'))
+        .set(como('prof1@a.com'))
+        .expect(200);
+      expect(res.body.hoy).toBe(hoy);
+      expect(res.body.turnos[0]).toMatchObject({
+        id: deHoy,
+        fecha: hoy,
+        hora: '09:00',
+        conNota: false,
+      });
+      const turnos = res.body.turnos.map((t: { id: string }) => t.id);
+      expect(turnos).not.toContain(ids.tLaura); // de otra profesional
+      expect(turnos).not.toContain(ids.tFuturo); // todavía no llegó
+      await http().get(ruta('/sesiones')).set(como('prof3@a.com')).expect(404);
+      await http().get(ruta('/sesiones')).set(como('recep@a.com')).expect(403);
+    });
+
+    it('el borrador es solo de su autor, va cifrado y se borra al guardar la evolución', async () => {
+      const vacio = await http()
+        .get(ruta('/borrador'))
+        .set(como('prof1@a.com'))
+        .expect(200);
+      expect(vacio.body).toEqual({ borrador: null });
+      const guardado = await http()
+        .put(ruta('/borrador'))
+        .set(como('prof1@a.com'))
+        .send({
+          texto: 'Motivo\nBorrador a medio escribir',
+          origen: 'dictada',
+          turnoId: ids.tPasado,
+        })
+        .expect(200);
+      expect(guardado.body.borrador).toMatchObject({
+        texto: 'Motivo\nBorrador a medio escribir',
+        origen: 'dictada',
+        compartida: false,
+        turnoId: ids.tPasado,
+      });
+      const fila = await prisma.borradorNota.findFirstOrThrow({
+        where: { pacienteId: ids.juan, profesionalId: ids.p1 },
+      });
+      expect(fila.texto.startsWith('v1:')).toBe(true);
+      expect(fila.texto).not.toContain('medio');
+
+      // Guardar de nuevo lo reemplaza: hay uno solo por profesional y paciente.
+      await http()
+        .put(ruta('/borrador'))
+        .set(como('prof1@a.com'))
+        .send({ texto: 'Borrador corregido' })
+        .expect(200);
+      expect(
+        await prisma.borradorNota.count({ where: { pacienteId: ids.juan } }),
+      ).toBe(1);
+      const ajeno = await http()
+        .get(ruta('/borrador'))
+        .set(como('prof2@a.com'))
+        .expect(200);
+      expect(ajeno.body).toEqual({ borrador: null });
+      const mio = await http()
+        .get(ruta('/borrador'))
+        .set(como('prof1@a.com'))
+        .expect(200);
+      expect(mio.body.borrador.texto).toBe('Borrador corregido');
+
+      await http()
+        .post(ruta())
+        .set(como('prof1@a.com'))
+        .send({ texto: 'Borrador corregido' })
+        .expect(201);
+      expect(
+        await prisma.borradorNota.count({
+          where: { pacienteId: ids.juan, profesionalId: ids.p1 },
+        }),
+      ).toBe(0);
+    });
+
+    it('descartar borra el borrador; recepción, quien no atiende y otro centro no acceden', async () => {
+      await http()
+        .put(ruta('/borrador'))
+        .set(como('prof2@a.com'))
+        .send({ texto: 'Borrador de Laura' })
+        .expect(200);
+      await http()
+        .delete(ruta('/borrador'))
+        .set(como('prof2@a.com'))
+        .expect(204);
+      expect(
+        await prisma.borradorNota.count({ where: { pacienteId: ids.juan } }),
+      ).toBe(0);
+      await http()
+        .put(ruta('/borrador'))
+        .set(como('recep@a.com'))
+        .send({ texto: 'x' })
+        .expect(403);
+      await http()
+        .put(ruta('/borrador'))
+        .set(como('prof3@a.com'))
+        .send({ texto: 'x' })
+        .expect(404);
+      await http().get(ruta('/borrador')).set(como('admin@b.com')).expect(403);
+    });
+
+    it('no acepta en el borrador un turno de otro profesional', async () => {
+      await http()
+        .put(ruta('/borrador'))
+        .set(como('prof1@a.com'))
+        .send({ texto: 'x', turnoId: ids.tLaura })
+        .expect(400);
+    });
+
+    it('un borrador que nadie tocó en 30 días se borra al leerlo y con la limpieza', async () => {
+      const envejecer = (profesionalId: string, dias: number) =>
+        prisma.$executeRaw`UPDATE borradores_nota SET actualizado_en = now() - make_interval(days => ${dias}) WHERE paciente_id = ${ids.juan}::uuid AND profesional_id = ${profesionalId}::uuid`;
+
+      await http()
+        .put(ruta('/borrador'))
+        .set(como('prof1@a.com'))
+        .send({ texto: 'Viejo' })
+        .expect(200);
+      await envejecer(ids.p1, 31);
+      const leido = await http()
+        .get(ruta('/borrador'))
+        .set(como('prof1@a.com'))
+        .expect(200);
+      expect(leido.body).toEqual({ borrador: null });
+      expect(
+        await prisma.borradorNota.count({ where: { pacienteId: ids.juan } }),
+      ).toBe(0);
+
+      // La limpieza general borra solo los vencidos.
+      await http()
+        .put(ruta('/borrador'))
+        .set(como('prof1@a.com'))
+        .send({ texto: 'Reciente' })
+        .expect(200);
+      await http()
+        .put(ruta('/borrador'))
+        .set(como('prof2@a.com'))
+        .send({ texto: 'De hace mucho' })
+        .expect(200);
+      await envejecer(ids.p2, 40);
+      const { BorradoresVencidos } =
+        await import('../src/notas/borradores-vencidos.js');
+      expect(await app.get(BorradoresVencidos).limpiar()).toBe(1);
+      const quedan = await prisma.borradorNota.findMany({
+        where: { pacienteId: ids.juan },
+      });
+      expect(quedan.map((b) => b.profesionalId)).toEqual([ids.p1]);
+      await http()
+        .delete(ruta('/borrador'))
+        .set(como('prof1@a.com'))
+        .expect(204);
+    });
+
+    it('borrar un turno deja el borrador sin turno, sin impedirlo', async () => {
+      const turno = (
+        await http()
+          .post('/api/v1/turnos')
+          .set(como('admin@a.com'))
+          .send({
+            pacienteId: ids.juan,
+            profesionalId: ids.p1,
+            fecha: '2026-10-30',
+            hora: '15:00',
+            duracionMin: 45,
+          })
+          .expect(201)
+      ).body.id as string;
+      await http()
+        .put(ruta('/borrador'))
+        .set(como('prof1@a.com'))
+        .send({ texto: 'Con turno', turnoId: turno })
+        .expect(200);
+      await prisma.turno.delete({ where: { id: turno } });
+      const fila = await prisma.borradorNota.findFirstOrThrow({
+        where: { pacienteId: ids.juan, profesionalId: ids.p1 },
+      });
+      expect(fila).toMatchObject({ turnoId: null, centroId: ids.centroA });
+      await http()
+        .delete(ruta('/borrador'))
+        .set(como('prof1@a.com'))
+        .expect(204);
+    });
+  });
 });

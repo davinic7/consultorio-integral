@@ -23,6 +23,7 @@ export const MODELOS_DE_CENTRO: ReadonlySet<Prisma.ModelName> =
     'Factura',
     'ConfigFiscal',
     'NotaSesion',
+    'BorradorNota',
     'Aviso',
     'CambioAsistencia',
   ]);

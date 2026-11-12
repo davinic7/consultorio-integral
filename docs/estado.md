@@ -65,11 +65,10 @@ Los 10 pasos de [prototipo.md](prototipo.md) están hechos (versión 1.0).
 - Tipografías: servirlas desde el propio servidor en vez de Google Fonts antes de salir al mercado o de la app móvil (hoy es una excepción autorizada, ver [decisiones.md](decisiones.md) §18).
 
 - ARCA: probar en homologación con un certificado real (seguir [arca-paso-a-paso.md](arca-paso-a-paso.md)) antes de pasar a producción.
-- **Expediente con dictado** (etapa 4): transcripción en el propio servidor ([decisiones.md](decisiones.md) §19). El diseño está listo: guía en [diseno/expediente-dictado.md](diseno/expediente-dictado.md) y tableros en `diseno/referencia/expediente/`. Falta implementarlo (pasos 2 a 4 de la guía) y elegir el servicio de Render con más memoria.
+- **Expediente con dictado** (etapa 4): transcripción en el propio servidor ([decisiones.md](decisiones.md) §19 y §20). Diseño en [diseno/expediente-dictado.md](diseno/expediente-dictado.md). Hecho el paso 2: la pestaña Expediente (línea de tiempo por mes, búsqueda y filtros, leer y editar, privada o compartida, sesión vinculada, guía de estructura) con borradores en el servidor que vencen a los 30 días (migración `expediente`). Falta el paso 3 (grabación en el navegador, cola sin señal y API del dictado) y el 4 (Whisper, medición en Render y plan).
 - Precios de los planes: hoy en 0, falta la política comercial.
 - Alta de centros por cuenta propia (registro público con plan y cobro del servicio): hoy solo el superadmin crea centros.
 - Obras sociales: leer órdenes y tokens desde fotos (la referencia usaba OCR en el navegador) y planilla de la orden en PDF.
-- Tests de frontend de la pantalla de notas (pasa a ser el Expediente; los suma la etapa 4). Salas, profesionales, pacientes, agenda y planilla ya tienen los suyos.
 - Lint del backend: Windows (Control de aplicaciones) bloquea `tsgolint.exe`, el ejecutable de las reglas con tipos. Se corre `oxlint` sin `--type-aware` hasta resolverlo.
 - Agenda: arrastrar y soltar turnos para moverlos (hoy se mueven desde el panel) y horario visible configurable por centro (hoy 07:00 a 22:00).
 - Avisos: hoy se consultan cada minuto; más adelante, notificaciones push en la app móvil.

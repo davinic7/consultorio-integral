@@ -202,8 +202,8 @@
           (cambio)="cargarCobros()"
         />
       }
-      @case ('notas') {
-        <app-notas-paciente [pacienteId]="p.id" />
+      @case ('expediente') {
+        <app-expediente-paciente [pacienteId]="p.id" [nombre]="p.nombre" />
       }
       @case ('datos') {
         <ng-container *ngTemplateOutlet="formulario" />

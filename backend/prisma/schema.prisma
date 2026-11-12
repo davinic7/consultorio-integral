@@ -75,6 +75,15 @@ enum EstadoAsistencia {
   @@map("estado_asistencia")
 }
 
+/// Cómo se escribió una nota de sesión.
+enum OrigenNota {
+  escrita
+  /// Dictada por voz: se transcribió y el profesional revisó el texto antes de guardarlo.
+  dictada
+
+  @@map("origen_nota")
+}
+
 enum MedioPago {
   efectivo
   transferencia
@@ -192,6 +201,7 @@ model Centro {
   acuerdosAlquiler  AcuerdoAlquiler[]
   configsFiscales   ConfigFiscal[]
   notasSesion       NotaSesion[]
+  borradoresNota    BorradorNota[]
   cambiosAsistencia CambioAsistencia[]
   sesiones          Sesion[]
   avisos            Aviso[]
@@ -297,6 +307,7 @@ model Profesional {
   acuerdos               AcuerdoAlquiler[]
   prestaciones           Prestacion[]
   notasSesion            NotaSesion[]
+  borradoresNota         BorradorNota[]
   configFiscal           ConfigFiscal?
   facturas               Factura[]
 
@@ -385,6 +396,7 @@ model Paciente {
   precios       Precio[]
   facturas      Factura[]
   notasSesion   NotaSesion[]
+  borradores    BorradorNota[]
 
   @@unique([centroId, id])
   @@unique([centroId, dni])
@@ -459,6 +471,7 @@ model Turno {
   recurrencia       Recurrencia?       @relation(fields: [centroId, recurrenciaId], references: [centroId, id], onDelete: Restrict)
   prestacion        Prestacion?
   notasSesion       NotaSesion[]
+  borradoresNota    BorradorNota[]
   cambiosAsistencia CambioAsistencia[]
 
   @@unique([centroId, id])
@@ -796,15 +809,18 @@ model Factura {
 /// El texto se guarda cifrado con la clave de datos del centro (AES-256-GCM,
 /// src/notas/cifrado.ts); la base nunca tiene el texto en claro.
 model NotaSesion {
-  id            String   @id @default(uuid(7)) @db.Uuid
-  centroId      String   @map("centro_id") @db.Uuid
-  turnoId       String?  @map("turno_id") @db.Uuid
-  pacienteId    String   @map("paciente_id") @db.Uuid
-  profesionalId String   @map("profesional_id") @db.Uuid
+  id            String     @id @default(uuid(7)) @db.Uuid
+  centroId      String     @map("centro_id") @db.Uuid
+  turnoId       String?    @map("turno_id") @db.Uuid
+  pacienteId    String     @map("paciente_id") @db.Uuid
+  profesionalId String     @map("profesional_id") @db.Uuid
   texto         String
-  compartida    Boolean  @default(false)
-  creadaEn      DateTime @default(now()) @map("creada_en") @db.Timestamptz(3)
-  actualizadaEn DateTime @default(now()) @updatedAt @map("actualizada_en") @db.Timestamptz(3)
+  compartida    Boolean    @default(false)
+  origen        OrigenNota @default(escrita)
+  creadaEn      DateTime   @default(now()) @map("creada_en") @db.Timestamptz(3)
+  actualizadaEn DateTime   @default(now()) @updatedAt @map("actualizada_en") @db.Timestamptz(3)
+  /// Última vez que cambió el texto. Cambiar la visibilidad no cuenta como edición.
+  editadaEn     DateTime?  @map("editada_en") @db.Timestamptz(3)
 
   centro      Centro      @relation(fields: [centroId], references: [id], onDelete: Cascade)
   turno       Turno?      @relation(fields: [centroId, turnoId], references: [centroId, id], onDelete: Restrict)
@@ -814,4 +830,35 @@ model NotaSesion {
   @@unique([centroId, id])
   @@index([centroId, pacienteId, creadaEn])
   @@map("notas_sesion")
+}
+
+/// Evolución que el profesional todavía no guardó: lo que va escribiendo o lo que
+/// volvió del dictado, para revisarlo. Una por profesional y paciente. Vive en el
+/// servidor (no en el teléfono), cifrada como las notas, y la ve solo su autor.
+/// Al guardar la evolución se borra; si nadie lo toca en 30 días, también
+/// (src/notas/borradores-vencidos.ts).
+model BorradorNota {
+  id            String     @id @default(uuid(7)) @db.Uuid
+  centroId      String     @map("centro_id") @db.Uuid
+  pacienteId    String     @map("paciente_id") @db.Uuid
+  profesionalId String     @map("profesional_id") @db.Uuid
+  turnoId       String?    @map("turno_id") @db.Uuid
+  /// Cifrado con la clave de datos del centro, como NotaSesion.texto.
+  texto         String
+  compartida    Boolean    @default(false)
+  origen        OrigenNota @default(escrita)
+  creadoEn      DateTime   @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn DateTime   @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+
+  centro      Centro      @relation(fields: [centroId], references: [id], onDelete: Cascade)
+  paciente    Paciente    @relation(fields: [centroId, pacienteId], references: [centroId, id], onDelete: Restrict)
+  profesional Profesional @relation(fields: [centroId, profesionalId], references: [centroId, id], onDelete: Restrict)
+  /// Un borrador nunca impide borrar su turno: queda sin turno y sigue siendo del
+  /// paciente. En la base es ON DELETE SET NULL ("turno_id"), solo esa columna
+  /// (PostgreSQL 15+). Prisma avisa porque centroId es obligatorio: es esperado.
+  turno       Turno?      @relation(fields: [centroId, turnoId], references: [centroId, id], onDelete: SetNull)
+
+  @@unique([centroId, id])
+  @@unique([centroId, pacienteId, profesionalId])
+  @@map("borradores_nota")
 }

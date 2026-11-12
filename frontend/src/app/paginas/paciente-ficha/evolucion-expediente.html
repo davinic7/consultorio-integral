@@ -1,0 +1,195 @@
+<span class="evo__punto" aria-hidden="true" [attr.data-color]="v().color"></span>
+<article class="evo__tarjeta" [attr.aria-labelledby]="'ev-' + nota().id">
+  <header class="evo__encabezado">
+    <h4 class="evo__fecha oc-mono" [id]="'ev-' + nota().id">{{ v().fecha }}</h4>
+    <span class="evo__turno">
+      <svg
+        aria-hidden="true"
+        width="13"
+        height="13"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.7"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <rect x="3" y="5" width="18" height="16" rx="3" />
+        <path d="M3 10h18M8 3v4M16 3v4" />
+      </svg>
+      {{ v().turno }}
+    </span>
+    <span class="evo__chips">
+      <span class="evo__chip">
+        @if (nota().compartida) {
+          <svg
+            aria-hidden="true"
+            width="13"
+            height="13"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="9" cy="8" r="3.5" />
+            <path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7" />
+          </svg>
+          Compartida
+        } @else {
+          <svg
+            aria-hidden="true"
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <rect x="5" y="11" width="14" height="9" rx="2" />
+            <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+          </svg>
+          Privada
+        }
+      </span>
+      <span class="evo__chip">
+        @if (nota().origen === 'dictada') {
+          <svg
+            aria-hidden="true"
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <rect x="9" y="3" width="6" height="11" rx="3" />
+            <path d="M5 11a7 7 0 0 0 14 0M12 18v3" />
+          </svg>
+          Dictada
+        } @else {
+          <svg
+            aria-hidden="true"
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M4 20h4L19 9l-4-4L4 16z" />
+          </svg>
+          Escrita
+        }
+      </span>
+    </span>
+  </header>
+
+  <div class="evo__autor">
+    <span class="evo__avatar" aria-hidden="true" [attr.data-color]="v().color">{{
+      v().iniciales
+    }}</span>
+    <span>{{ v().autor }}</span>
+    @if (!nota().propia) {
+      <span class="evo__ajena">Del equipo · solo lectura</span>
+    }
+  </div>
+
+  @if (editando()) {
+    <div class="evo__edicion">
+      <label class="evo__oculto" [for]="'edicion-' + nota().id">Texto de la evolución</label>
+      <textarea
+        class="evo__texto"
+        rows="10"
+        maxlength="20000"
+        [id]="'edicion-' + nota().id"
+        [ngModel]="textoEdicion()"
+        (ngModelChange)="textoEdicion.set($event)"
+      ></textarea>
+      <div class="evo__fila">
+        <button
+          type="button"
+          class="oc-btn oc-btn--primario"
+          [disabled]="guardando()"
+          (click)="guardar()"
+        >
+          {{ guardando() ? 'Guardando…' : 'Guardar cambios' }}
+        </button>
+        <button type="button" class="oc-btn oc-btn--fantasma" (click)="cancelar()">Cancelar</button>
+        <span class="oc-suave evo__nota">Se registra la fecha de la edición.</span>
+      </div>
+    </div>
+  } @else if (abierta()) {
+    <div class="evo__lectura">
+      @for (s of v().secciones; track $index) {
+        <div>
+          @if (s.titulo) {
+            <h5>{{ s.titulo }}</h5>
+          }
+          <p>{{ s.texto }}</p>
+        </div>
+      }
+    </div>
+  } @else {
+    <p class="evo__resumen">{{ v().resumen }}</p>
+  }
+
+  <footer class="evo__fila">
+    @if (!editando()) {
+      <button
+        type="button"
+        class="oc-btn oc-btn--fantasma oc-btn--chico"
+        [attr.aria-expanded]="abierta()"
+        (click)="alternar.emit()"
+      >
+        {{ abierta() ? 'Cerrar' : 'Leer completa' }}
+      </button>
+      @if (nota().propia) {
+        <button type="button" class="oc-btn oc-btn--fantasma oc-btn--chico" (click)="editar()">
+          <svg
+            aria-hidden="true"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M4 20h4L19 9l-4-4L4 16z" />
+            <path d="m13.5 6.5 4 4" />
+          </svg>
+          Editar
+        </button>
+      }
+      @if (nota().propia && abierta()) {
+        <div class="oc-segmentado" role="group" aria-label="Quién ve esta evolución">
+          <button
+            type="button"
+            [attr.aria-pressed]="!nota().compartida"
+            (click)="cambiarVisibilidad(false)"
+          >
+            Privada
+          </button>
+          <button
+            type="button"
+            [attr.aria-pressed]="nota().compartida"
+            (click)="cambiarVisibilidad(true)"
+          >
+            Compartida
+          </button>
+        </div>
+        <span class="oc-suave evo__nota">{{ v().quienVe }}</span>
+      }
+    }
+    <span class="evo__pie oc-mono">{{ v().pie }}</span>
+  </footer>
+</article>

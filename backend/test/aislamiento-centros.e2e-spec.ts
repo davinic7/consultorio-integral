@@ -104,6 +104,28 @@ describe.skipIf(!url)('Aislamiento entre centros (PostgreSQL)', () => {
     ).rejects.toBeTruthy();
   });
 
+  it('borradores del expediente: cada centro ve los suyos y no apunta a un paciente ajeno', async () => {
+    await a.db.borradorNota.create({
+      data: {
+        pacienteId: a.paciente.id,
+        profesionalId: a.profesional.id,
+        texto: 'v1:cifrado',
+      } as any,
+    });
+    expect(await a.db.borradorNota.count()).toBe(1);
+    expect(await b.db.borradorNota.count()).toBe(0);
+    // La clave compuesta (centro_id, paciente_id) impide cruzar centros.
+    await expect(
+      a.db.borradorNota.create({
+        data: {
+          pacienteId: b.paciente.id,
+          profesionalId: a.profesional.id,
+          texto: 'v1:cifrado',
+        } as any,
+      }),
+    ).rejects.toMatchObject({ code: 'P2003' });
+  });
+
   it('rechaza pedir datos de otro centro de forma explícita', async () => {
     await expect(
       a.db.paciente.findMany({ where: { centroId: b.centro.id } }),

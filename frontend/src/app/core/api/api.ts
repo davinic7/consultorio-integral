@@ -31,7 +31,10 @@ import type {
   Financiador,
   EstadoMarcable,
   HistorialAsistencia,
+  BorradorNota,
   Nota,
+  OrigenNota,
+  SesionesNota,
   Planilla,
   DatosPaciente,
   DatosRecurrencia,
@@ -225,7 +228,15 @@ export class AsistenciaApi {
   }
 }
 
-/** Notas de sesión (solo profesionales). */
+/** Datos de una evolución nueva o de un borrador. */
+export interface DatosEvolucion {
+  texto: string;
+  compartida: boolean;
+  turnoId?: string | null;
+  origen?: OrigenNota;
+}
+
+/** Evoluciones del expediente (solo quien escribe notas: profesional o admin que atiende). */
 @Injectable({ providedIn: 'root' })
 export class NotasApi {
   private readonly http = inject(HttpClient);
@@ -233,14 +244,35 @@ export class NotasApi {
   listar(pacienteId: string) {
     return firstValueFrom(this.http.get<Nota[]>(`${API}/pacientes/${pacienteId}/notas`));
   }
-  crear(
-    pacienteId: string,
-    datos: { texto: string; compartida: boolean; turnoId?: string | null },
-  ) {
+  crear(pacienteId: string, datos: DatosEvolucion) {
     return firstValueFrom(this.http.post<Nota>(`${API}/pacientes/${pacienteId}/notas`, datos));
   }
   editar(id: string, datos: { texto?: string; compartida?: boolean }) {
     return firstValueFrom(this.http.patch<Nota>(`${API}/notas/${id}`, datos));
+  }
+  /** Mis sesiones recientes con el paciente, para vincular la evolución. */
+  sesiones(pacienteId: string) {
+    return firstValueFrom(
+      this.http.get<SesionesNota>(`${API}/pacientes/${pacienteId}/notas/sesiones`),
+    );
+  }
+  borrador(pacienteId: string) {
+    return firstValueFrom(
+      this.http.get<{ borrador: BorradorNota | null }>(
+        `${API}/pacientes/${pacienteId}/notas/borrador`,
+      ),
+    );
+  }
+  guardarBorrador(pacienteId: string, datos: DatosEvolucion) {
+    return firstValueFrom(
+      this.http.put<{ borrador: BorradorNota }>(
+        `${API}/pacientes/${pacienteId}/notas/borrador`,
+        datos,
+      ),
+    );
+  }
+  descartarBorrador(pacienteId: string) {
+    return firstValueFrom(this.http.delete<void>(`${API}/pacientes/${pacienteId}/notas/borrador`));
   }
 }
 

@@ -35,10 +35,10 @@ import { AuthService } from '../../core/auth/auth.service';
 import { tieneModulo } from '../../core/auth/modulos';
 import { puede } from '../../core/auth/roles';
 import { AsistenciaPaciente } from './asistencia-paciente';
-import { NotasPaciente } from './notas-paciente';
+import { ExpedientePaciente } from './expediente-paciente';
 import { PagosPaciente } from './pagos-paciente';
 
-type Pestana = 'resumen' | 'sesiones' | 'pagos' | 'notas' | 'datos';
+type Pestana = 'resumen' | 'sesiones' | 'pagos' | 'expediente' | 'datos';
 
 /** Vencimiento de CUD solo si tiene CUD. */
 function cudCoherente(g: AbstractControl): ValidationErrors | null {
@@ -55,7 +55,7 @@ const vacioANull = (s: string) => (s.trim() === '' ? null : s.trim());
     RouterLink,
     NgTemplateOutlet,
     AsistenciaPaciente,
-    NotasPaciente,
+    ExpedientePaciente,
     PagosPaciente,
   ],
   templateUrl: './paciente-ficha.html',
@@ -109,7 +109,7 @@ export class PacienteFicha implements OnInit {
       { id: 'sesiones', texto: 'Sesiones' },
     ];
     if (this.conCobros()) p.push({ id: 'pagos', texto: 'Pagos' });
-    if (this.escribeNotas()) p.push({ id: 'notas', texto: 'Notas' });
+    if (this.escribeNotas()) p.push({ id: 'expediente', texto: 'Expediente' });
     p.push({ id: 'datos', texto: this.puedeEditar() ? 'Editar datos' : 'Datos' });
     return p;
   });

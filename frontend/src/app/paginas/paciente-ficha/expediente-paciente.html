@@ -1,0 +1,210 @@
+<!-- Expediente del paciente. Referencia: docs/diseno/referencia/expediente/Main.dc.html y Celular.dc.html -->
+<div class="exp">
+  <section class="exp__linea" aria-labelledby="exp-titulo">
+    <div class="exp__cabecera">
+      <h2 id="exp-titulo">Expediente</h2>
+      <span
+        class="exp__cifrado oc-mono"
+        title="Las evoluciones se guardan cifradas. Las privadas las ves solo vos; las compartidas, también el equipo del paciente."
+      >
+        <svg
+          aria-hidden="true"
+          width="13"
+          height="13"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.7"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <rect x="5" y="11" width="14" height="9" rx="2" />
+          <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+        </svg>
+        Contenido cifrado
+      </span>
+    </div>
+
+    @if (!cargando() && notas().length) {
+      <div class="exp__filtros">
+        <label class="oc-buscador exp__buscador">
+          <svg
+            aria-hidden="true"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+          >
+            <circle cx="11" cy="11" r="7" />
+            <path d="m20 20-3.5-3.5" />
+          </svg>
+          <span class="exp__oculto">Buscar en el expediente</span>
+          <input
+            type="search"
+            placeholder="Buscar en las evoluciones"
+            [ngModel]="q()"
+            (ngModelChange)="q.set($event)"
+          />
+        </label>
+        <div class="oc-segmentado" role="group" aria-label="Período">
+          @for (p of periodos; track p.id) {
+            <button
+              type="button"
+              [attr.aria-pressed]="periodo() === p.id"
+              (click)="periodo.set(p.id)"
+            >
+              {{ p.texto }}
+            </button>
+          }
+        </div>
+        <div class="oc-segmentado" role="group" aria-label="Autor">
+          @for (a of autores; track a.id) {
+            <button type="button" [attr.aria-pressed]="autor() === a.id" (click)="autor.set(a.id)">
+              {{ a.texto }}
+            </button>
+          }
+        </div>
+      </div>
+    }
+
+    @if (aviso(); as mensaje) {
+      <div class="oc-alerta oc-alerta--ok exp__aviso" role="status">
+        <span>{{ mensaje }}</span>
+        <button
+          type="button"
+          class="exp__cerrar-aviso"
+          aria-label="Cerrar aviso"
+          (click)="aviso.set(null)"
+        >
+          <svg
+            aria-hidden="true"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          >
+            <path d="M6 6l12 12M18 6 6 18" />
+          </svg>
+        </button>
+      </div>
+    }
+    @if (error(); as mensaje) {
+      <p class="oc-alerta oc-alerta--error" role="alert">{{ mensaje }}</p>
+    }
+
+    @if (borrador() && modo() === 'inicio') {
+      <article class="exp__borrador" aria-labelledby="exp-borrador">
+        <div class="exp__borrador-cabecera">
+          <h3 id="exp-borrador">Borrador sin guardar</h3>
+          <span class="oc-mono oc-suave">{{ guardadoBorrador() }}</span>
+        </div>
+        <p class="exp__resumen">{{ resumenBorrador() }}</p>
+        <div>
+          <button type="button" class="oc-btn oc-btn--chico" (click)="panel.escribir()">
+            Seguir escribiendo
+          </button>
+        </div>
+      </article>
+    }
+
+    @if (cargando()) {
+      <p class="oc-suave">Cargando…</p>
+    } @else if (!notas().length) {
+      <div class="exp__vacio">
+        <svg aria-hidden="true" width="96" height="96" viewBox="0 0 96 96">
+          <circle
+            cx="48"
+            cy="48"
+            r="42"
+            fill="none"
+            stroke="var(--oc-borde)"
+            stroke-width="1.5"
+            stroke-dasharray="3 6"
+          />
+          <circle cx="48" cy="48" r="28" fill="none" stroke="var(--oc-borde)" stroke-width="1.5" />
+          <circle cx="86" cy="36" r="4" fill="var(--oc-lila)" />
+          <path
+            d="M38 58h20M40 46h16M40 38h16"
+            fill="none"
+            stroke="var(--oc-texto-medio)"
+            stroke-width="2"
+            stroke-linecap="round"
+          />
+        </svg>
+        <h3>Todavía no hay evoluciones{{ nombre() ? ' de ' + nombre() : '' }}</h3>
+        <p>
+          Al terminar la sesión, escribí la primera evolución. Queda cifrada y la ves solo vos,
+          salvo que elijas compartirla con el equipo del paciente.
+        </p>
+        <button type="button" class="oc-btn" (click)="panel.escribir()">Escribir la primera</button>
+      </div>
+    } @else if (!filtradas().length) {
+      <div class="exp__sin-resultados">
+        <p>No hay evoluciones que coincidan con la búsqueda en este período.</p>
+        <button type="button" class="oc-btn oc-btn--fantasma" (click)="limpiarFiltros()">
+          Limpiar filtros
+        </button>
+      </div>
+    } @else {
+      <p class="oc-suave exp__conteo">{{ conteo() }} · de la más nueva a la más vieja</p>
+      @for (g of grupos(); track g.clave) {
+        <h3 class="exp__mes">{{ g.mes }}</h3>
+        <ol class="exp__lista">
+          @for (n of g.notas; track n.id) {
+            <li
+              appEvolucion
+              [nota]="n"
+              [zona]="zona()"
+              [hoy]="hoy()"
+              [abierta]="abierta() === n.id"
+              (alternar)="alternar(n.id)"
+              (cambio)="reemplazar($event)"
+              (aviso)="mostrarAviso($event)"
+              (error)="mostrarError($event)"
+            ></li>
+          }
+        </ol>
+      }
+    }
+  </section>
+
+  <app-panel-evolucion
+    #panel
+    [pacienteId]="pacienteId()"
+    [sesiones]="sesiones()"
+    [zona]="zona()"
+    [hoy]="hoy()"
+    [(modo)]="modo"
+    [(borrador)]="borrador"
+    (guardada)="alGuardar($event)"
+    (aviso)="mostrarAviso($event)"
+  />
+
+  @if (modo() === 'inicio' && !cargando()) {
+    <div class="exp__barra-celular">
+      <button type="button" class="oc-btn exp__barra-boton" (click)="panel.escribir()">
+        <svg
+          aria-hidden="true"
+          width="19"
+          height="19"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.7"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M4 20h4L19 9l-4-4L4 16z" />
+          <path d="m13.5 6.5 4 4" />
+        </svg>
+        {{ borrador() ? 'Seguir el borrador' : 'Escribir evolución' }}
+      </button>
+    </div>
+  }
+</div>

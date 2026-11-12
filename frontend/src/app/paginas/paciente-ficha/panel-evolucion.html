@@ -1,0 +1,260 @@
+<!-- Panel de nueva evolución. Referencia: docs/diseno/referencia/expediente/Main.dc.html (panel derecho) -->
+<section class="pan" aria-labelledby="exp-nueva">
+  <div class="pan__cabecera">
+    <h2 id="exp-nueva">
+      {{ modo() === 'escribir' ? 'Escribir la evolución' : 'Nueva evolución' }}
+    </h2>
+    @if (modo() !== 'inicio') {
+      <button
+        type="button"
+        class="oc-btn oc-btn--icono"
+        aria-label="Cerrar la nueva evolución"
+        (click)="cerrar()"
+      >
+        <svg
+          aria-hidden="true"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+        >
+          <path d="M6 6l12 12M18 6 6 18" />
+        </svg>
+      </button>
+    }
+  </div>
+
+  @if (modo() === 'inicio') {
+    <button type="button" class="pan__camino" (click)="escribir()">
+      <span class="pan__camino-icono" aria-hidden="true">
+        <svg
+          width="22"
+          height="22"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.7"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M4 20h4L19 9l-4-4L4 16z" />
+          <path d="m13.5 6.5 4 4" />
+        </svg>
+      </span>
+      <span>
+        <span class="pan__titulo">{{ borrador() ? 'Seguir el borrador' : 'Escribir' }}</span>
+        <span class="pan__sub">Con el teclado, a tu ritmo</span>
+      </span>
+    </button>
+
+    <div class="pan__guia">
+      <button
+        type="button"
+        class="pan__guia-boton"
+        aria-controls="exp-guia"
+        [attr.aria-expanded]="guiaAbierta()"
+        (click)="guiaAbierta.set(!guiaAbierta())"
+      >
+        <span>Guía de estructura <span class="oc-suave">· opcional</span></span>
+        <span class="oc-suave pan__nota">{{ usarGuia() ? 'Activada' : 'Sin usar' }}</span>
+        <svg
+          aria-hidden="true"
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          [class.pan__girado]="guiaAbierta()"
+        >
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      </button>
+      @if (guiaAbierta()) {
+        <div id="exp-guia" class="pan__guia-cuerpo">
+          <ol class="pan__guia-lista">
+            @for (t of guia; track t) {
+              <li>{{ t }}</li>
+            }
+          </ol>
+          <label class="oc-check">
+            <input
+              type="checkbox"
+              [ngModel]="usarGuia()"
+              (ngModelChange)="cambiarUsoGuia($event)"
+            />
+            Usarla en las evoluciones nuevas
+          </label>
+          <p class="oc-suave pan__nota">
+            Se suman como títulos al texto. Podés borrarlos o escribir sin ellos.
+          </p>
+        </div>
+      }
+    </div>
+
+    <p class="oc-suave pan__nota pan__privacidad">
+      <svg
+        aria-hidden="true"
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.7"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <rect x="5" y="11" width="14" height="9" rx="2" />
+        <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+      </svg>
+      <span
+        >Se guarda cifrada. Mientras escribís, el borrador queda en el servidor, no en este
+        dispositivo.</span
+      >
+    </p>
+  } @else {
+    <label class="oc-campo">
+      Sesión
+      <select [ngModel]="turnoId() ?? ''" (ngModelChange)="elegirSesion($event)">
+        @for (o of opcionesSesion(); track o.id) {
+          <option [value]="o.id">{{ o.texto }}</option>
+        }
+        <option value="">Sin turno: llamada, reunión o informe</option>
+      </select>
+    </label>
+
+    <label class="oc-campo">
+      Evolución
+      <textarea
+        id="texto-evolucion"
+        class="pan__texto"
+        rows="14"
+        maxlength="20000"
+        placeholder="Escribí qué trabajaron en la sesión"
+        [ngModel]="texto()"
+        (ngModelChange)="cambiarTexto($event)"
+      ></textarea>
+    </label>
+    <p
+      class="oc-suave pan__nota pan__estado"
+      role="status"
+      [class.pan__estado--aviso]="estadoConAviso()"
+    >
+      {{ estadoTexto() }}
+    </p>
+
+    <fieldset class="pan__quien">
+      <legend class="oc-suave">¿Quién la ve?</legend>
+      <div class="pan__opciones">
+        <button
+          type="button"
+          class="pan__opcion"
+          [attr.aria-pressed]="!compartida()"
+          (click)="ponerCompartida(false)"
+        >
+          <svg
+            aria-hidden="true"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.7"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <rect x="5" y="11" width="14" height="9" rx="2" />
+            <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+          </svg>
+          <span
+            ><span class="pan__opcion-titulo">Privada</span
+            ><span class="pan__opcion-sub">Solo vos</span></span
+          >
+        </button>
+        <button
+          type="button"
+          class="pan__opcion"
+          [attr.aria-pressed]="compartida()"
+          (click)="ponerCompartida(true)"
+        >
+          <svg
+            aria-hidden="true"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.7"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="9" cy="8" r="3.5" />
+            <path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7" />
+          </svg>
+          <span
+            ><span class="pan__opcion-titulo">Compartida</span
+            ><span class="pan__opcion-sub">Equipo del paciente</span></span
+          >
+        </button>
+      </div>
+    </fieldset>
+
+    @if (error(); as mensaje) {
+      <p class="oc-alerta oc-alerta--error" role="alert">{{ mensaje }}</p>
+    }
+
+    <div class="pan__acciones">
+      <button type="button" class="oc-btn oc-btn--fantasma" (click)="pedirDescarte()">
+        Descartar
+      </button>
+      <button
+        type="button"
+        class="oc-btn oc-btn--primario pan__guardar"
+        [disabled]="guardando()"
+        (click)="guardar()"
+      >
+        {{ guardando() ? 'Guardando…' : 'Guardar evolución' }}
+      </button>
+    </div>
+  }
+
+  @if (confirmar(); as c) {
+    <div class="pan__velo">
+      <div
+        class="pan__dialogo"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="exp-conf-titulo"
+        aria-describedby="exp-conf-texto"
+      >
+        <h3 id="exp-conf-titulo">
+          {{ c === 'salir' ? '¿Salir sin guardar?' : '¿Descartar el borrador?' }}
+        </h3>
+        <p id="exp-conf-texto">
+          @if (c === 'salir') {
+            Todavía no se pudo guardar el borrador de esta evolución. Si salís ahora, se pierde lo
+            último que escribiste.
+          } @else {
+            Se borra el texto de esta evolución. No se puede recuperar.
+          }
+        </p>
+        <button
+          type="button"
+          id="confirmar-seguir"
+          class="oc-btn oc-btn--primario"
+          (click)="seguirEditando()"
+        >
+          Seguir editando
+        </button>
+        <button type="button" class="oc-btn oc-btn--peligro" (click)="descartar()">
+          Descartar el borrador
+        </button>
+      </div>
+    </div>
+  }
+</section>

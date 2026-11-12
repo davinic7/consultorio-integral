@@ -224,17 +224,51 @@ export interface Planilla {
   }[];
 }
 
-/** Nota de sesión (el texto llega ya descifrado). */
+/** Escrita con el teclado o dictada (transcripta y revisada antes de guardarla). */
+export type OrigenNota = 'escrita' | 'dictada';
+
+/** Evolución del expediente (nota de sesión). El texto llega ya descifrado. */
 export interface Nota {
   id: string;
   texto: string;
   compartida: boolean;
+  origen: OrigenNota;
   /** La escribí yo. */
   propia: boolean;
   profesional: { id: string; nombre: string; apellido: string; disciplina: string };
-  turno: { id: string; inicio: string } | null;
+  turno: { id: string; inicio: string; sala: string | null } | null;
   creadaEn: string;
   actualizadaEn: string;
+  /** Última vez que cambió el texto (cambiar quién la ve no cuenta). */
+  editadaEn: string | null;
+}
+
+/** Una sesión mía con el paciente, para vincular la evolución. */
+export interface SesionNota {
+  id: string;
+  /** AAAA-MM-DD y HH:MM, en la zona del centro. */
+  fecha: string;
+  hora: string;
+  inicio: string;
+  estadoAsistencia: EstadoTurno;
+  sala: { id: string; nombre: string } | null;
+  /** Ya tiene una evolución mía. */
+  conNota: boolean;
+}
+
+export interface SesionesNota {
+  /** Hoy en la zona del centro (AAAA-MM-DD). */
+  hoy: string;
+  turnos: SesionNota[];
+}
+
+/** Evolución sin guardar. Vive en el servidor, cifrada, y la ve solo su autor. */
+export interface BorradorNota {
+  texto: string;
+  compartida: boolean;
+  origen: OrigenNota;
+  turnoId: string | null;
+  actualizadoEn: string;
 }
 
 // ───────── Cobros y liquidación ─────────
