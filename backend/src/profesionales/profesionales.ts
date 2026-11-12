@@ -118,7 +118,10 @@ export class ProfesionalesService {
     return vista(p, quien);
   }
 
-  /** El usuario a vincular tiene que ser miembro activo del centro con rol profesional. */
+  /**
+   * El usuario a vincular tiene que ser miembro activo del centro con rol profesional
+   * o administración (un profesional que trabaja solo administra su propio espacio).
+   */
   private async validarUsuario(centroId: string, usuarioId: string) {
     const miembro = await this.prisma
       .paraCentro(centroId)
@@ -127,9 +130,9 @@ export class ProfesionalesService {
       throw new BadRequestException(
         'usuarioId: no es miembro activo de este centro',
       );
-    if (miembro.rol !== Rol.profesional) {
+    if (miembro.rol !== Rol.profesional && miembro.rol !== Rol.admin) {
       throw new BadRequestException(
-        'usuarioId: el usuario no tiene rol profesional en el centro',
+        'usuarioId: el usuario tiene que tener rol profesional o administración',
       );
     }
   }

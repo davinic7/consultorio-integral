@@ -197,7 +197,9 @@ export class NotasService {
 
 @ApiTags('notas')
 @ApiBearerAuth()
-@Roles(Rol.profesional)
+// Admin también: un profesional que trabaja solo es admin de su espacio. Igual hace falta
+// una ficha de profesional vinculada y que atienda al paciente (profesionalAsignado).
+@Roles(Rol.profesional, Rol.admin)
 @RequiereModulo(Modulo.pacientes)
 @Controller('pacientes')
 export class NotasDePacienteController {
@@ -227,7 +229,9 @@ export class NotasDePacienteController {
 
 @ApiTags('notas')
 @ApiBearerAuth()
-@Roles(Rol.profesional)
+// Admin también: un profesional que trabaja solo es admin de su espacio. Igual hace falta
+// una ficha de profesional vinculada y que atienda al paciente (profesionalAsignado).
+@Roles(Rol.profesional, Rol.admin)
 @RequiereModulo(Modulo.pacientes)
 @Controller('notas')
 export class NotasController {

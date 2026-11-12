@@ -403,6 +403,8 @@ export class PlataformaApi {
     slug: string;
     plan: string;
     admin: { email: string; nombre: string; password?: string };
+    /** El administrador también atiende: se crea su ficha de profesional. */
+    atiende?: { nombre: string; apellido: string; disciplina: string; matricula?: string };
   }) {
     return firstValueFrom(this.http.post<{ id: string }>(`${API}/centros`, datos));
   }

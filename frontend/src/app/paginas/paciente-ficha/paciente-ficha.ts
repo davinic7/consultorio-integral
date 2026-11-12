@@ -85,6 +85,11 @@ export class PacienteFicha implements OnInit {
     tieneModulo(this.auth.sesion(), 'obras_sociales'),
   );
   protected readonly esProfesional = computed(() => this.auth.sesion()?.rol === 'profesional');
+  /** Escribe notas: un profesional, o un admin que también atiende (trabaja solo). */
+  protected readonly escribeNotas = computed(() => {
+    const s = this.auth.sesion();
+    return s?.rol === 'profesional' || (s?.rol === 'admin' && !!s.atiende);
+  });
   protected readonly paciente = signal<Paciente | null>(null);
   protected readonly profesionales = signal<Profesional[]>([]);
   protected readonly asignados = signal<Set<string>>(new Set());
@@ -102,7 +107,7 @@ export class PacienteFicha implements OnInit {
       { id: 'sesiones', texto: 'Sesiones' },
     ];
     if (this.conCobros()) p.push({ id: 'pagos', texto: 'Pagos' });
-    if (this.esProfesional()) p.push({ id: 'notas', texto: 'Notas' });
+    if (this.escribeNotas()) p.push({ id: 'notas', texto: 'Notas' });
     p.push({ id: 'datos', texto: this.puedeEditar() ? 'Editar datos' : 'Datos' });
     return p;
   });

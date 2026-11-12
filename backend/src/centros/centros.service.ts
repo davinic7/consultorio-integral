@@ -26,6 +26,18 @@ export const crearCentroSchema = z.object({
     /** Obligatoria si el email todavía no tiene cuenta. */
     password: passwordNueva.optional(),
   }),
+  /**
+   * El administrador también atiende (profesional que trabaja solo): se le crea su
+   * ficha de profesional vinculada, con el 100 % de lo facturado.
+   */
+  atiende: z
+    .object({
+      nombre: z.string().trim().min(1).max(80),
+      apellido: z.string().trim().min(1).max(80),
+      disciplina: z.string().trim().min(1).max(80),
+      matricula: z.string().trim().max(40).optional(),
+    })
+    .optional(),
 });
 export type CrearCentroDto = z.infer<typeof crearCentroSchema>;
 
@@ -78,11 +90,21 @@ export class CentrosService {
             },
           });
         }
-        // Única escritura directa en un modelo de centro: es el centro recién creado en
+        // Únicas escrituras directas en modelos de centro: es el centro recién creado en
         // esta misma transacción (el cliente de centro no se puede usar dentro de una).
         await tx.miembro.create({
           data: { centroId: centro.id, usuarioId: admin.id, rol: Rol.admin },
         });
+        if (dto.atiende) {
+          await tx.profesional.create({
+            data: {
+              centroId: centro.id,
+              usuarioId: admin.id,
+              ...dto.atiende,
+              porcentajeLiquidacion: 100,
+            },
+          });
+        }
         return {
           id: centro.id,
           nombre: centro.nombre,

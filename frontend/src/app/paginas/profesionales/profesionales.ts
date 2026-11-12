@@ -23,7 +23,7 @@ export class Profesionales implements OnInit {
   protected readonly editando = signal<Profesional | null>(null);
   protected readonly error = signal<string | null>(null);
   protected readonly guardando = signal(false);
-  /** Usuarios del centro con rol profesional, para vincular su cuenta. */
+  /** Usuarios del centro con rol profesional o administración, para vincular su cuenta. */
   protected readonly cuentas = signal<Miembro[]>([]);
 
   protected readonly form = inject(NonNullableFormBuilder).group({
@@ -43,7 +43,7 @@ export class Profesionales implements OnInit {
   private async cargarCuentas(): Promise<void> {
     try {
       const miembros = await this.usuariosApi.listar();
-      this.cuentas.set(miembros.filter((m) => m.rol === 'profesional' && m.activo));
+      this.cuentas.set(miembros.filter((m) => (m.rol === 'profesional' || m.rol === 'admin') && m.activo));
     } catch {
       this.cuentas.set([]);
     }

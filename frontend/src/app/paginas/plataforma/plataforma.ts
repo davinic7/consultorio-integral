@@ -163,6 +163,30 @@ interface PlanEditable {
               <input type="password" formControlName="password" autocomplete="new-password" />
             </label>
           </div>
+          <label class="oc-check">
+            <input type="checkbox" formControlName="atiende" />
+            El administrador también atiende (profesional que trabaja solo, sin recepción)
+          </label>
+          @if (formCentro.controls.atiende.value) {
+            <div class="grilla">
+              <label class="oc-campo">
+                Nombre del profesional
+                <input formControlName="profNombre" />
+              </label>
+              <label class="oc-campo">
+                Apellido
+                <input formControlName="apellido" />
+              </label>
+              <label class="oc-campo">
+                Disciplina
+                <input formControlName="disciplina" placeholder="Psicología" />
+              </label>
+              <label class="oc-campo">
+                Matrícula (opcional)
+                <input formControlName="matricula" />
+              </label>
+            </div>
+          }
           <div>
             <button type="submit" class="oc-btn oc-btn--primario" [disabled]="ocupado()">
               Crear centro
@@ -280,6 +304,11 @@ export class Plataforma implements OnInit {
     email: ['', [Validators.required, Validators.email]],
     adminNombre: ['', Validators.required],
     password: [''],
+    atiende: [false],
+    profNombre: [''],
+    apellido: [''],
+    disciplina: [''],
+    matricula: [''],
   });
 
   protected readonly formPlan = this.fb.group({
@@ -331,6 +360,10 @@ export class Plataforma implements OnInit {
       return;
     }
     const v = this.formCentro.getRawValue();
+    if (v.atiende && (!v.profNombre.trim() || !v.apellido.trim() || !v.disciplina.trim())) {
+      this.error.set('Si el administrador atiende, completá su nombre, apellido y disciplina.');
+      return;
+    }
     await this.hacer(
       () =>
         this.api.crearCentro({
@@ -342,6 +375,16 @@ export class Plataforma implements OnInit {
             nombre: v.adminNombre.trim(),
             ...(v.password ? { password: v.password } : {}),
           },
+          ...(v.atiende
+            ? {
+                atiende: {
+                  nombre: v.profNombre.trim(),
+                  apellido: v.apellido.trim(),
+                  disciplina: v.disciplina.trim(),
+                  ...(v.matricula.trim() ? { matricula: v.matricula.trim() } : {}),
+                },
+              }
+            : {}),
         }),
       `Centro ${v.nombre} creado.`,
     );

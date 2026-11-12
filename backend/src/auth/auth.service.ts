@@ -60,6 +60,8 @@ export interface RespuestaSesion {
     modulos: Modulo[];
   } | null;
   rol: Rol | null;
+  /** Tiene una ficha de profesional activa en el centro (atiende pacientes). */
+  atiende: boolean;
   /** Centros a los que puede entrar. */
   centros: CentroDeUsuario[];
 }
@@ -190,6 +192,7 @@ export class AuthService {
       usuario: this.datosUsuario(usuario),
       centro: miembro ? this.datosCentro(miembro.centro) : null,
       rol: miembro?.rol ?? null,
+      atiende: await this.atiende(usuario.id, miembro?.centroId ?? null),
       centros: miembros.map((m) => this.centroDeUsuario(m)),
     };
   }
@@ -246,9 +249,22 @@ export class AuthService {
       usuario: this.datosUsuario(usuario),
       centro: miembro ? this.datosCentro(miembro.centro) : null,
       rol: miembro?.rol ?? null,
+      atiende: await this.atiende(usuario.id, miembro?.centroId ?? null),
       centros: miembros.map((m) => this.centroDeUsuario(m)),
     };
     return { respuesta, sesionId: sesion.id };
+  }
+
+  private async atiende(
+    usuarioId: string,
+    centroId: string | null,
+  ): Promise<boolean> {
+    if (!centroId) return false;
+    const yo = await this.prisma.paraCentro(centroId).profesional.findFirst({
+      where: { usuarioId, activo: true },
+      select: { id: true },
+    });
+    return yo !== null;
   }
 
   private datosUsuario(u: Usuario) {

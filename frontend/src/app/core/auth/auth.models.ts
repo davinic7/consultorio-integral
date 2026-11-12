@@ -39,6 +39,8 @@ export interface DatosSesion {
   usuario: UsuarioResumen;
   centro: CentroResumen | null;
   rol: Rol | null;
+  /** Tiene ficha de profesional en el centro (atiende pacientes y escribe notas). */
+  atiende?: boolean;
   centros: CentroDeUsuario[];
 }
 
