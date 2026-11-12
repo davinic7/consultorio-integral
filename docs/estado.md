@@ -51,12 +51,20 @@ Los 10 pasos de [prototipo.md](prototipo.md) están hechos (versión 1.0).
 - **Sesión de la web en cookie httpOnly**: el refresh token ya no queda al alcance del JavaScript de la página (ver [decisiones.md](decisiones.md)). La app móvil sigue recibiéndolo en el cuerpo. Quien tenía sesión abierta pasa a la cookie sin tener que volver a entrar.
 - **Arranque en Render**: si falla el superadmin o los datos demo, solo avisa en el log y la API arranca igual.
 
+## Decisiones de producto del 12/11 (por etapas)
+
+- **Etapa 0, reglas y telemetría**: [AGENTS.md](../AGENTS.md) en la raíz con las reglas del proyecto; sin `@nestjs/mau` ni telemetría de Prisma o Angular CLI.
+- **Etapa 1, planes**: Individual y Centro (Básico, Intermedio, Full), cada uno módulos + límites de profesionales, salas y personas. Módulos nuevos: notas, salas, dictado y ARCA por profesional. El seed solo crea los planes que faltan (después los maneja el superadmin) y pasó los centros de los planes 1.0 a los nuevos.
+- **Etapa 2, acuerdos de alquiler**: reemplazan al porcentaje fijo. Suma de componentes (fijo, porcentaje, por sesión, por hora de sala, N sesiones) con vigencia por mes, y quién cobra. La liquidación muestra el alquiler y el saldo, y guarda su cálculo al cerrar. Pantalla en Profesionales → Acuerdo.
+- **Etapa 3, faltazos**: regla de cada profesional (Profesionales → Faltazos), cobro pendiente solo a particulares, anulable con motivo, en la liquidación y, si se elige, en la factura.
+
 ## Pendientes chicos anotados
 
 - Tipografías: servirlas desde el propio servidor en vez de Google Fonts antes de salir al mercado o de la app móvil (hoy es una excepción autorizada, ver [decisiones.md](decisiones.md) §18).
 
 - ARCA: probar en homologación con un certificado real (seguir [arca-paso-a-paso.md](arca-paso-a-paso.md)) antes de pasar a producción.
-- Planes: el plan Profesional no incluye facturación ARCA; decidir si un profesional independiente la tiene en su plan.
+- **Expediente con dictado** (etapa 4): transcripción en el propio servidor ([decisiones.md](decisiones.md) §19). Falta el diseño de la pantalla (pedido para Claude Design) y elegir el servicio de Render con más memoria.
+- Precios de los planes: hoy en 0, falta la política comercial.
 - Alta de centros por cuenta propia (registro público con plan y cobro del servicio): hoy solo el superadmin crea centros.
 - Obras sociales: leer órdenes y tokens desde fotos (la referencia usaba OCR en el navegador) y planilla de la orden en PDF.
 - Tests de frontend para las pantallas de salas, profesionales, pacientes, agenda, planilla y notas (hoy probadas a mano).

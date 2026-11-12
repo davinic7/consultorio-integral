@@ -147,7 +147,9 @@ Marcá cada caso a medida que lo probás. "Esperado" es lo que tiene que pasar.
 | Ver salas | ✔ | ✔ | ✔ |
 | Crear, editar y dar de baja salas | ✔ | — | — |
 | Ver profesionales | ✔ | ✔ | ✔ |
-| Ver porcentaje de liquidación | ✔ (todos) | — | solo el suyo |
+| Ver acuerdo de alquiler | ✔ (todos) | — | solo el suyo |
+| Regla de faltazo | ✔ (todos) | — | la suya |
+| Anular un faltazo | ✔ | ✔ | los suyos |
 | Crear y editar profesionales | ✔ | — | — |
 | Ver pacientes | todos | todos | solo los asignados |
 | Crear y editar pacientes | ✔ | ✔ | — (ficha en solo lectura) |
@@ -257,7 +259,7 @@ Los datos demo traen el valor de la sesión (particular $ 12.000, OSEP $ 9.500, 
 - [ ] **Para revisar** muestra cuántas sesiones tienen cada problema; tocar uno filtra la tabla.
 - [ ] Ficha → **Saldo**: suma lo que falta cobrar del paciente.
 - [ ] **Panel**: "Cobrado este mes" y lo que falta cobrar.
-- [ ] **Liquidación** (admin): una tarjeta por profesional con sesiones, facturado, retención del centro (100 − porcentaje del profesional) y a liquidar. Con turnos del mes sin marcar, "Generar liquidación" está desactivado y lo explica.
+- [ ] **Liquidación** (admin): una tarjeta por profesional con sesiones, facturado, cada renglón del alquiler según su acuerdo y el saldo ("El centro le paga" o "Le debe al centro"). Con turnos del mes sin marcar, "Generar liquidación" está desactivado y lo explica.
 - [ ] En un mes ya terminado y todo marcado, "Generar liquidación" → "Generada". Cambiar la asistencia de un turno de ese mes → error "La liquidación de ese mes ya está cerrada". "Reabrir" lo vuelve a permitir; "Marcar pagada" la deja cerrada para siempre.
 - [ ] Como profesional vinculado a una ficha: ve solo sus sesiones y su liquidación, sin botones para cobrar ni liquidar. Recepción no ve la pestaña Liquidación.
 
@@ -378,15 +380,22 @@ cd frontend && npx ng test --watch=false
 
 | Suite | Cantidad | Qué cubre |
 | --- | --- | --- |
-| Backend unitarios | 46 | variables de entorno, contraseñas, filtro por centro, búsqueda sin tildes, fechas y zonas horarias, cifrado de notas, reglas de cobro y liquidación, cliente ARCA (firma CMS, ticket, Factura C, QR), fechas a declarar y tokens |
-| Backend e2e | 122 | auth y roles, ABM, agenda (superposición, pedidos simultáneos, semanales), avisos, asistencia (permisos, mes cerrado, registro de cambios), historial, planilla, notas cifradas y quién las ve, obras sociales y sus reglas, cobros (precios, órdenes, pagos, conciliación) y liquidación, planes y módulos, facturación (simulada y contra un ARCA de prueba), presentación a obras sociales, aislamiento entre centros, contra PostgreSQL real |
-| Frontend | 34 | sesión, "Recordarme", renovación de token, login, tema claro/oscuro, fechas, ubicación de turnos en el calendario, cuándo se puede marcar asistencia, colores por disciplina, enlaces de WhatsApp y edad, formato de pesos y meses |
+| Backend unitarios | 62 | variables de entorno, contraseñas, filtro por centro, búsqueda sin tildes, fechas y zonas horarias, cifrado de notas, reglas de cobro y liquidación, acuerdos de alquiler, regla de faltazo, cliente ARCA (firma CMS, ticket, Factura C, QR), fechas a declarar y tokens |
+| Backend e2e | 167 | auth y roles, sesión web en cookie, límites de planes, acuerdos de alquiler, faltazos, ABM, agenda (superposición, pedidos simultáneos, semanales), avisos, asistencia (permisos, mes cerrado, registro de cambios), historial, planilla, notas cifradas y quién las ve, obras sociales y sus reglas, cobros (precios, órdenes, pagos, conciliación) y liquidación, planes y módulos, facturación (simulada y contra un ARCA de prueba), presentación a obras sociales, aislamiento entre centros, contra PostgreSQL real |
+| Frontend | 59 | sesión, "Recordarme", renovación de token, login, tema claro/oscuro, fechas, ubicación de turnos en el calendario, cuándo se puede marcar asistencia, colores por disciplina, enlaces de WhatsApp y edad, formato de pesos y meses |
 
 Los e2e usan la base `centro_integral_test` (`TEST_DATABASE_URL`), que se vacía en cada corrida: nunca tocan los datos de desarrollo.
 
 Lint: `npm run lint` en cada carpeta. En esta PC, Windows (Control de aplicaciones) bloquea el ejecutable de las reglas con tipos del lint del backend; mientras tanto: `npx oxlint --ignore-pattern "src/generated/**" src/ test/`.
 
 ---
+
+### Planes, acuerdos y faltazos (12/11)
+
+- [ ] **Planes** (superadmin, Centros y planes): cada plan muestra módulos y límites. En un centro con plan Individual, "Nuevo profesional" por segunda vez avisa "permite hasta 1 profesional activo", y Salas no aparece en el menú ni en la agenda.
+- [ ] **Acuerdo de alquiler** (admin, Profesionales → Acuerdo): cargar "cuota fija 20.000 + 10 %" desde este mes. En Cobros → Liquidación aparecen los dos renglones y el saldo. Con la liquidación cerrada, cargar un acuerdo desde ese mes responde que ya está cerrada.
+- [ ] **Faltazos** (profesional, Profesionales → Faltazos): activar la regla. Marcar "ausente sin aviso" a un particular → en Cobros aparece un cobro de faltazo. Marcar "ausente con aviso" pregunta si avisó a tiempo. Abrir el faltazo y anularlo con motivo → deja de sumar en la liquidación. A un paciente de obra social nunca se le genera.
+- [ ] **Facturar faltazos**: con un faltazo cobrado, Facturación muestra "+ 1 faltazo sin incluir"; tildando "Incluir los faltazos cobrados" se suma con su propio ítem.
 
 ## 8. Limitaciones conocidas (todavía no hechas)
 

@@ -32,22 +32,29 @@ Los módulos 1 a 4 de abajo describen el comportamiento esperado; parte ya exist
 El objetivo final es un software como servicio para centros de atención y consultorios en general, ofrecido en distintos planes. El prototipo se construye desde el día uno preparado para eso.
 
 - **Multi-centro (multi-tenant):** una sola base de datos con tabla **centros**; todas las tablas de datos llevan `centro_id` y cada consulta filtra por el centro del usuario logueado. Los datos de un centro nunca son visibles para otro.
-- **Funciones por plan:** tablas **planes** (id, nombre, precio\_mensual) y **plan\_modulos** (plan\_id, modulo); cada centro tiene un plan\_id y el sistema habilita o bloquea módulos según ese plan.
+- **Funciones por plan:** tablas **planes** (id, nombre, precio\_mensual, límites) y **plan\_modulos** (plan\_id, modulo); cada centro tiene un plan\_id y el sistema habilita o bloquea módulos según ese plan. Un plan es un conjunto de módulos más límites (máximo de profesionales, salas y personas con acceso; vacío = sin límite). Sumar o cambiar un plan es configuración del superadmin, sin tocar código. Lo que el plan no incluye se oculta en la web y la API lo rechaza.
 - **Usuarios por centro:** cada usuario pertenece a un centro; un superadministrador (DaviNic) gestiona centros y planes.
 
-| Plan | Pensado para | Módulos |
-| --- | --- | --- |
-| Básico | Consultorios chicos | Agenda con salas, asistencia, ficha del paciente |
-| Profesional | Centros medianos | Básico + cobros y liquidación por profesional + reportes |
-| Integral | Centros interdisciplinarios grandes | Profesional + obras sociales y CUD + facturación electrónica ARCA |
+Dos líneas de planes (decididas el 12/11/2026), cada una con tres niveles:
+
+| Plan | Pensado para | Módulos | Límites |
+| --- | --- | --- | --- |
+| Individual Básico | Un profesional que trabaja solo | Agenda, asistencia, pacientes, notas cifradas, cobros a particulares | 1 profesional, sin salas, 2 personas |
+| Individual Intermedio | | Básico + Factura C con ARCA | ídem |
+| Individual Full | | Intermedio + obras sociales y CUD, dictado, reportes propios | ídem |
+| Centro Básico | Centros con varios profesionales | Agenda con salas y asistencia, pacientes, notas, recepción | sin límites |
+| Centro Intermedio | | Básico + cobros, conciliación y liquidación con acuerdos de alquiler | sin límites |
+| Centro Full | | Intermedio + obras sociales, ARCA (del centro o de cada profesional), reportes del centro | sin límites |
+
+Los centros de los planes de la versión 1.0 (Básico, Profesional, Integral) pasaron a Centro Básico, Intermedio y Full; los consultorios de un profesional solo, a Individual Intermedio o Full.
 
 Primer caso a migrar más adelante: el consultorio de la psicóloga, como un centro más.
 
 ## Roles
 
-- **Administrador**: configura centro, salas, profesionales, porcentajes.
+- **Administrador**: configura centro, salas, profesionales y sus acuerdos de alquiler.
 - **Recepción**: gestiona turnos, asistencia, cobros, pacientes.
-- **Profesional**: ve su agenda, marca asistencia, escribe notas de sus pacientes, ve su liquidación.
+- **Profesional**: ve su agenda, marca asistencia, escribe notas de sus pacientes, ve su liquidación y decide su regla de faltazo.
 
 ## Módulo 1 — Agenda de turnos con salas
 
@@ -70,7 +77,9 @@ Primer caso a migrar más adelante: el consultorio de la psicóloga, como un cen
 - Cada turno presente genera un registro de prestación con su financiador: particular, obra social/prepaga o CUD.
 - Registro de pago: monto, fecha, medio de pago, estado (pendiente, cobrado, rechazado).
 - Conciliación: comparar sesiones asistidas contra sesiones facturadas/cobradas y marcar diferencias.
-- Liquidación mensual por profesional según porcentaje configurado.
+- **Acuerdo de alquiler** (centro → profesional), con vigencia desde un mes: un cambio no altera los meses ya liquidados. Lo que el profesional debe es la suma de los componentes que tenga: cuota fija mensual, porcentaje de lo facturado, monto por sesión atendida, monto por hora de sala y el equivalente a N sesiones (al precio particular vigente). "Mixto" es cualquier combinación. El acuerdo dice también quién cobra a los pacientes: el centro (y le liquida lo suyo) o el profesional (que factura aparte).
+- **Liquidación mensual por profesional**: facturado, cada renglón del alquiler y el saldo (si cobra el centro, lo facturado menos el alquiler; si cobra el profesional, lo que le debe al centro). Al cerrarla se guarda el cálculo. Se muestra en el comprobante de liquidación.
+- **Regla de faltazo** (la decide cada profesional; apagada por defecto): faltar sin aviso, o avisar con menos de la tolerancia (24 h por defecto), genera un cobro pendiente por la sesión completa, la mitad o un monto fijo. Solo a pacientes particulares, nunca a una obra social. Recepción o el profesional lo pueden anular con motivo. El faltazo cobrado entra en la liquidación, y el profesional elige si lo factura.
 - Reportes: listado de pacientes por profesional, facturación mensual, estado de pagos.
 
 ## Módulo 4 — Ficha del paciente
@@ -79,21 +88,23 @@ Primer caso a migrar más adelante: el consultorio de la psicóloga, como un cen
 - Financiador y número de afiliado; CUD sí/no con vencimiento.
 - Profesionales que lo atienden.
 - Notas de sesión: privadas del profesional por defecto, con opción de compartir con el equipo.
+- **Expediente con dictado** (por hacer): la pestaña de notas pasa a ser el expediente del paciente (evoluciones por sesión), con dictado por voz que se transcribe a texto. Los profesionales dictan sobre todo desde el celular, así que la transcripción corre en el propio servidor con un modelo abierto: el audio no va a terceros y no se guarda; queda solo el texto, revisado y cifrado como cualquier nota. Más adelante, en la app móvil, reconocimiento del propio teléfono sin conexión.
 - Búsqueda rápida por nombre, DNI o teléfono.
 
 ## Base de datos (PostgreSQL) — tablas iniciales
 
 - **usuarios**: id, nombre, email, password\_hash, rol, activo
-- **profesionales**: id, usuario\_id, disciplina, matricula, porcentaje\_liquidacion
+- **profesionales**: id, usuario\_id, disciplina, matricula, regla de faltazo (activa, tolerancia, modo, monto)
+- **acuerdos\_alquiler**: id, profesional\_id, vigente\_desde, monto\_fijo, porcentaje, monto\_por\_sesion, monto\_por\_hora, sesiones\_equivalentes, cobra\_el\_centro
 - **salas**: id, nombre, descripcion, activa
 - **pacientes**: id, nombre, apellido, dni, fecha\_nacimiento, telefono, email, responsable\_nombre, responsable\_telefono, financiador\_id, nro\_afiliado, tiene\_cud, cud\_vencimiento
 - **financiadores**: id, nombre, tipo (particular, obra\_social, prepaga, cud)
 - **paciente\_profesional**: paciente\_id, profesional\_id
 - **turnos**: id, paciente\_id, profesional\_id, sala\_id, inicio, fin, recurrencia\_id, estado\_asistencia, observaciones
 - **recurrencias**: id, dia\_semana, hora, duracion, fecha\_desde, fecha\_hasta
-- **prestaciones**: id, turno\_id, financiador\_id, monto, facturada (bool), periodo
+- **prestaciones**: id, turno\_id, tipo (sesión o faltazo), financiador\_id, monto, facturada (bool), periodo, anulada (fecha, quién, motivo)
 - **pagos**: id, prestacion\_id, monto, fecha, medio, estado
-- **liquidaciones**: id, profesional\_id, periodo, total\_bruto, porcentaje, total\_liquidado, estado
+- **liquidaciones**: id, profesional\_id, periodo, total\_bruto, alquiler, detalle\_alquiler, cobra\_el\_centro, total\_liquidado (saldo), estado
 - **notas\_sesion**: id, turno\_id, paciente\_id, profesional\_id, texto, compartida (bool), creada\_en
 
 ## Seguridad
@@ -101,6 +112,7 @@ Primer caso a migrar más adelante: el consultorio de la psicóloga, como un cen
 - Login con contraseñas hasheadas y sesiones seguras.
 - Permisos por rol; las notas clínicas solo las ve su autor salvo que se compartan.
 - Backups automáticos de la base de datos.
+- Reglas del proyecto para quien programe (personas o IA) en [AGENTS.md](../AGENTS.md): todo filtrado por `centro_id`, nada de datos de pacientes en los logs, secretos solo en `.env`, y ningún servicio externo que reciba datos sin autorización (telemetría de las herramientas apagada).
 
 ## Orden de desarrollo sugerido
 
@@ -114,3 +126,5 @@ Primer caso a migrar más adelante: el consultorio de la psicóloga, como un cen
 8. Conciliación de asistencia y liquidación por porcentaje
 9. Planes y habilitación de módulos
 10. Portar ARCA (Factura C) y OSEP desde `referencia-php/`
+
+Después de la 1.0 (decisiones del 12/11/2026): planes Individual y Centro con límites, acuerdos de alquiler, regla de faltazo, sesión web en cookie httpOnly y, por hacer, el expediente con dictado.
