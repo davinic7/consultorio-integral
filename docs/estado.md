@@ -41,9 +41,12 @@ Obras sociales, prepagas y CUD por centro con sus reglas (código de prestación
 
 Los 10 pasos de [prototipo.md](prototipo.md) están hechos (versión 1.0).
 
+## Después de la 1.0
+
+- **Usuarios del centro** (`/usuarios`, solo administración): alta con rol y contraseña inicial (vacía si el email ya tiene cuenta en otro centro), cambio de rol, baja y reactivación. El admin no puede cambiarse el rol ni darse de baja a sí mismo. 6 tests de frontend nuevos.
+
 ## Pendientes chicos anotados
 
-- Pantalla para administrar usuarios del centro (hoy solo por API).
 - ARCA: probar en homologación con un certificado real del centro antes de pasar a producción. Decidir si cada profesional factura con su propio CUIT (hoy factura el centro).
 - Obras sociales: leer órdenes y tokens desde fotos (la referencia usaba OCR en el navegador) y planilla de la orden en PDF.
 - Módulo "reportes" del plan: todavía no tiene pantallas propias.

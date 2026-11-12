@@ -81,6 +81,7 @@ const MENU: ItemMenu[] = [
     abajo: false,
     modulo: 'facturacion_arca',
   },
+  { ruta: '/usuarios', texto: 'Usuarios', icono: 'usuarios', roles: ['admin'], abajo: false },
 ];
 
 /** Superadministrador sin centro elegido. */

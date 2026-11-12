@@ -118,6 +118,12 @@ export const routes: Routes = [
           import('./paginas/financiadores/financiadores').then((m) => m.Financiadores),
       },
       {
+        path: 'usuarios',
+        canActivate: [rolGuard('admin')],
+        title: 'Usuarios · Centro Integral',
+        loadComponent: () => import('./paginas/usuarios/usuarios').then((m) => m.Usuarios),
+      },
+      {
         path: 'salas',
         canActivate: [conCentro],
         title: 'Salas · Centro Integral',

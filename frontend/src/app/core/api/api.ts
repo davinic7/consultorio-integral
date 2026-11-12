@@ -31,6 +31,7 @@ import type {
   DatosPaciente,
   DatosRecurrencia,
   DatosTurno,
+  DatosMiembro,
   Miembro,
   Ocupacion,
   Pagina,
@@ -50,6 +51,13 @@ export class UsuariosApi {
   /** Personas del centro (solo admin). */
   listar() {
     return firstValueFrom(this.http.get<Miembro[]>(`${API}/usuarios`));
+  }
+  /** Suma una persona al centro; la contraseña solo hace falta si el email no tiene cuenta. */
+  crear(datos: DatosMiembro) {
+    return firstValueFrom(this.http.post<Miembro>(`${API}/usuarios`, datos));
+  }
+  actualizar(id: string, datos: Partial<Pick<Miembro, 'rol' | 'activo'>>) {
+    return firstValueFrom(this.http.patch<Miembro>(`${API}/usuarios/${id}`, datos));
   }
 }
 

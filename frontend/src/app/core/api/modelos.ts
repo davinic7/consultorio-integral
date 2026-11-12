@@ -14,6 +14,15 @@ export interface Miembro {
   usuario: { id: string; email: string; nombre: string; activo: boolean };
 }
 
+/** Alta de una persona en el centro. */
+export interface DatosMiembro {
+  email: string;
+  nombre: string;
+  rol: Miembro['rol'];
+  /** Obligatoria si el email todavía no tiene cuenta; se ignora si ya existe. */
+  password?: string;
+}
+
 export interface Sala {
   id: string;
   nombre: string;
