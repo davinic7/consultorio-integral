@@ -41,15 +41,21 @@ Obras sociales, prepagas y CUD por centro con sus reglas (código de prestación
 
 Los 10 pasos de [prototipo.md](prototipo.md) están hechos (versión 1.0).
 
-## Después de la 1.0
+## Después de la 1.0 (12 de noviembre de 2026)
 
-- **Usuarios del centro** (`/usuarios`, solo administración): alta con rol y contraseña inicial (vacía si el email ya tiene cuenta en otro centro), cambio de rol, baja y reactivación. El admin no puede cambiarse el rol ni darse de baja a sí mismo. 6 tests de frontend nuevos.
+- **Usuarios del centro** (`/usuarios`, solo administración): alta con rol y contraseña inicial (vacía si el email ya tiene cuenta en otro centro), cambio de rol, baja y reactivación. El admin no puede cambiarse el rol ni darse de baja a sí mismo.
+- **Profesional que trabaja solo**: un admin puede tener ficha de profesional ("también atiende"): agenda propia, liquidación y notas de sesión. La sesión trae `atiende`. El superadmin crea el consultorio unipersonal en un paso ("el administrador también atiende").
+- **Comprobante de liquidación** (`/cobros/liquidacion/:profesionalId?mes=`): sesiones del mes, totales, retención y firmas; imprimir o PDF y resumen por WhatsApp.
+- **ARCA por profesional**: el centro elige si factura él o cada profesional con su CUIT y su certificado (`config_fiscal` por emisor, migración `emisor_por_profesional`). El profesional carga sus datos y emite lo suyo. Guía: [arca-paso-a-paso.md](arca-paso-a-paso.md).
+- **Reportes** (`/reportes`, módulo reportes): asistencia, facturado y cobrado por mes, profesional y cobertura; pacientes atendidos y nuevos.
+- **Arranque en Render**: si falla el superadmin o los datos demo, solo avisa en el log y la API arranca igual.
 
 ## Pendientes chicos anotados
 
-- ARCA: probar en homologación con un certificado real del centro antes de pasar a producción. Decidir si cada profesional factura con su propio CUIT (hoy factura el centro).
+- ARCA: probar en homologación con un certificado real (seguir [arca-paso-a-paso.md](arca-paso-a-paso.md)) antes de pasar a producción.
+- Planes: el plan Profesional no incluye facturación ARCA; decidir si un profesional independiente la tiene en su plan.
+- Alta de centros por cuenta propia (registro público con plan y cobro del servicio): hoy solo el superadmin crea centros.
 - Obras sociales: leer órdenes y tokens desde fotos (la referencia usaba OCR en el navegador) y planilla de la orden en PDF.
-- Módulo "reportes" del plan: todavía no tiene pantallas propias.
 - Refresh token de la web en cookie httpOnly antes de producción.
 - Tests de frontend para las pantallas de salas, profesionales, pacientes, agenda, planilla y notas (hoy probadas a mano).
 - Lint del backend: Windows (Control de aplicaciones) bloquea `tsgolint.exe`, el ejecutable de las reglas con tipos. Se corre `oxlint` sin `--type-aware` hasta resolverlo.
@@ -57,8 +63,18 @@ Los 10 pasos de [prototipo.md](prototipo.md) están hechos (versión 1.0).
 - Agenda: arrastrar y soltar turnos para moverlos (hoy se mueven desde el panel) y horario visible configurable por centro (hoy 07:00 a 22:00).
 - Avisos: hoy se consultan cada minuto; más adelante, notificaciones push en la app móvil.
 - Cobros: un faltazo sin aviso de un particular no genera cobro (en la referencia PHP sí se cobraba); decidir si se agrega como regla por centro.
-- Cobros: comprobante de liquidación para imprimir o mandar al profesional.
-- Arranque en Render: si falla un paso opcional (superadmin o datos demo, por ejemplo por una contraseña corta) el contenedor no arranca; evaluar que esos pasos solo avisen en el log.
+
+## Desarrollo sin PostgreSQL instalado
+
+En una PC sin PostgreSQL se puede usar el Postgres liviano de Prisma. Tiene **una sola base por servidor**, así que desarrollo y tests van en servidores distintos:
+
+```bash
+cd backend
+npx prisma dev --name centro --detach        # desarrollo
+npx prisma dev --name centro-test --detach   # tests e2e
+```
+
+Cada uno imprime su URL `postgres://…`: la primera va en `DATABASE_URL` y la segunda en `TEST_DATABASE_URL` del `.env`. No admite consultas en paralelo: si dos pedidos llegan juntos, alguno puede responder 500. Pasa solo con este servidor; con PostgreSQL de verdad, no.
 
 ## Rediseño Órbita Cian
 
