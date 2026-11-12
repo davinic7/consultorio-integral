@@ -12,6 +12,10 @@ export const NOMBRE_MODULO: Record<Modulo, string> = {
   reportes: 'Reportes',
   obras_sociales: 'Obras sociales',
   facturacion_arca: 'Facturación electrónica',
+  notas: 'Notas de sesión',
+  salas: 'Salas',
+  dictado: 'Dictado',
+  arca_por_profesional: 'ARCA por profesional',
 };
 export const MODULOS = Object.keys(NOMBRE_MODULO) as Modulo[];
 

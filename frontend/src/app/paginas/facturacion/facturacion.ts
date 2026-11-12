@@ -11,6 +11,7 @@ import type {
   PendienteFactura,
 } from '../../core/api/modelos';
 import { AuthService } from '../../core/auth/auth.service';
+import { tieneModulo } from '../../core/auth/modulos';
 import { nombreMes, plata, sumarMes } from '../../core/cobros';
 import { enlaceWhatsApp } from '../../core/contacto';
 import { ahoraEn } from '../../core/fechas';
@@ -112,6 +113,10 @@ export class Facturacion {
   protected readonly emisorId = signal<string | null>(null);
   /** El profesional entró pero en el centro factura el centro. */
   protected readonly sinAcceso = signal(false);
+  /** El plan permite que cada profesional facture con su CUIT. */
+  protected readonly porProfesional = computed(() =>
+    tieneModulo(this.auth.sesion(), 'arca_por_profesional'),
+  );
   protected readonly cadaProfesional = computed(
     () => (this.centro() ?? this.config())?.facturaCadaProfesional ?? false,
   );

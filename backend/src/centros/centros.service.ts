@@ -17,7 +17,7 @@ export const crearCentroSchema = z.object({
     .toLowerCase()
     .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, 'solo minúsculas, números y guiones')
     .max(60),
-  /** Código del plan: basico | profesional | integral. */
+  /** Código del plan, por ejemplo centro-basico o individual-intermedio. */
   plan: z.string().trim().min(1).max(30),
   /** Primer administrador del centro. */
   admin: z.object({

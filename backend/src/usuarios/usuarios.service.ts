@@ -8,6 +8,7 @@ import {
 import { Prisma } from '../generated/prisma/client.js';
 import { hashPassword } from '../auth/password.js';
 import { sinCentro } from '../prisma/centro.js';
+import { LimitesPlan } from '../planes/planes.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import type {
   ActualizarMiembroDto,
@@ -25,7 +26,10 @@ const SELECT_MIEMBRO = {
 /** Usuarios del centro (miembros). Todo pasa por el cliente del centro. */
 @Injectable()
 export class UsuariosService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly limites: LimitesPlan,
+  ) {}
 
   listar(centroId: string) {
     return this.prisma.paraCentro(centroId).miembro.findMany({
@@ -58,6 +62,7 @@ export class UsuariosService {
           },
         });
       }
+      await this.limites.exigirLugar(centroId, 'usuarios', tx);
       try {
         return await tx.miembro.create({
           data: sinCentro<Prisma.MiembroUncheckedCreateInput>({
@@ -94,6 +99,8 @@ export class UsuariosService {
         'No podés cambiar tu propio rol ni desactivarte',
       );
     }
+    if (dto.activo === true && !miembro.activo)
+      await this.limites.exigirLugar(centroId, 'usuarios');
     return db.miembro.update({
       where: { id: miembroId },
       data: { rol: dto.rol, activo: dto.activo },

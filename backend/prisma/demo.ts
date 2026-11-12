@@ -105,8 +105,8 @@ async function precio(
 }
 
 try {
-  const demo = await centro('demo', 'Centro Demo', 'integral');
-  const norte = await centro('demo-norte', 'Centro Demo Norte', 'basico');
+  const demo = await centro('demo', 'Centro Demo', 'centro-full');
+  const norte = await centro('demo-norte', 'Centro Demo Norte', 'centro-basico');
 
   await usuario('superadmin@demo.local', 'Superadmin Demo', true);
   const admin = await usuario('admin@demo.local', 'Ana Admin');

@@ -19,6 +19,7 @@ import type {
 import { ESTADOS_MARCABLES, NOMBRE_ESTADO, sePuedeMarcar } from '../../core/asistencia';
 import { colorDisciplina, type ColorDisciplina } from '../../core/disciplina';
 import { AuthService } from '../../core/auth/auth.service';
+import { tieneModulo } from '../../core/auth/modulos';
 import {
   ahoraEn,
   diaSemana,
@@ -88,6 +89,8 @@ export class Agenda implements OnInit {
   private readonly zona = computed(() => this.auth.sesion()?.centro?.zonaHoraria);
   protected readonly rol = computed(() => this.auth.sesion()?.rol ?? null);
   protected readonly esProfesional = computed(() => this.rol() === 'profesional');
+  /** El plan incluye salas (un consultorio individual no las usa). */
+  protected readonly conSalas = computed(() => tieneModulo(this.auth.sesion(), 'salas'));
 
   protected readonly vista = signal<Vista>('semana');
   protected readonly fecha = signal(hoyEn(this.zona()));

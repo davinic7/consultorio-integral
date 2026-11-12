@@ -17,6 +17,27 @@ interface PlanEditable {
   nombre: string;
   precioMensual: number;
   modulos: Set<Modulo>;
+  /** Texto vacío = sin límite. */
+  maxProfesionales: string;
+  maxSalas: string;
+  maxUsuarios: string;
+}
+
+/** Campos de límite del plan, en el orden en que se muestran. */
+const LIMITES = [
+  { campo: 'maxProfesionales', texto: 'Máx. profesionales' },
+  { campo: 'maxSalas', texto: 'Máx. salas' },
+  { campo: 'maxUsuarios', texto: 'Máx. personas con acceso' },
+] as const;
+
+/** '' → null (sin límite); si no, el número entero. */
+function limite(v: string): number | null {
+  const t = String(v ?? '').trim();
+  return t === '' ? null : Math.max(0, Math.trunc(Number(t)));
+}
+
+function textoLimite(n: number | null): string {
+  return n === null ? 'sin límite' : String(n);
 }
 
 /**
@@ -207,6 +228,11 @@ interface PlanEditable {
                   {{ e.plan.centros === 1 ? 'centro' : 'centros' }} ·
                   {{ plata(e.plan.precioMensual) }} por mes{{ e.plan.activo ? '' : ' · inactivo' }}
                 </div>
+                <div class="oc-suave">
+                  Profesionales: {{ textoLimite(e.plan.maxProfesionales) }} · Salas:
+                  {{ textoLimite(e.plan.maxSalas) }} · Personas:
+                  {{ textoLimite(e.plan.maxUsuarios) }}
+                </div>
               </div>
               <div class="grilla">
                 <label class="oc-campo">
@@ -223,6 +249,19 @@ interface PlanEditable {
                     [name]="'p' + e.plan.id"
                   />
                 </label>
+                @for (l of limites; track l.campo) {
+                  <label class="oc-campo">
+                    {{ l.texto }}
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      placeholder="Sin límite"
+                      [(ngModel)]="e[l.campo]"
+                      [name]="l.campo + e.plan.id"
+                    />
+                  </label>
+                }
               </div>
               <fieldset class="modulos">
                 <legend class="oc-suave">Módulos</legend>
@@ -296,11 +335,13 @@ export class Plataforma implements OnInit {
   protected readonly modulos = MODULOS;
   protected readonly nombreModulo = NOMBRE_MODULO;
   protected readonly plata = plata;
+  protected readonly limites = LIMITES;
+  protected readonly textoLimite = textoLimite;
 
   protected readonly formCentro = this.fb.group({
     nombre: ['', [Validators.required, Validators.maxLength(120)]],
     slug: ['', [Validators.required, Validators.pattern(/^[a-z0-9]+(-[a-z0-9]+)*$/)]],
-    plan: ['basico', Validators.required],
+    plan: ['centro-basico', Validators.required],
     email: ['', [Validators.required, Validators.email]],
     adminNombre: ['', Validators.required],
     password: [''],
@@ -333,6 +374,9 @@ export class Plataforma implements OnInit {
           nombre: e.nombre.trim(),
           precioMensual: Number(e.precioMensual),
           modulos: MODULOS.filter((m) => e.modulos.has(m)),
+          maxProfesionales: limite(e.maxProfesionales),
+          maxSalas: limite(e.maxSalas),
+          maxUsuarios: limite(e.maxUsuarios),
         }),
       `Plan ${e.nombre} guardado. Los centros lo ven al renovar su sesión.`,
     );
@@ -437,6 +481,9 @@ export class Plataforma implements OnInit {
           nombre: plan.nombre,
           precioMensual: plan.precioMensual,
           modulos: new Set(plan.modulos),
+          maxProfesionales: plan.maxProfesionales?.toString() ?? '',
+          maxSalas: plan.maxSalas?.toString() ?? '',
+          maxUsuarios: plan.maxUsuarios?.toString() ?? '',
         })),
       );
     } catch (e) {

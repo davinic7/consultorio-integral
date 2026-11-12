@@ -56,7 +56,7 @@ const MENU: ItemMenu[] = [
     roles: TODOS,
     abajo: false,
   },
-  { ruta: '/salas', texto: 'Salas', icono: 'salas', roles: TODOS, abajo: false },
+  { ruta: '/salas', texto: 'Salas', icono: 'salas', roles: TODOS, abajo: false, modulo: 'salas' },
   {
     ruta: '/financiadores',
     texto: 'Obras sociales',

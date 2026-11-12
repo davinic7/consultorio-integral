@@ -35,6 +35,14 @@ enum Modulo {
   reportes
   obras_sociales
   facturacion_arca
+  /// Notas de sesión cifradas.
+  notas
+  /// Salas del centro y su asignación en la agenda.
+  salas
+  /// Dictado de notas por voz.
+  dictado
+  /// Cada profesional factura con su propio CUIT (requiere facturacion_arca).
+  arca_por_profesional
 
   @@map("modulo")
 }
@@ -111,13 +119,18 @@ enum EstadoLiquidacion {
 // ───────────────────────── Globales (sin centro) ─────────────────────────
 
 model Plan {
-  id            String       @id @default(uuid(7)) @db.Uuid
-  codigo        String       @unique @db.VarChar(30)
-  nombre        String       @db.VarChar(80)
-  precioMensual Decimal      @map("precio_mensual") @db.Decimal(12, 2)
-  activo        Boolean      @default(true)
-  modulos       PlanModulo[]
-  centros       Centro[]
+  id               String       @id @default(uuid(7)) @db.Uuid
+  codigo           String       @unique @db.VarChar(30)
+  nombre           String       @db.VarChar(80)
+  precioMensual    Decimal      @map("precio_mensual") @db.Decimal(12, 2)
+  activo           Boolean      @default(true)
+  /// Límites del plan; null = sin límite. Cuentan solo los activos.
+  maxProfesionales Int?         @map("max_profesionales") @db.SmallInt
+  maxSalas         Int?         @map("max_salas") @db.SmallInt
+  /// Personas con acceso al centro (admin, recepción y profesionales).
+  maxUsuarios      Int?         @map("max_usuarios") @db.SmallInt
+  modulos          PlanModulo[]
+  centros          Centro[]
 
   @@map("planes")
 }

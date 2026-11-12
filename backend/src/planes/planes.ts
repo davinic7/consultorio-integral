@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  ForbiddenException,
   Get,
   Global,
   Injectable,
@@ -17,6 +18,7 @@ import { SoloSuperadmin } from '../auth/decoradores.js';
 import { idParam } from '../common/comunes.js';
 import { ApiBodyZod } from '../common/zod.js';
 import { Modulo, Prisma } from '../generated/prisma/client.js';
+import type { ClienteDeCentro } from '../prisma/centro.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
 export const CLAVE_MODULO = 'plan:modulo';
@@ -37,7 +39,75 @@ export const NOMBRE_MODULO: Record<Modulo, string> = {
   reportes: 'Reportes',
   obras_sociales: 'Obras sociales',
   facturacion_arca: 'Facturación electrónica',
+  notas: 'Notas de sesión',
+  salas: 'Salas',
+  dictado: 'Dictado',
+  arca_por_profesional: 'ARCA por profesional',
 };
+
+/** Qué cuenta cada límite del plan (siempre solo lo activo). */
+export type RecursoLimitado = 'profesionales' | 'salas' | 'usuarios';
+
+const TEXTO_RECURSO: Record<RecursoLimitado, [string, string]> = {
+  profesionales: ['profesional activo', 'profesionales activos'],
+  salas: ['sala activa', 'salas activas'],
+  usuarios: ['persona con acceso', 'personas con acceso'],
+};
+
+/** Cliente (o transacción) del centro: lo que hace falta para contar. */
+type Contador = Pick<ClienteDeCentro, 'profesional' | 'sala' | 'miembro'>;
+
+/**
+ * Límites del plan del centro: máximo de profesionales, salas y personas con
+ * acceso. Se controlan al sumar uno o al reactivarlo; bajar de plan no da de baja
+ * a nadie, solo impide sumar más hasta volver a estar dentro del límite.
+ */
+@Injectable()
+export class LimitesPlan {
+  constructor(private readonly prisma: PrismaService) {}
+
+  /** Falla con 403 si sumar uno más del recurso pasaría el límite del plan. */
+  async exigirLugar(
+    centroId: string,
+    recurso: RecursoLimitado,
+    db: Contador = this.prisma.paraCentro(centroId),
+  ): Promise<void> {
+    const centro = await this.prisma.centro.findUnique({
+      where: { id: centroId },
+      select: {
+        plan: {
+          select: {
+            nombre: true,
+            maxProfesionales: true,
+            maxSalas: true,
+            maxUsuarios: true,
+          },
+        },
+      },
+    });
+    const plan = centro?.plan;
+    if (!plan) return;
+    const max = {
+      profesionales: plan.maxProfesionales,
+      salas: plan.maxSalas,
+      usuarios: plan.maxUsuarios,
+    }[recurso];
+    if (max === null) return;
+    const actuales =
+      recurso === 'profesionales'
+        ? await db.profesional.count({ where: { activo: true } })
+        : recurso === 'salas'
+          ? await db.sala.count({ where: { activa: true } })
+          : await db.miembro.count({ where: { activo: true } });
+    if (actuales < max) return;
+    const [uno, varios] = TEXTO_RECURSO[recurso];
+    throw new ForbiddenException(
+      max === 0
+        ? `El plan ${plan.nombre} no incluye ${varios.replace(/ activ[oa]s$/, '')}`
+        : `El plan ${plan.nombre} permite hasta ${max} ${max === 1 ? uno : varios}`,
+    );
+  }
+}
 
 /** Cuánto se recuerdan los módulos de un centro antes de volver a leerlos. */
 const CACHE_MS = 30_000;
@@ -75,7 +145,8 @@ export class ModulosCentro {
 
 // ───────── Planes y centros (superadmin) ─────────
 
-const modulos = z.array(z.enum(Modulo)).max(20);
+const modulos = z.array(z.enum(Modulo)).max(30);
+const limite = z.number().int().min(0).max(9999).nullable().optional();
 
 export const crearPlanSchema = z.object({
   codigo: z
@@ -86,6 +157,10 @@ export const crearPlanSchema = z.object({
   nombre: z.string().trim().min(1).max(80),
   precioMensual: z.number().min(0).max(99_999_999).multipleOf(0.01),
   modulos,
+  /** null o sin enviar: sin límite. */
+  maxProfesionales: limite,
+  maxSalas: limite,
+  maxUsuarios: limite,
 });
 
 export const actualizarPlanSchema = crearPlanSchema
@@ -110,6 +185,9 @@ const SELECT_PLAN = {
   nombre: true,
   precioMensual: true,
   activo: true,
+  maxProfesionales: true,
+  maxSalas: true,
+  maxUsuarios: true,
   modulos: { select: { modulo: true } },
   _count: { select: { centros: true } },
 } satisfies Prisma.PlanSelect;
@@ -121,6 +199,9 @@ function vistaPlan(p: Prisma.PlanGetPayload<{ select: typeof SELECT_PLAN }>) {
     nombre: p.nombre,
     precioMensual: p.precioMensual.toNumber(),
     activo: p.activo,
+    maxProfesionales: p.maxProfesionales,
+    maxSalas: p.maxSalas,
+    maxUsuarios: p.maxUsuarios,
     modulos: Object.values(Modulo).filter((m) =>
       p.modulos.some((x) => x.modulo === m),
     ),
@@ -149,6 +230,9 @@ export class PlanesService {
         codigo: dto.codigo,
         nombre: dto.nombre,
         precioMensual: dto.precioMensual,
+        maxProfesionales: dto.maxProfesionales ?? null,
+        maxSalas: dto.maxSalas ?? null,
+        maxUsuarios: dto.maxUsuarios ?? null,
         modulos: {
           create: [...new Set(dto.modulos)].map((modulo) => ({ modulo })),
         },
@@ -266,7 +350,7 @@ export class CentrosPlanController {
 @Global()
 @Module({
   controllers: [PlanesController, CentrosPlanController],
-  providers: [ModulosCentro, PlanesService],
-  exports: [ModulosCentro],
+  providers: [ModulosCentro, LimitesPlan, PlanesService],
+  exports: [ModulosCentro, LimitesPlan],
 })
 export class PlanesModule {}

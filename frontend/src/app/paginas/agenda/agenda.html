@@ -3,7 +3,16 @@
     <h1>Agenda</h1>
     @if (puedeCrear()) {
       <button type="button" class="oc-btn oc-btn--primario agenda-nuevo" (click)="abrirNuevo()">
-        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <svg
+          aria-hidden="true"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        >
           <path d="M12 5v14M5 12h14" />
         </svg>
         Nuevo turno
@@ -16,30 +25,30 @@
       <button type="button" [attr.aria-pressed]="vista() === 'dia'" (click)="cambiarVista('dia')">
         Día
       </button>
-      <button type="button" [attr.aria-pressed]="vista() === 'semana'" (click)="cambiarVista('semana')">
+      <button
+        type="button"
+        [attr.aria-pressed]="vista() === 'semana'"
+        (click)="cambiarVista('semana')"
+      >
         Semana
       </button>
-      <button type="button" [attr.aria-pressed]="vista() === 'salas'" (click)="cambiarVista('salas')">
-        Salas
-      </button>
+      @if (conSalas()) {
+        <button
+          type="button"
+          [attr.aria-pressed]="vista() === 'salas'"
+          (click)="cambiarVista('salas')"
+        >
+          Salas
+        </button>
+      }
     </div>
 
     <div class="agenda-nav">
-      <button
-        type="button"
-        class="oc-btn oc-btn--chico"
-        (click)="mover(-1)"
-        aria-label="Anterior"
-      >
+      <button type="button" class="oc-btn oc-btn--chico" (click)="mover(-1)" aria-label="Anterior">
         ‹
       </button>
       <button type="button" class="oc-btn oc-btn--chico" (click)="irAHoy()">Hoy</button>
-      <button
-        type="button"
-        class="oc-btn oc-btn--chico"
-        (click)="mover(1)"
-        aria-label="Siguiente"
-      >
+      <button type="button" class="oc-btn oc-btn--chico" (click)="mover(1)" aria-label="Siguiente">
         ›
       </button>
       <input
@@ -65,16 +74,18 @@
             }
           </select>
         }
-        <select
-          [ngModel]="filtroSala()"
-          (ngModelChange)="filtroSala.set($event); filtrar()"
-          aria-label="Filtrar por sala"
-        >
-          <option value="">Todas las salas</option>
-          @for (s of salas(); track s.id) {
-            <option [value]="s.id">{{ s.nombre }}</option>
-          }
-        </select>
+        @if (conSalas()) {
+          <select
+            [ngModel]="filtroSala()"
+            (ngModelChange)="filtroSala.set($event); filtrar()"
+            aria-label="Filtrar por sala"
+          >
+            <option value="">Todas las salas</option>
+            @for (s of salas(); track s.id) {
+              <option [value]="s.id">{{ s.nombre }}</option>
+            }
+          </select>
+        }
       </div>
     }
   </div>
@@ -130,7 +141,11 @@
             [attr.aria-label]="'Agregar turno: ' + col.titulo"
           >
             @if (col.fecha === ahora().fecha && lineaAhora() !== null) {
-              <span class="oc-ahora calendario__ahora" [style.top.px]="lineaAhora()" aria-hidden="true"></span>
+              <span
+                class="oc-ahora calendario__ahora"
+                [style.top.px]="lineaAhora()"
+                aria-hidden="true"
+              ></span>
             }
             @for (b of col.bloques; track $index) {
               @let t = b.item.turno;
@@ -185,9 +200,7 @@
               <dl class="datos">
                 <dt>Cuándo</dt>
                 <dd>
-                  {{ fechaLarga(t.fecha) }}, {{ t.hora }} a {{ t.horaFin }} ({{
-                    t.duracionMin
-                  }}
+                  {{ fechaLarga(t.fecha) }}, {{ t.hora }} a {{ t.horaFin }} ({{ t.duracionMin }}
                   min)
                 </dd>
                 <dt>Profesional</dt>
@@ -253,7 +266,9 @@
 
               @if (puedeGestionar(t)) {
                 <div class="acciones">
-                  <button type="button" class="oc-btn oc-btn--primario" (click)="editar()">Mover o editar</button>
+                  <button type="button" class="oc-btn oc-btn--primario" (click)="editar()">
+                    Mover o editar
+                  </button>
                 </div>
                 <label class="oc-campo">
                   <span>Motivo de cancelación (opcional)</span>
@@ -280,7 +295,9 @@
                   }
                 </div>
                 @if (esProfesional()) {
-                  <p class="oc-suave">Los cambios que hagas se avisan a administración y recepción.</p>
+                  <p class="oc-suave">
+                    Los cambios que hagas se avisan a administración y recepción.
+                  </p>
                 }
               }
             }
@@ -335,15 +352,17 @@
                 </label>
               }
 
-              <label class="oc-campo">
-                <span>Sala</span>
-                <select name="salaId" [(ngModel)]="form.salaId">
-                  <option value="">Sin sala</option>
-                  @for (s of salas(); track s.id) {
-                    <option [value]="s.id">{{ s.nombre }}</option>
-                  }
-                </select>
-              </label>
+              @if (conSalas()) {
+                <label class="oc-campo">
+                  <span>Sala</span>
+                  <select name="salaId" [(ngModel)]="form.salaId">
+                    <option value="">Sin sala</option>
+                    @for (s of salas(); track s.id) {
+                      <option [value]="s.id">{{ s.nombre }}</option>
+                    }
+                  </select>
+                </label>
+              }
 
               <div class="fila-campos">
                 <label class="oc-campo">
@@ -421,8 +440,22 @@
   </div>
 
   @if (puedeCrear()) {
-    <button type="button" class="oc-btn oc-btn--primario agenda-fab" (click)="abrirNuevo()" aria-label="Nuevo turno">
-      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+    <button
+      type="button"
+      class="oc-btn oc-btn--primario agenda-fab"
+      (click)="abrirNuevo()"
+      aria-label="Nuevo turno"
+    >
+      <svg
+        aria-hidden="true"
+        width="22"
+        height="22"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+      >
         <path d="M12 5v14M5 12h14" />
       </svg>
     </button>

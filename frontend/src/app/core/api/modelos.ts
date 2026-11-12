@@ -401,6 +401,10 @@ export interface Plan {
   precioMensual: number;
   activo: boolean;
   modulos: Modulo[];
+  /** Límites del plan; null = sin límite. */
+  maxProfesionales: number | null;
+  maxSalas: number | null;
+  maxUsuarios: number | null;
   /** Centros que lo usan. */
   centros: number;
 }
@@ -535,7 +539,13 @@ export interface Presentacion {
   };
   resumen: { sesiones: number; conOrden: number; conToken: number; presentadas: number };
   pacientes: {
-    paciente: { id: string; nombre: string; apellido: string; dni: string | null; nroAfiliado: string | null };
+    paciente: {
+      id: string;
+      nombre: string;
+      apellido: string;
+      dni: string | null;
+      nroAfiliado: string | null;
+    };
     sesiones: SesionPresentacion[];
   }[];
 }

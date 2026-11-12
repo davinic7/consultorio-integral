@@ -200,7 +200,7 @@ export class NotasService {
 // Admin también: un profesional que trabaja solo es admin de su espacio. Igual hace falta
 // una ficha de profesional vinculada y que atienda al paciente (profesionalAsignado).
 @Roles(Rol.profesional, Rol.admin)
-@RequiereModulo(Modulo.pacientes)
+@RequiereModulo(Modulo.notas)
 @Controller('pacientes')
 export class NotasDePacienteController {
   constructor(private readonly notas: NotasService) {}
@@ -232,7 +232,7 @@ export class NotasDePacienteController {
 // Admin también: un profesional que trabaja solo es admin de su espacio. Igual hace falta
 // una ficha de profesional vinculada y que atienda al paciente (profesionalAsignado).
 @Roles(Rol.profesional, Rol.admin)
-@RequiereModulo(Modulo.pacientes)
+@RequiereModulo(Modulo.notas)
 @Controller('notas')
 export class NotasController {
   constructor(private readonly notas: NotasService) {}

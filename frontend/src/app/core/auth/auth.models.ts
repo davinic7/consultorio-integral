@@ -9,7 +9,11 @@ export type Modulo =
   | 'liquidacion'
   | 'reportes'
   | 'obras_sociales'
-  | 'facturacion_arca';
+  | 'facturacion_arca'
+  | 'notas'
+  | 'salas'
+  | 'dictado'
+  | 'arca_por_profesional';
 
 export interface CentroResumen {
   id: string;

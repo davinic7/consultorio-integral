@@ -42,7 +42,7 @@ import {
   type ConfigFiscal,
 } from '../generated/prisma/client.js';
 import { CifradoService } from '../notas/cifrado.js';
-import { RequiereModulo } from '../planes/planes.js';
+import { ModulosCentro, RequiereModulo } from '../planes/planes.js';
 import { sinCentro, type ClienteDeCentro } from '../prisma/centro.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import {
@@ -130,6 +130,7 @@ export class FacturacionService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly cifrado: CifradoService,
+    private readonly modulos: ModulosCentro,
   ) {}
 
   /** Datos fiscales del emisor (para un profesional, los suyos). */
@@ -183,6 +184,14 @@ export class FacturacionService {
           'facturaCadaProfesional: se elige en los datos del centro',
         );
       }
+      if (
+        facturaCadaProfesional &&
+        !(await this.porProfesionalHabilitado(centroId))
+      ) {
+        throw new ForbiddenException(
+          'Tu plan no incluye la facturación de cada profesional con su CUIT',
+        );
+      }
     }
     const datos = {
       ...resto,
@@ -206,7 +215,10 @@ export class FacturacionService {
           : {}),
       },
     });
-    return this.vistaConfig(c, e.profesionalId ? centro : c);
+    return this.vistaConfig(
+      c,
+      e.profesionalId ? centro : await this.conPlan(centroId, c),
+    );
   }
 
   /** Genera la clave privada (queda cifrada en la base) y devuelve el pedido de certificado. */
@@ -564,7 +576,30 @@ export class FacturacionService {
   // ───────── Internos ─────────
 
   /** Datos fiscales del centro; sin cargar, se crean con los valores por defecto. */
+  /**
+   * Datos fiscales del centro; sin cargar, se crean con los valores por defecto.
+   * Si el plan no incluye ARCA por profesional, factura el centro aunque la opción
+   * haya quedado guardada (por ejemplo, después de bajar de plan).
+   */
   private async configCentro(centroId: string): Promise<ConfigFiscal> {
+    return this.conPlan(centroId, await this.configCentroGuardada(centroId));
+  }
+
+  private async conPlan(
+    centroId: string,
+    c: ConfigFiscal,
+  ): Promise<ConfigFiscal> {
+    if (!c.facturaCadaProfesional) return c;
+    return (await this.porProfesionalHabilitado(centroId))
+      ? c
+      : { ...c, facturaCadaProfesional: false };
+  }
+
+  private async porProfesionalHabilitado(centroId: string): Promise<boolean> {
+    return (await this.modulos.de(centroId)).has(Modulo.arca_por_profesional);
+  }
+
+  private async configCentroGuardada(centroId: string): Promise<ConfigFiscal> {
     const db = this.db(centroId);
     const c = await db.configFiscal.findFirst({
       where: { profesionalId: null },

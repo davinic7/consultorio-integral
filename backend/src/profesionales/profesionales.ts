@@ -24,6 +24,7 @@ import {
 import { ApiBodyZod } from '../common/zod.js';
 import { Prisma, Rol, type Profesional } from '../generated/prisma/client.js';
 import { sinCentro } from '../prisma/centro.js';
+import { LimitesPlan } from '../planes/planes.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
 // ───────── Schemas ─────────
@@ -70,7 +71,10 @@ export interface ProfesionalVista {
 
 @Injectable()
 export class ProfesionalesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly limites: LimitesPlan,
+  ) {}
 
   async listar(
     centroId: string,
@@ -98,6 +102,8 @@ export class ProfesionalesService {
     quien: UsuarioAutenticado,
   ) {
     if (dto.usuarioId) await this.validarUsuario(centroId, dto.usuarioId);
+    // Nace activo: cuenta para el límite del plan.
+    await this.limites.exigirLugar(centroId, 'profesionales');
     const p = await this.prisma.paraCentro(centroId).profesional.create({
       data: sinCentro<Prisma.ProfesionalUncheckedCreateInput>(dto),
     });
@@ -111,6 +117,13 @@ export class ProfesionalesService {
     quien: UsuarioAutenticado,
   ) {
     if (dto.usuarioId) await this.validarUsuario(centroId, dto.usuarioId);
+    if (dto.activo === true) {
+      const actual = await this.prisma
+        .paraCentro(centroId)
+        .profesional.findUnique({ where: { id }, select: { activo: true } });
+      if (actual && !actual.activo)
+        await this.limites.exigirLugar(centroId, 'profesionales');
+    }
     const p = await this.prisma.paraCentro(centroId).profesional.update({
       where: { id },
       data: dto,

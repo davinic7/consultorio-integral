@@ -265,7 +265,7 @@
       }
 
       @case ('datos') {
-        @if (esAdmin()) {
+        @if (esAdmin() && (porProfesional() || cadaProfesional())) {
           <section class="oc-tarjeta seccion">
             <h2>Quién factura</h2>
             <label class="oc-check">

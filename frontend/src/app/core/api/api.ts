@@ -227,7 +227,10 @@ export class NotasApi {
   listar(pacienteId: string) {
     return firstValueFrom(this.http.get<Nota[]>(`${API}/pacientes/${pacienteId}/notas`));
   }
-  crear(pacienteId: string, datos: { texto: string; compartida: boolean; turnoId?: string | null }) {
+  crear(
+    pacienteId: string,
+    datos: { texto: string; compartida: boolean; turnoId?: string | null },
+  ) {
     return firstValueFrom(this.http.post<Nota>(`${API}/pacientes/${pacienteId}/notas`, datos));
   }
   editar(id: string, datos: { texto?: string; compartida?: boolean }) {
@@ -416,12 +419,28 @@ export class PlataformaApi {
   planes() {
     return firstValueFrom(this.http.get<Plan[]>(`${API}/planes`));
   }
-  crearPlan(datos: { codigo: string; nombre: string; precioMensual: number; modulos: Modulo[] }) {
+  crearPlan(datos: {
+    codigo: string;
+    nombre: string;
+    precioMensual: number;
+    modulos: Modulo[];
+    maxProfesionales?: number | null;
+    maxSalas?: number | null;
+    maxUsuarios?: number | null;
+  }) {
     return firstValueFrom(this.http.post<Plan>(`${API}/planes`, datos));
   }
   actualizarPlan(
     id: string,
-    datos: Partial<{ nombre: string; precioMensual: number; modulos: Modulo[]; activo: boolean }>,
+    datos: Partial<{
+      nombre: string;
+      precioMensual: number;
+      modulos: Modulo[];
+      activo: boolean;
+      maxProfesionales: number | null;
+      maxSalas: number | null;
+      maxUsuarios: number | null;
+    }>,
   ) {
     return firstValueFrom(this.http.patch<Plan>(`${API}/planes/${id}`, datos));
   }
@@ -435,7 +454,9 @@ export class FacturacionApi {
   // profesionalId: emisor cuando factura cada profesional (sin él, el centro o uno mismo).
   config(profesionalId?: string) {
     return firstValueFrom(
-      this.http.get<ConfigFiscal>(`${API}/facturacion/config`, { params: params({ profesionalId }) }),
+      this.http.get<ConfigFiscal>(`${API}/facturacion/config`, {
+        params: params({ profesionalId }),
+      }),
     );
   }
   emisores() {
@@ -455,9 +476,13 @@ export class FacturacionApi {
   }
   pedirCertificado(profesionalId?: string) {
     return firstValueFrom(
-      this.http.post<{ csr: string }>(`${API}/facturacion/config/pedido-certificado`, {}, {
-        params: params({ profesionalId }),
-      }),
+      this.http.post<{ csr: string }>(
+        `${API}/facturacion/config/pedido-certificado`,
+        {},
+        {
+          params: params({ profesionalId }),
+        },
+      ),
     );
   }
   guardarCertificado(certificado: string, profesionalId?: string) {
@@ -471,9 +496,13 @@ export class FacturacionApi {
   }
   probar(profesionalId?: string) {
     return firstValueFrom(
-      this.http.post<{ ok: boolean; mensaje: string }>(`${API}/facturacion/probar`, {}, {
-        params: params({ profesionalId }),
-      }),
+      this.http.post<{ ok: boolean; mensaje: string }>(
+        `${API}/facturacion/probar`,
+        {},
+        {
+          params: params({ profesionalId }),
+        },
+      ),
     );
   }
   pendientes(mes: string, profesionalId?: string) {
@@ -488,7 +517,11 @@ export class FacturacionApi {
       this.http.post<{
         emitidas: number;
         resultados: { pacienteId: string; ok: boolean; facturaId?: string; error?: string }[];
-      }>(`${API}/facturacion/emitir`, { mes, pacienteIds, ...(profesionalId ? { profesionalId } : {}) }),
+      }>(`${API}/facturacion/emitir`, {
+        mes,
+        pacienteIds,
+        ...(profesionalId ? { profesionalId } : {}),
+      }),
     );
   }
   facturas(mes: string, profesionalId?: string) {
@@ -499,7 +532,9 @@ export class FacturacionApi {
     );
   }
   marcarEnviada(id: string, enviada: boolean) {
-    return firstValueFrom(this.http.patch<unknown>(`${API}/facturacion/facturas/${id}`, { enviada }));
+    return firstValueFrom(
+      this.http.patch<unknown>(`${API}/facturacion/facturas/${id}`, { enviada }),
+    );
   }
   pdf(id: string) {
     return firstValueFrom(
@@ -526,7 +561,9 @@ export class PresentacionApi {
 
   ver(mes: string, financiadorId: string) {
     return firstValueFrom(
-      this.http.get<Presentacion>(`${API}/presentacion`, { params: params({ mes, financiadorId }) }),
+      this.http.get<Presentacion>(`${API}/presentacion`, {
+        params: params({ mes, financiadorId }),
+      }),
     );
   }
   completarFechas(mes: string, financiadorId: string) {

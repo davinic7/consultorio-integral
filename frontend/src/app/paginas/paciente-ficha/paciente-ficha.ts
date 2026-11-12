@@ -81,13 +81,15 @@ export class PacienteFicha implements OnInit {
   protected readonly esAlta = computed(() => !this.id());
   /** El plan del centro incluye cobros (pestaña Pagos y saldo) y obras sociales (órdenes). */
   protected readonly conCobros = computed(() => tieneModulo(this.auth.sesion(), 'cobros'));
-  private readonly conOrdenes = computed(() =>
-    tieneModulo(this.auth.sesion(), 'obras_sociales'),
-  );
+  private readonly conOrdenes = computed(() => tieneModulo(this.auth.sesion(), 'obras_sociales'));
   protected readonly esProfesional = computed(() => this.auth.sesion()?.rol === 'profesional');
-  /** Escribe notas: un profesional, o un admin que también atiende (trabaja solo). */
+  /**
+   * Escribe notas: un profesional, o un admin que también atiende (trabaja solo),
+   * si el plan incluye las notas de sesión.
+   */
   protected readonly escribeNotas = computed(() => {
     const s = this.auth.sesion();
+    if (!tieneModulo(s, 'notas')) return false;
     return s?.rol === 'profesional' || (s?.rol === 'admin' && !!s.atiende);
   });
   protected readonly paciente = signal<Paciente | null>(null);
@@ -163,7 +165,8 @@ export class PacienteFicha implements OnInit {
     const dias = Math.round(
       (Date.parse(`${p.cudVencimiento}T00:00:00Z`) - Date.parse(`${hoy}T00:00:00Z`)) / 86_400_000,
     );
-    if (dias < 0) return { nivel: 'error', texto: `El CUD venció el ${this.fechaCorta(p.cudVencimiento)}.` };
+    if (dias < 0)
+      return { nivel: 'error', texto: `El CUD venció el ${this.fechaCorta(p.cudVencimiento)}.` };
     if (dias <= 30)
       return {
         nivel: 'aviso',
@@ -207,7 +210,8 @@ export class PacienteFicha implements OnInit {
   protected readonly colorDe = colorDisciplina;
   protected readonly inicialesDe = iniciales;
   /** "2026-05-13" → "13/05/2026". */
-  protected readonly fechaCorta = (f: string | null) => (f ? f.split('-').reverse().join('/') : '—');
+  protected readonly fechaCorta = (f: string | null) =>
+    f ? f.split('-').reverse().join('/') : '—';
 
   /** El financiador actual sigue en la lista (si se dio de baja, igual se muestra). */
   protected tieneFinanciador(id: string): boolean {

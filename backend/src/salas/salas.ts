@@ -19,7 +19,8 @@ import {
   textoOpcional,
 } from '../common/comunes.js';
 import { ApiBodyZod } from '../common/zod.js';
-import { Prisma, Rol } from '../generated/prisma/client.js';
+import { Modulo, Prisma, Rol } from '../generated/prisma/client.js';
+import { LimitesPlan, RequiereModulo } from '../planes/planes.js';
 import { sinCentro } from '../prisma/centro.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
@@ -50,7 +51,10 @@ const SELECT_SALA = {
 
 @Injectable()
 export class SalasService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly limites: LimitesPlan,
+  ) {}
 
   listar(centroId: string, incluirInactivas = false) {
     return this.prisma.paraCentro(centroId).sala.findMany({
@@ -60,14 +64,22 @@ export class SalasService {
     });
   }
 
-  crear(centroId: string, dto: CrearSalaDto) {
+  async crear(centroId: string, dto: CrearSalaDto) {
+    await this.limites.exigirLugar(centroId, 'salas');
     return this.prisma.paraCentro(centroId).sala.create({
       data: sinCentro<Prisma.SalaUncheckedCreateInput>(dto),
       select: SELECT_SALA,
     });
   }
 
-  actualizar(centroId: string, id: string, dto: ActualizarSalaDto) {
+  async actualizar(centroId: string, id: string, dto: ActualizarSalaDto) {
+    if (dto.activa === true) {
+      const actual = await this.prisma
+        .paraCentro(centroId)
+        .sala.findUnique({ where: { id }, select: { activa: true } });
+      if (actual && !actual.activa)
+        await this.limites.exigirLugar(centroId, 'salas');
+    }
     return this.prisma.paraCentro(centroId).sala.update({
       where: { id },
       data: dto,
@@ -78,7 +90,10 @@ export class SalasService {
 
 // ───────── Controller ─────────
 
-/** Salas del centro: las ven todos; las administra el admin. La baja es activa = false. */
+/**
+ * Salas del centro: las ven todos; las administra el admin (si el plan incluye
+ * salas). La baja es activa = false.
+ */
 @ApiTags('salas')
 @ApiBearerAuth()
 @Controller('salas')
@@ -96,6 +111,7 @@ export class SalasController {
 
   @Post()
   @Roles(Rol.admin)
+  @RequiereModulo(Modulo.salas)
   @ApiBodyZod(crearSalaSchema)
   crear(
     @CentroActual() centroId: string,
@@ -106,6 +122,7 @@ export class SalasController {
 
   @Patch(':id')
   @Roles(Rol.admin)
+  @RequiereModulo(Modulo.salas)
   @ApiBodyZod(actualizarSalaSchema)
   actualizar(
     @CentroActual() centroId: string,
