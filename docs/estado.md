@@ -59,7 +59,6 @@ Los 10 pasos de [prototipo.md](prototipo.md) están hechos (versión 1.0).
 - Obras sociales: leer órdenes y tokens desde fotos (la referencia usaba OCR en el navegador) y planilla de la orden en PDF.
 - Tests de frontend para las pantallas de salas, profesionales, pacientes, agenda, planilla y notas (hoy probadas a mano).
 - Lint del backend: Windows (Control de aplicaciones) bloquea `tsgolint.exe`, el ejecutable de las reglas con tipos. Se corre `oxlint` sin `--type-aware` hasta resolverlo.
-- `backend/AGENTS.md` (generado por NestJS, promociona su telemetría): decidir si se borra.
 - Agenda: arrastrar y soltar turnos para moverlos (hoy se mueven desde el panel) y horario visible configurable por centro (hoy 07:00 a 22:00).
 - Avisos: hoy se consultan cada minuto; más adelante, notificaciones push en la app móvil.
 - Cobros: un faltazo sin aviso de un particular no genera cobro (en la referencia PHP sí se cobraba); decidir si se agrega como regla por centro.

@@ -7,6 +7,10 @@
 # ───────── Etapa 1: compilar ─────────
 FROM node:26-slim AS build
 WORKDIR /app
+# Sin telemetría de Prisma, Angular CLI ni paquetes que avisan al instalarse.
+ENV CHECKPOINT_DISABLE=1 \
+    NG_CLI_ANALYTICS=false \
+    SCARF_ANALYTICS=false
 
 # Dependencias primero (se cachean mientras no cambien los package-lock).
 COPY frontend/package.json frontend/package-lock.json frontend/
@@ -30,6 +34,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-cert
   && rm -rf /var/lib/apt/lists/*
 
 ENV NODE_ENV=production \
+    CHECKPOINT_DISABLE=1 \
     PORT=3000 \
     FRONTEND_DIR=/app/web
 WORKDIR /app/backend
