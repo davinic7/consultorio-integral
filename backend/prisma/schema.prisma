@@ -621,10 +621,9 @@ model Liquidacion {
   @@map("liquidaciones")
 }
 
-/// Datos fiscales del centro para facturar con ARCA (uno por centro).
-/// La clave privada se guarda cifrada con la clave de datos del centro.
 /// Datos fiscales de un emisor: el centro (profesionalId null, una fila por centro)
 /// o un profesional que factura con su propio CUIT.
+/// La clave privada se guarda cifrada con la clave de datos del centro.
 model ConfigFiscal {
   id                     String    @id @default(uuid(7)) @db.Uuid
   centroId               String    @map("centro_id") @db.Uuid

@@ -295,7 +295,7 @@ export class ReportesService {
   private async alcance(db: ClienteDeCentro, quien: UsuarioAutenticado) {
     if (quien.rol !== Rol.profesional) return null;
     const yo = await db.profesional.findFirst({
-      where: { usuarioId: quien.usuarioId },
+      where: { usuarioId: quien.usuarioId, activo: true },
       select: { id: true },
     });
     if (!yo)
