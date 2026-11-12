@@ -176,7 +176,7 @@ Limitaciones conocidas:
 
 ## 16. Facturación electrónica con ARCA (paso 10)
 
-- **Emisor: el centro.** Un CUIT, punto de venta y certificado por centro (tabla `config_fiscal`). En la referencia cada profesional facturaba con su CUIT; si un centro necesita eso, se agrega un emisor por profesional.
+- **Emisor: el centro o cada profesional.** `config_fiscal` tiene una fila del centro (`profesional_id` null, única por índice parcial) y una por profesional que factura con su CUIT. El centro elige con `factura_cada_profesional`: si está activo, cada profesional carga sus datos y su certificado y emite las facturas de las sesiones que atendió (admin puede hacerlo por él; recepción emite pero no cambia datos fiscales). Cada factura guarda su emisor (`config_fiscal_id`), y la numeración es por emisor. Guía para el profesional: [arca-paso-a-paso.md](arca-paso-a-paso.md).
 - **Qué se factura:** Factura C (monotributo) a consumidor final, una por paciente particular y por mes, con las sesiones ya cobradas y sin factura. Sin DNI sale "sin identificar" (tipo 99). Las sesiones de obras sociales no se facturan acá: se presentan.
 - **Cliente ARCA en TypeScript** ([src/facturacion/arca.ts](../backend/src/facturacion/arca.ts)), portado de `Arca.php`: WSAA firma el pedido de ticket en CMS con el contenido incluido (`node-forge`; verificado con `openssl cms -verify`) y el ticket (12 h) se guarda y reutiliza; WSFEv1 pide el último número y solicita el CAE. Las conexiones bajan el nivel de TLS (`SECLEVEL=1`) solo para ARCA, como la referencia. El transporte se puede reemplazar: así se prueba sin red.
 - **Modos:** simulado (no llama a ARCA; numeración propia y CAE ficticio), homologación y producción. Fuera de producción el PDF dice "SIN VALIDEZ FISCAL".

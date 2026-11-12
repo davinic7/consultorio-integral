@@ -77,7 +77,7 @@ const MENU: ItemMenu[] = [
     ruta: '/facturacion',
     texto: 'Facturación',
     icono: 'facturacion',
-    roles: ['admin', 'recepcion'],
+    roles: TODOS,
     abajo: false,
     modulo: 'facturacion_arca',
   },

@@ -159,7 +159,7 @@ model Centro {
   ordenes           Orden[]
   precios           Precio[]
   facturas          Factura[]
-  configFiscal      ConfigFiscal?
+  configsFiscales   ConfigFiscal[]
   notasSesion       NotaSesion[]
   cambiosAsistencia CambioAsistencia[]
   sesiones          Sesion[]
@@ -258,6 +258,8 @@ model Profesional {
   liquidaciones Liquidacion[]
   prestaciones  Prestacion[]
   notasSesion   NotaSesion[]
+  configFiscal  ConfigFiscal?
+  facturas      Factura[]
 
   @@unique([centroId, id])
   @@unique([centroId, usuarioId])
@@ -621,65 +623,85 @@ model Liquidacion {
 
 /// Datos fiscales del centro para facturar con ARCA (uno por centro).
 /// La clave privada se guarda cifrada con la clave de datos del centro.
+/// Datos fiscales de un emisor: el centro (profesionalId null, una fila por centro)
+/// o un profesional que factura con su propio CUIT.
 model ConfigFiscal {
-  centroId          String    @id @map("centro_id") @db.Uuid
+  id                     String    @id @default(uuid(7)) @db.Uuid
+  centroId               String    @map("centro_id") @db.Uuid
+  /// null: datos del centro. Con valor: los del profesional.
+  profesionalId          String?   @map("profesional_id") @db.Uuid
   /// 11 dígitos, sin guiones.
-  cuit              String?   @db.VarChar(11)
-  razonSocial       String?   @map("razon_social") @db.VarChar(120)
-  domicilio         String?   @db.VarChar(200)
-  inicioActividades DateTime? @map("inicio_actividades") @db.Date
+  cuit                   String?   @db.VarChar(11)
+  razonSocial            String?   @map("razon_social") @db.VarChar(120)
+  domicilio              String?   @db.VarChar(200)
+  inicioActividades      DateTime? @map("inicio_actividades") @db.Date
   /// Punto de venta "RECE para aplicativo y web services".
-  ptoVta            Int       @default(1) @map("pto_vta") @db.SmallInt
-  modo              ModoArca  @default(simulado)
+  ptoVta                 Int       @default(1) @map("pto_vta") @db.SmallInt
+  modo                   ModoArca  @default(simulado)
   /// Descripción del ítem de la factura.
-  textoItem         String    @default("Honorarios por sesión") @map("texto_item") @db.VarChar(200)
-  clavePrivada      String?   @map("clave_privada")
-  certificado       String?
-  certificadoVence  DateTime? @map("certificado_vence") @db.Timestamptz(3)
+  textoItem              String    @default("Honorarios por sesión") @map("texto_item") @db.VarChar(200)
+  clavePrivada           String?   @map("clave_privada")
+  certificado            String?
+  certificadoVence       DateTime? @map("certificado_vence") @db.Timestamptz(3)
   /// Ticket de acceso de WSAA (dura 12 h): se reutiliza mientras vale.
-  ticketToken       String?   @map("ticket_token")
-  ticketSign        String?   @map("ticket_sign")
-  ticketVence       DateTime? @map("ticket_vence") @db.Timestamptz(3)
-  ticketModo        ModoArca? @map("ticket_modo")
+  ticketToken            String?   @map("ticket_token")
+  ticketSign             String?   @map("ticket_sign")
+  ticketVence            DateTime? @map("ticket_vence") @db.Timestamptz(3)
+  ticketModo             ModoArca? @map("ticket_modo")
+  /// Solo en la fila del centro: cada profesional factura sus sesiones con sus datos.
+  facturaCadaProfesional Boolean   @default(false) @map("factura_cada_profesional")
 
-  centro Centro @relation(fields: [centroId], references: [id], onDelete: Cascade)
+  centro      Centro       @relation(fields: [centroId], references: [id], onDelete: Cascade)
+  profesional Profesional? @relation(fields: [centroId, profesionalId], references: [centroId, id], onDelete: Cascade)
+  facturas    Factura[]
 
+  @@unique([centroId, id])
+  /// Un emisor por profesional. La fila única del centro (profesional_id null) la
+  /// asegura un índice parcial en la migración.
+  @@unique([centroId, profesionalId])
   @@map("config_fiscal")
 }
 
 /// Factura C (monotributo) a un paciente particular por las sesiones de un mes.
 model Factura {
-  id         String        @id @default(uuid(7)) @db.Uuid
-  centroId   String        @map("centro_id") @db.Uuid
-  pacienteId String        @map("paciente_id") @db.Uuid
+  id             String        @id @default(uuid(7)) @db.Uuid
+  centroId       String        @map("centro_id") @db.Uuid
+  pacienteId     String        @map("paciente_id") @db.Uuid
+  /// Emisor: datos fiscales con los que se emitió (del centro o de un profesional).
+  configFiscalId String        @map("config_fiscal_id") @db.Uuid
+  /// Profesional de las sesiones, si factura cada profesional.
+  profesionalId  String?       @map("profesional_id") @db.Uuid
   /// Primer día del mes de las sesiones.
-  periodo    DateTime      @db.Date
-  fecha      DateTime      @db.Date
-  ptoVta     Int           @map("pto_vta") @db.SmallInt
+  periodo        DateTime      @db.Date
+  fecha          DateTime      @db.Date
+  ptoVta         Int           @map("pto_vta") @db.SmallInt
   /// 11 = Factura C.
-  cbteTipo   Int           @default(11) @map("cbte_tipo") @db.SmallInt
-  numero     Int?
+  cbteTipo       Int           @default(11) @map("cbte_tipo") @db.SmallInt
+  numero         Int?
   /// 96 = DNI, 99 = consumidor final sin identificar.
-  docTipo    Int           @map("doc_tipo") @db.SmallInt
-  docNro     String        @map("doc_nro") @db.VarChar(11)
-  total      Decimal       @db.Decimal(12, 2)
+  docTipo        Int           @map("doc_tipo") @db.SmallInt
+  docNro         String        @map("doc_nro") @db.VarChar(11)
+  total          Decimal       @db.Decimal(12, 2)
   /// Ítems: [{ descripcion, cantidad, precio }].
-  detalle    Json
-  cae        String?       @db.VarChar(20)
-  caeVence   DateTime?     @map("cae_vence") @db.Date
-  modo       ModoArca
-  estado     EstadoFactura
-  error      String?       @db.VarChar(1000)
+  detalle        Json
+  cae            String?       @db.VarChar(20)
+  caeVence       DateTime?     @map("cae_vence") @db.Date
+  modo           ModoArca
+  estado         EstadoFactura
+  error          String?       @db.VarChar(1000)
   /// Ya se le mandó al paciente.
-  enviada    Boolean       @default(false)
-  creadaEn   DateTime      @default(now()) @map("creada_en") @db.Timestamptz(3)
+  enviada        Boolean       @default(false)
+  creadaEn       DateTime      @default(now()) @map("creada_en") @db.Timestamptz(3)
 
   centro       Centro       @relation(fields: [centroId], references: [id], onDelete: Cascade)
   paciente     Paciente     @relation(fields: [centroId, pacienteId], references: [centroId, id], onDelete: Restrict)
+  emisor       ConfigFiscal @relation(fields: [centroId, configFiscalId], references: [centroId, id], onDelete: Restrict)
+  profesional  Profesional? @relation(fields: [centroId, profesionalId], references: [centroId, id], onDelete: Restrict)
   prestaciones Prestacion[]
 
   @@unique([centroId, id])
-  @@unique([centroId, modo, ptoVta, cbteTipo, numero])
+  /// Numeración de ARCA: por emisor (CUIT), punto de venta y tipo.
+  @@unique([configFiscalId, modo, ptoVta, cbteTipo, numero])
   @@index([centroId, periodo])
   @@map("facturas")
 }

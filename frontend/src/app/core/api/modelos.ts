@@ -420,6 +420,10 @@ export interface CentroPlataforma {
 export type ModoArca = 'simulado' | 'homologacion' | 'produccion';
 
 export interface ConfigFiscal {
+  /** null: datos del centro. */
+  profesionalId: string | null;
+  /** El centro eligió que cada profesional facture con su propio CUIT. */
+  facturaCadaProfesional: boolean;
   cuit: string | null;
   razonSocial: string | null;
   domicilio: string | null;
@@ -430,6 +434,14 @@ export interface ConfigFiscal {
   tieneClave: boolean;
   tieneCertificado: boolean;
   certificadoVence: string | null;
+}
+
+/** Profesional y el estado de sus datos fiscales (si factura cada uno). */
+export interface EmisorProfesional {
+  profesional: ProfesionalResumen;
+  cuit: string | null;
+  modo: ModoArca;
+  tieneCertificado: boolean;
 }
 
 export interface PendienteFactura {
@@ -445,6 +457,8 @@ export interface PendienteFactura {
 export interface Factura {
   id: string;
   paciente: { id: string; nombre: string; apellido: string; telefono: string | null };
+  /** Emisor, si factura cada profesional. */
+  profesional: { id: string; nombre: string; apellido: string } | null;
   numero: number | null;
   ptoVta: number;
   fecha: string;

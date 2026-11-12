@@ -6,6 +6,7 @@ import type { Modulo } from '../auth/auth.models';
 import type {
   Aviso,
   ConfigFiscal,
+  EmisorProfesional,
   Factura,
   PendienteFactura,
   Presentacion,
@@ -430,41 +431,70 @@ export class PlataformaApi {
 export class FacturacionApi {
   private readonly http = inject(HttpClient);
 
-  config() {
-    return firstValueFrom(this.http.get<ConfigFiscal>(`${API}/facturacion/config`));
-  }
-  guardarConfig(datos: Partial<Omit<ConfigFiscal, 'tieneClave' | 'tieneCertificado' | 'certificadoVence'>>) {
-    return firstValueFrom(this.http.put<ConfigFiscal>(`${API}/facturacion/config`, datos));
-  }
-  pedirCertificado() {
+  // profesionalId: emisor cuando factura cada profesional (sin él, el centro o uno mismo).
+  config(profesionalId?: string) {
     return firstValueFrom(
-      this.http.post<{ csr: string }>(`${API}/facturacion/config/pedido-certificado`, {}),
+      this.http.get<ConfigFiscal>(`${API}/facturacion/config`, { params: params({ profesionalId }) }),
     );
   }
-  guardarCertificado(certificado: string) {
+  emisores() {
+    return firstValueFrom(this.http.get<EmisorProfesional[]>(`${API}/facturacion/emisores`));
+  }
+  guardarConfig(
+    datos: Partial<
+      Omit<ConfigFiscal, 'profesionalId' | 'tieneClave' | 'tieneCertificado' | 'certificadoVence'>
+    >,
+    profesionalId?: string,
+  ) {
     return firstValueFrom(
-      this.http.put<ConfigFiscal>(`${API}/facturacion/config/certificado`, { certificado }),
+      this.http.put<ConfigFiscal>(`${API}/facturacion/config`, datos, {
+        params: params({ profesionalId }),
+      }),
     );
   }
-  probar() {
-    return firstValueFrom(this.http.post<{ ok: boolean; mensaje: string }>(`${API}/facturacion/probar`, {}));
-  }
-  pendientes(mes: string) {
+  pedirCertificado(profesionalId?: string) {
     return firstValueFrom(
-      this.http.get<PendienteFactura[]>(`${API}/facturacion/pendientes`, { params: params({ mes }) }),
+      this.http.post<{ csr: string }>(`${API}/facturacion/config/pedido-certificado`, {}, {
+        params: params({ profesionalId }),
+      }),
     );
   }
-  emitir(mes: string, pacienteIds: string[]) {
+  guardarCertificado(certificado: string, profesionalId?: string) {
+    return firstValueFrom(
+      this.http.put<ConfigFiscal>(
+        `${API}/facturacion/config/certificado`,
+        { certificado },
+        { params: params({ profesionalId }) },
+      ),
+    );
+  }
+  probar(profesionalId?: string) {
+    return firstValueFrom(
+      this.http.post<{ ok: boolean; mensaje: string }>(`${API}/facturacion/probar`, {}, {
+        params: params({ profesionalId }),
+      }),
+    );
+  }
+  pendientes(mes: string, profesionalId?: string) {
+    return firstValueFrom(
+      this.http.get<PendienteFactura[]>(`${API}/facturacion/pendientes`, {
+        params: params({ mes, profesionalId }),
+      }),
+    );
+  }
+  emitir(mes: string, pacienteIds: string[], profesionalId?: string) {
     return firstValueFrom(
       this.http.post<{
         emitidas: number;
         resultados: { pacienteId: string; ok: boolean; facturaId?: string; error?: string }[];
-      }>(`${API}/facturacion/emitir`, { mes, pacienteIds }),
+      }>(`${API}/facturacion/emitir`, { mes, pacienteIds, ...(profesionalId ? { profesionalId } : {}) }),
     );
   }
-  facturas(mes: string) {
+  facturas(mes: string, profesionalId?: string) {
     return firstValueFrom(
-      this.http.get<Factura[]>(`${API}/facturacion/facturas`, { params: params({ mes }) }),
+      this.http.get<Factura[]>(`${API}/facturacion/facturas`, {
+        params: params({ mes, profesionalId }),
+      }),
     );
   }
   marcarEnviada(id: string, enviada: boolean) {

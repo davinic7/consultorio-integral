@@ -1,8 +1,15 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { FacturacionApi, mensajeDeError } from '../../core/api/api';
-import type { ConfigFiscal, Factura, ModoArca, PendienteFactura } from '../../core/api/modelos';
+import type {
+  ConfigFiscal,
+  EmisorProfesional,
+  Factura,
+  ModoArca,
+  PendienteFactura,
+} from '../../core/api/modelos';
 import { AuthService } from '../../core/auth/auth.service';
 import { nombreMes, plata, sumarMes } from '../../core/cobros';
 import { enlaceWhatsApp } from '../../core/contacto';
@@ -20,6 +27,9 @@ const NOMBRE_MODO: Record<ModoArca, string> = {
  * Facturación electrónica C con ARCA (portado de facturacion.php): por mes, una
  * factura por paciente particular con las sesiones cobradas; las emitidas, con
  * su PDF y para mandar por WhatsApp; y los datos fiscales y el certificado.
+ *
+ * Emisor: el centro, o cada profesional con su CUIT si el centro lo eligió. En ese
+ * caso admin y recepción eligen el profesional, y el profesional ve lo suyo.
  */
 @Component({
   selector: 'app-facturacion',
@@ -75,6 +85,9 @@ const NOMBRE_MODO: Record<ModoArca, string> = {
     .nota {
       font-size: 0.75rem;
     }
+    .emisor {
+      max-width: 28rem;
+    }
     .acciones-fila {
       display: flex;
       flex-wrap: wrap;
@@ -89,6 +102,19 @@ export class Facturacion {
   private readonly hoy = computed(() => ahoraEn(this.auth.sesion()?.centro?.zonaHoraria).fecha);
 
   protected readonly esAdmin = computed(() => this.auth.sesion()?.rol === 'admin');
+  protected readonly esProfesional = computed(() => this.auth.sesion()?.rol === 'profesional');
+  /** Admin o el propio profesional cambian datos fiscales; recepción solo los ve. */
+  protected readonly editaDatos = computed(() => this.esAdmin() || this.esProfesional());
+  /** Datos del centro (admin y recepción): dicen si factura cada profesional. */
+  protected readonly centro = signal<ConfigFiscal | null>(null);
+  protected readonly emisores = signal<EmisorProfesional[]>([]);
+  /** Profesional elegido como emisor (admin y recepción, si factura cada uno). */
+  protected readonly emisorId = signal<string | null>(null);
+  /** El profesional entró pero en el centro factura el centro. */
+  protected readonly sinAcceso = signal(false);
+  protected readonly cadaProfesional = computed(
+    () => (this.centro() ?? this.config())?.facturaCadaProfesional ?? false,
+  );
   /** Por defecto, el mes anterior (se factura cuando terminó). */
   protected readonly mes = signal(sumarMes(this.hoy().slice(0, 7), -1));
   protected readonly pestana = signal<Pestana>('pendientes');
@@ -130,7 +156,38 @@ export class Facturacion {
       const mes = this.mes();
       untracked(() => void this.cargar(mes));
     });
-    void this.cargarConfig();
+    void this.cargarConfig().then(() => this.cargar(this.mes()));
+  }
+
+  /** profesionalId para la API: el emisor elegido por admin o recepción. */
+  private prof(): string | undefined {
+    return this.cadaProfesional() && !this.esProfesional()
+      ? (this.emisorId() ?? undefined)
+      : undefined;
+  }
+
+  protected async elegirEmisor(id: string): Promise<void> {
+    this.emisorId.set(id || null);
+    this.csr.set(null);
+    await this.cargarConfig();
+    await this.cargar(this.mes());
+  }
+
+  /** Admin: el centro factura todo, o cada profesional con su CUIT. */
+  protected alternarCadaProfesional(valor: boolean) {
+    const texto = valor
+      ? 'Cada profesional va a facturar sus sesiones particulares con su propio CUIT y certificado. ¿Seguir?'
+      : 'El centro va a facturar todas las sesiones con sus datos fiscales. ¿Seguir?';
+    if (!confirm(texto)) {
+      this.centro.update((c) => (c ? { ...c } : c));
+      return;
+    }
+    return this.hacer(async () => {
+      this.centro.set(await this.api.guardarConfig({ facturaCadaProfesional: valor }));
+      this.emisorId.set(null);
+      await this.cargarConfig();
+      this.mensaje.set(valor ? 'Ahora factura cada profesional.' : 'Ahora factura el centro.');
+    });
   }
 
   protected moverMes(n: number): void {
@@ -158,9 +215,11 @@ export class Facturacion {
     )
       return;
     await this.hacer(async () => {
-      const r = await this.api.emitir(this.mes(), ids);
+      const r = await this.api.emitir(this.mes(), ids, this.prof());
       const errores = r.resultados.filter((x) => !x.ok);
-      this.mensaje.set(`Se emitieron ${r.emitidas} ${r.emitidas === 1 ? 'factura' : 'facturas'}.`);
+      this.mensaje.set(
+        r.emitidas === 1 ? 'Se emitió 1 factura.' : `Se emitieron ${r.emitidas} facturas.`,
+      );
       if (errores.length) {
         const nombre = (id: string) => {
           const p = this.pendientes().find((x) => x.paciente.id === id)?.paciente;
@@ -216,16 +275,21 @@ export class Facturacion {
   protected guardarDatos() {
     return this.hacer(async () => {
       this.config.set(
-        await this.api.guardarConfig({
-          cuit: this.datos.cuit || null,
-          razonSocial: this.datos.razonSocial || null,
-          domicilio: this.datos.domicilio || null,
-          inicioActividades: this.datos.inicioActividades || null,
-          ptoVta: Number(this.datos.ptoVta),
-          modo: this.datos.modo,
-          textoItem: this.datos.textoItem,
-        }),
+        await this.api.guardarConfig(
+          {
+            cuit: this.datos.cuit || null,
+            razonSocial: this.datos.razonSocial || null,
+            domicilio: this.datos.domicilio || null,
+            inicioActividades: this.datos.inicioActividades || null,
+            ptoVta: Number(this.datos.ptoVta),
+            modo: this.datos.modo,
+            textoItem: this.datos.textoItem,
+          },
+          this.prof(),
+        ),
       );
+      if (this.cadaProfesional() && !this.esProfesional())
+        this.emisores.set(await this.api.emisores());
       this.mensaje.set('Datos fiscales guardados.');
     });
   }
@@ -240,7 +304,7 @@ export class Facturacion {
     )
       return;
     return this.hacer(async () => {
-      const r = await this.api.pedirCertificado();
+      const r = await this.api.pedirCertificado(this.prof());
       this.csr.set(r.csr);
       const a = document.createElement('a');
       a.href = URL.createObjectURL(new Blob([r.csr], { type: 'application/pkcs10' }));
@@ -257,14 +321,14 @@ export class Facturacion {
 
   protected guardarCertificado() {
     return this.hacer(async () => {
-      this.config.set(await this.api.guardarCertificado(this.certificado));
+      this.config.set(await this.api.guardarCertificado(this.certificado, this.prof()));
       this.certificado = '';
       this.mensaje.set('Certificado guardado.');
     });
   }
 
   protected probar() {
-    return this.hacer(async () => this.mensaje.set((await this.api.probar()).mensaje));
+    return this.hacer(async () => this.mensaje.set((await this.api.probar(this.prof())).mensaje));
   }
 
   // ───────── Internos ─────────
@@ -285,19 +349,50 @@ export class Facturacion {
 
   private async cargarConfig(): Promise<void> {
     try {
-      const c = await this.api.config();
+      if (this.esProfesional()) {
+        // Sus propios datos; si factura el centro, la API responde 403.
+        const c = await this.api.config();
+        this.config.set(c);
+        this.datos = { ...c };
+        return;
+      }
+      const centro = await this.api.config();
+      this.centro.set(centro);
+      if (!centro.facturaCadaProfesional) {
+        this.emisores.set([]);
+        this.config.set(centro);
+        this.datos = { ...centro };
+        return;
+      }
+      const emisores = await this.api.emisores();
+      this.emisores.set(emisores);
+      if (!emisores.some((e) => e.profesional.id === this.emisorId()))
+        this.emisorId.set(emisores[0]?.profesional.id ?? null);
+      const id = this.emisorId();
+      const c = id ? await this.api.config(id) : null;
       this.config.set(c);
-      this.datos = { ...c };
+      this.datos = c ? { ...c } : {};
     } catch (e) {
+      if (this.esProfesional() && e instanceof HttpErrorResponse && e.status === 403) {
+        this.sinAcceso.set(true);
+        return;
+      }
       this.error.set(mensajeDeError(e));
     }
   }
 
   private async cargar(mes: string): Promise<void> {
+    // Todavía sin datos, o el centro factura y quien entra es un profesional.
+    if (this.sinAcceso() || (!this.config() && !this.centro())) return;
+    if (this.cadaProfesional() && !this.esProfesional() && !this.emisorId()) {
+      this.pendientes.set([]);
+      this.facturas.set([]);
+      return;
+    }
     try {
       const [pendientes, facturas] = await Promise.all([
-        this.api.pendientes(mes),
-        this.api.facturas(mes),
+        this.api.pendientes(mes, this.prof()),
+        this.api.facturas(mes, this.prof()),
       ]);
       if (mes !== this.mes()) return;
       this.pendientes.set(pendientes);

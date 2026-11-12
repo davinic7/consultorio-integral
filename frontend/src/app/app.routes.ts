@@ -64,7 +64,11 @@ export const routes: Routes = [
       },
       {
         path: 'facturacion',
-        canActivate: [rolGuard('admin', 'recepcion'), moduloGuard('facturacion_arca')],
+        // El profesional entra si el centro eligió que factura cada uno (si no, la pantalla lo avisa).
+        canActivate: [
+          rolGuard('admin', 'recepcion', 'profesional'),
+          moduloGuard('facturacion_arca'),
+        ],
         title: 'Facturación · Centro Integral',
         loadComponent: () => import('./paginas/facturacion/facturacion').then((m) => m.Facturacion),
       },
