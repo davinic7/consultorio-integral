@@ -30,7 +30,12 @@ describe.skipIf(!url)('Financiadores (e2e)', () => {
       'TRUNCATE centros, planes, usuarios RESTART IDENTITY CASCADE',
     );
     const plan = await prisma.plan.create({
-      data: { codigo: 'basico', nombre: 'Básico', precioMensual: 0, modulos: TODOS_LOS_MODULOS },
+      data: {
+        codigo: 'basico',
+        nombre: 'Básico',
+        precioMensual: 0,
+        modulos: TODOS_LOS_MODULOS,
+      },
     });
     const a = await prisma.centro.create({
       data: { nombre: 'A', slug: 'a', planId: plan.id },
@@ -122,9 +127,7 @@ describe.skipIf(!url)('Financiadores (e2e)', () => {
       .get('/api/v1/financiadores')
       .set(como('recep@a.com'))
       .expect(200);
-    expect(res.body.map((f: { nombre: string }) => f.nombre)).toEqual([
-      'OSEP',
-    ]);
+    expect(res.body.map((f: { nombre: string }) => f.nombre)).toEqual(['OSEP']);
     await http()
       .post('/api/v1/financiadores')
       .set(como('recep@a.com'))

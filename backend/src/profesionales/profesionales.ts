@@ -29,24 +29,18 @@ import { PrismaService } from '../prisma/prisma.service.js';
 
 // ───────── Schemas ─────────
 
-const porcentaje = z.number().min(0).max(100).multipleOf(0.01);
-
 export const crearProfesionalSchema = z.object({
   nombre: textoObligatorio(80),
   apellido: textoObligatorio(80),
   disciplina: textoObligatorio(80),
   matricula: textoOpcional(40),
-  porcentajeLiquidacion: porcentaje.default(0),
   /** Usuario del centro con el que inicia sesión (opcional). */
   usuarioId: z.uuid().nullable().optional(),
 });
 export type CrearProfesionalDto = z.infer<typeof crearProfesionalSchema>;
 
 export const actualizarProfesionalSchema = crearProfesionalSchema
-  .extend({
-    porcentajeLiquidacion: porcentaje.optional(),
-    activo: z.boolean().optional(),
-  })
+  .extend({ activo: z.boolean().optional() })
   .partial()
   .refine((d) => Object.keys(d).length > 0, 'sin cambios');
 export type ActualizarProfesionalDto = z.infer<
@@ -63,8 +57,6 @@ export interface ProfesionalVista {
   matricula: string | null;
   usuarioId: string | null;
   activo: boolean;
-  /** Solo para el admin y para el propio profesional. */
-  porcentajeLiquidacion?: number;
 }
 
 // ───────── Servicio ─────────
@@ -85,7 +77,7 @@ export class ProfesionalesService {
       where: incluirInactivos ? {} : { activo: true },
       orderBy: [{ apellido: 'asc' }, { nombre: 'asc' }],
     });
-    return lista.map((p) => vista(p, quien));
+    return lista.map((p) => vista(p));
   }
 
   async obtener(centroId: string, id: string, quien: UsuarioAutenticado) {
@@ -93,7 +85,7 @@ export class ProfesionalesService {
       .paraCentro(centroId)
       .profesional.findUnique({ where: { id } });
     if (!p) throw new NotFoundException('Profesional no encontrado');
-    return vista(p, quien);
+    return vista(p);
   }
 
   async crear(
@@ -107,7 +99,7 @@ export class ProfesionalesService {
     const p = await this.prisma.paraCentro(centroId).profesional.create({
       data: sinCentro<Prisma.ProfesionalUncheckedCreateInput>(dto),
     });
-    return vista(p, quien);
+    return vista(p);
   }
 
   async actualizar(
@@ -128,7 +120,7 @@ export class ProfesionalesService {
       where: { id },
       data: dto,
     });
-    return vista(p, quien);
+    return vista(p);
   }
 
   /**
@@ -151,8 +143,8 @@ export class ProfesionalesService {
   }
 }
 
-function vista(p: Profesional, quien: UsuarioAutenticado): ProfesionalVista {
-  const v: ProfesionalVista = {
+function vista(p: Profesional): ProfesionalVista {
+  return {
     id: p.id,
     nombre: p.nombre,
     apellido: p.apellido,
@@ -161,10 +153,6 @@ function vista(p: Profesional, quien: UsuarioAutenticado): ProfesionalVista {
     usuarioId: p.usuarioId,
     activo: p.activo,
   };
-  if (quien.rol === Rol.admin || p.usuarioId === quien.usuarioId) {
-    v.porcentajeLiquidacion = p.porcentajeLiquidacion.toNumber();
-  }
-  return v;
 }
 
 // ───────── Controller ─────────

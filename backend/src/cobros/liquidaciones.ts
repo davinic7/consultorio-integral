@@ -31,7 +31,12 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { generarLiquidacionSchema, mesSchema } from './cobros.schemas.js';
 import { alcanceDe, ESTADOS_CERRADOS, type DbCobros } from './comun.js';
 import { PrestacionesService } from './prestaciones.service.js';
-import { cobroDe, liquidar, num, sumar, type Decimal } from './reglas.js';
+import {
+  calcularAlquiler,
+  horasDe,
+  type ComponenteCalculado,
+} from './alquiler.js';
+import { CERO, cobroDe, num, sumar, type Decimal } from './reglas.js';
 
 const SELECT_PROFESIONAL = {
   id: true,
@@ -39,8 +44,15 @@ const SELECT_PROFESIONAL = {
   apellido: true,
   disciplina: true,
   activo: true,
-  porcentajeLiquidacion: true,
 } satisfies Prisma.ProfesionalSelect;
+
+/** Acuerdo con el que se calculó (o se cerró) el mes. */
+export interface AcuerdoUsado {
+  id: string | null;
+  /** YYYY-MM desde el que rige; null en liquidaciones anteriores a los acuerdos. */
+  vigenteDesde: string | null;
+  nota: string | null;
+}
 
 /** Totales de un profesional en un mes, en Decimal (para seguir operando). */
 export interface TotalesProfesional {
@@ -53,9 +65,13 @@ export interface TotalesProfesional {
   sesiones: number;
   bruto: Decimal;
   cobrado: Decimal;
-  porcentaje: Decimal;
-  liquidado: Decimal;
-  retencion: Decimal;
+  /** Lo que el profesional le debe al centro por el alquiler del mes. */
+  alquiler: Decimal;
+  componentes: ComponenteCalculado[];
+  cobraElCentro: boolean;
+  /** Positivo: el centro le paga al profesional. Negativo: el profesional le debe al centro. */
+  saldo: Decimal;
+  acuerdo: AcuerdoUsado | null;
   liquidacion: {
     id: string;
     estado: EstadoLiquidacion;
@@ -66,6 +82,19 @@ export interface TotalesProfesional {
   sinMarcar: number;
   /** Turnos presentes sin prestación (datos anteriores a cobros). */
   sinPrestacion: number;
+  /** Para guardar al cerrar: horas de sala y precio de la sesión usados. */
+  bases: { horasSala: number; precioSesion: number };
+}
+
+/** Lo que se guarda en liquidaciones.detalle_alquiler al cerrar. */
+interface DetalleAlquiler {
+  acuerdoId: string | null;
+  vigenteDesde: string | null;
+  cobraElCentro: boolean;
+  componentes: ComponenteCalculado[];
+  horasSala?: number;
+  precioSesion?: number;
+  nota?: string | null;
 }
 
 function vistaTotales(t: TotalesProfesional) {
@@ -74,10 +103,11 @@ function vistaTotales(t: TotalesProfesional) {
     sesiones: t.sesiones,
     facturado: num(t.bruto),
     cobrado: num(t.cobrado),
-    porcentaje: num(t.porcentaje),
-    retencionPorcentaje: num(new Prisma.Decimal(100).minus(t.porcentaje)),
-    aLiquidar: num(t.liquidado),
-    retencion: num(t.retencion),
+    alquiler: num(t.alquiler),
+    componentes: t.componentes,
+    cobraElCentro: t.cobraElCentro,
+    saldo: num(t.saldo),
+    acuerdo: t.acuerdo,
     liquidacion: t.liquidacion && {
       id: t.liquidacion.id,
       estado: t.liquidacion.estado,
@@ -89,9 +119,13 @@ function vistaTotales(t: TotalesProfesional) {
   };
 }
 
+const mesDe = (d: Date) => d.toISOString().slice(0, 7);
+
 /**
  * Liquidación mensual por profesional: lo facturado en el mes (sus prestaciones)
- * por su porcentaje. El resto es la retención del centro.
+ * y lo que debe al centro según su acuerdo de alquiler vigente ese mes (ver
+ * alquiler.ts). Si el centro cobra por él, el saldo es lo facturado menos el
+ * alquiler; si cobra el profesional, el saldo es lo que le debe al centro.
  *
  * "Generar" la deja cerrada con los totales guardados: desde ahí no se puede
  * cambiar la asistencia ni los montos de ese mes. Después se marca pagada. Una
@@ -166,6 +200,33 @@ export class LiquidacionesService {
       select: SELECT_PROFESIONAL,
       orderBy: [{ apellido: 'asc' }, { nombre: 'asc' }],
     });
+    const ids = profesionales.map((p) => p.id);
+    const [acuerdos, turnosEnSala, precio] = await Promise.all([
+      db.acuerdoAlquiler.findMany({
+        where: { profesionalId: { in: ids }, vigenteDesde: { lte: periodo } },
+        orderBy: { vigenteDesde: 'desc' },
+      }),
+      db.turno.findMany({
+        where: {
+          ...alcance,
+          ...enElMes,
+          estadoAsistencia: EstadoAsistencia.presente,
+          salaId: { not: null },
+        },
+        select: { profesionalId: true, inicio: true, fin: true },
+      }),
+      // Precio particular general vigente al último día del mes ("N sesiones").
+      db.precio.findFirst({
+        where: {
+          pacienteId: null,
+          financiadorId: null,
+          vigenteDesde: { lte: new Date(`${ultimo}T00:00:00Z`) },
+        },
+        orderBy: [{ vigenteDesde: 'desc' }, { creadoEn: 'desc' }],
+        select: { monto: true },
+      }),
+    ]);
+    const precioSesion = precio?.monto ?? CERO;
     const contar = (
       filas: { profesionalId: string; _count: { _all: number } }[],
     ) => new Map(filas.map((f) => [f.profesionalId, f._count._all]));
@@ -182,29 +243,61 @@ export class LiquidacionesService {
         );
         const congelada = liq && ESTADOS_CERRADOS.includes(liq.estado as never);
         const { id, nombre, apellido, disciplina } = prof;
+        const horasSala = sumar(
+          turnosEnSala
+            .filter((t) => t.profesionalId === prof.id)
+            .map((t) => horasDe(t.inicio, t.fin)),
+        );
         let sesiones: number;
         let bruto: Decimal;
-        let porcentaje: Decimal;
-        let liquidado: Decimal;
+        let calculo: ReturnType<typeof calcularAlquiler>;
+        let cobraElCentro: boolean;
+        let acuerdoUsado: AcuerdoUsado | null;
         if (congelada) {
+          const d = (liq.detalleAlquiler ?? null) as DetalleAlquiler | null;
           sesiones = liq.sesiones;
           bruto = liq.totalBruto;
-          porcentaje = liq.porcentaje;
-          liquidado = liq.totalLiquidado;
+          cobraElCentro = liq.cobraElCentro;
+          calculo = {
+            alquiler: liq.alquiler,
+            componentes: d?.componentes ?? [],
+            saldo: liq.totalLiquidado,
+          };
+          acuerdoUsado = d
+            ? {
+                id: d.acuerdoId,
+                vigenteDesde: d.vigenteDesde,
+                nota: d.nota ?? null,
+              }
+            : null;
         } else {
+          const acuerdo =
+            acuerdos.find((a) => a.profesionalId === prof.id) ?? null;
           sesiones = suyas.length;
           bruto = sumar(suyas.map((p) => p.monto));
-          porcentaje = prof.porcentajeLiquidacion;
-          liquidado = liquidar(bruto, porcentaje).liquidado;
+          calculo = calcularAlquiler(acuerdo, {
+            facturado: bruto,
+            sesiones,
+            horasSala,
+            precioSesion,
+          });
+          cobraElCentro = acuerdo?.cobraElCentro ?? true;
+          acuerdoUsado = acuerdo && {
+            id: acuerdo.id,
+            vigenteDesde: mesDe(acuerdo.vigenteDesde),
+            nota: acuerdo.nota,
+          };
         }
         return {
           profesional: { id, nombre, apellido, disciplina },
           sesiones,
           bruto,
           cobrado,
-          porcentaje,
-          liquidado,
-          retencion: bruto.minus(liquidado),
+          alquiler: calculo.alquiler,
+          componentes: calculo.componentes,
+          cobraElCentro,
+          saldo: calculo.saldo,
+          acuerdo: acuerdoUsado,
           liquidacion: liq && {
             id: liq.id,
             estado: liq.estado,
@@ -213,6 +306,10 @@ export class LiquidacionesService {
           },
           sinMarcar: marcar.get(prof.id) ?? 0,
           sinPrestacion: faltan.get(prof.id) ?? 0,
+          bases: {
+            horasSala: num(horasSala),
+            precioSesion: num(precioSesion),
+          },
         } satisfies TotalesProfesional;
       })
       .filter(
@@ -250,11 +347,22 @@ export class LiquidacionesService {
           : `Quedan ${t.sinMarcar} turnos del mes sin asistencia marcada: marcalos antes de liquidar`,
       );
     }
+    const detalle: DetalleAlquiler = {
+      acuerdoId: t.acuerdo?.id ?? null,
+      vigenteDesde: t.acuerdo?.vigenteDesde ?? null,
+      cobraElCentro: t.cobraElCentro,
+      componentes: t.componentes,
+      horasSala: t.bases.horasSala,
+      precioSesion: t.bases.precioSesion,
+      nota: t.acuerdo?.nota ?? null,
+    };
     const datos = {
       sesiones: t.sesiones,
       totalBruto: t.bruto,
-      porcentaje: t.porcentaje,
-      totalLiquidado: t.liquidado,
+      alquiler: t.alquiler,
+      detalleAlquiler: detalle as unknown as Prisma.InputJsonObject,
+      cobraElCentro: t.cobraElCentro,
+      totalLiquidado: t.saldo,
       estado: EstadoLiquidacion.cerrada,
       cerradaEn: new Date(),
     };
@@ -332,7 +440,7 @@ export class LiquidacionesService {
 export class LiquidacionesController {
   constructor(private readonly liquidaciones: LiquidacionesService) {}
 
-  /** Por profesional: sesiones, facturado, porcentaje y a liquidar. El profesional ve solo la suya. */
+  /** Por profesional: sesiones, facturado, alquiler y saldo. El profesional ve solo la suya. */
   @Get()
   @Roles(Rol.admin, Rol.profesional)
   listar(

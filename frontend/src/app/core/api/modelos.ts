@@ -38,8 +38,6 @@ export interface Profesional {
   matricula: string | null;
   usuarioId: string | null;
   activo: boolean;
-  /** Solo visible para admin y para el propio profesional. */
-  porcentajeLiquidacion?: number;
 }
 
 export type ProfesionalResumen = Pick<Profesional, 'id' | 'nombre' | 'apellido' | 'disciplina'>;
@@ -303,8 +301,10 @@ export interface ResumenCobros {
   cobrado: number;
   porCobrar: number;
   porCobrarSesiones: number;
-  aLiquidar: number;
-  retencion: number;
+  /** Lo que los profesionales le deben al centro por alquiler. */
+  alquiler: number;
+  /** Suma de los saldos de los profesionales (positivo: el centro les paga). */
+  saldoProfesionales: number;
   cobradoPorMedio: { medio: MedioPago; monto: number }[];
   cobradoPorDia: { fecha: string; monto: number }[];
   porProfesional: { profesional: ProfesionalResumen; sesiones: number; facturado: number }[];
@@ -334,15 +334,49 @@ export interface Conciliacion {
 
 export type EstadoLiquidacion = 'borrador' | 'cerrada' | 'pagada';
 
+export type TipoComponente =
+  'fijo' | 'porcentaje' | 'por_sesion' | 'por_hora' | 'sesiones_equivalentes';
+
+/** Un renglón del cálculo del alquiler del mes. */
+export interface ComponenteAlquiler {
+  tipo: TipoComponente;
+  /** Monto, porcentaje, monto por unidad o N sesiones. */
+  valor: number;
+  /** Facturado, sesiones, horas de sala o precio de la sesión. */
+  base: number | null;
+  monto: number;
+}
+
+/** Acuerdo de alquiler de un profesional, vigente desde un mes. */
+export interface AcuerdoAlquiler {
+  id: string;
+  /** YYYY-MM */
+  vigenteDesde: string;
+  montoFijo: number | null;
+  porcentaje: number | null;
+  montoPorSesion: number | null;
+  montoPorHora: number | null;
+  sesionesEquivalentes: number | null;
+  cobraElCentro: boolean;
+  nota: string | null;
+  creadoEn: string;
+}
+
+export type DatosAcuerdo = Omit<AcuerdoAlquiler, 'id' | 'vigenteDesde' | 'creadoEn'>;
+
 export interface LiquidacionProfesional {
   profesional: ProfesionalResumen;
   sesiones: number;
   facturado: number;
   cobrado: number;
-  porcentaje: number;
-  retencionPorcentaje: number;
-  aLiquidar: number;
-  retencion: number;
+  /** Lo que el profesional le debe al centro por su acuerdo de alquiler. */
+  alquiler: number;
+  componentes: ComponenteAlquiler[];
+  /** El centro cobra a los pacientes por el profesional. */
+  cobraElCentro: boolean;
+  /** Positivo: el centro le paga al profesional. Negativo: el profesional le debe al centro. */
+  saldo: number;
+  acuerdo: { id: string | null; vigenteDesde: string | null; nota: string | null } | null;
   liquidacion: {
     id: string;
     estado: EstadoLiquidacion;

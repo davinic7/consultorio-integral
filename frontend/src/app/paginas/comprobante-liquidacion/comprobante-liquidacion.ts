@@ -3,7 +3,14 @@ import { Router, RouterLink } from '@angular/router';
 import { CobrosApi, LiquidacionesApi, mensajeDeError } from '../../core/api/api';
 import type { LiquidacionProfesional, Prestacion } from '../../core/api/modelos';
 import { AuthService } from '../../core/auth/auth.service';
-import { NOMBRE_LIQUIDACION, nombreMes, plata, sumarMes } from '../../core/cobros';
+import {
+  NOMBRE_LIQUIDACION,
+  nombreMes,
+  plata,
+  sumarMes,
+  textoComponente,
+  textoSaldo,
+} from '../../core/cobros';
 import { diaSemana, hoyEn, NOMBRE_DIA } from '../../core/fechas';
 
 /** Texto corto del comprobante para mandar por WhatsApp. */
@@ -13,8 +20,10 @@ export function textoComprobante(centro: string, mes: string, l: LiquidacionProf
     `${l.profesional.nombre} ${l.profesional.apellido} (${l.profesional.disciplina})`,
     `Sesiones: ${l.sesiones}`,
     `Facturado: ${plata(l.facturado)}`,
-    `Retención del centro (${l.retencionPorcentaje}%): − ${plata(l.retencion)}`,
-    `A liquidar: ${plata(l.aLiquidar)}`,
+    ...l.componentes.map((c) => `Alquiler · ${textoComponente(c)}: − ${plata(c.monto)}`),
+    `Alquiler total: ${plata(l.alquiler)}`,
+    ...(l.cobraElCentro ? [] : ['Cobra el profesional: lo facturado no pasa por el centro']),
+    `${textoSaldo(l.saldo, false)}: ${plata(Math.abs(l.saldo))}`,
   ].join('\n');
 }
 
@@ -188,10 +197,25 @@ export function textoComprobante(centro: string, mes: string, l: LiquidacionProf
           <dd class="oc-mono">{{ l.sesiones }}</dd>
           <dt>Facturado</dt>
           <dd class="oc-mono">{{ plata(l.facturado) }}</dd>
-          <dt>Retención del centro ({{ l.retencionPorcentaje }}%)</dt>
-          <dd class="oc-mono">− {{ plata(l.retencion) }}</dd>
-          <dt class="total">A liquidar</dt>
-          <dd class="total oc-mono">{{ plata(l.aLiquidar) }}</dd>
+          @for (c of l.componentes; track $index) {
+            <dt>Alquiler · {{ textoComponente(c) }}</dt>
+            <dd class="oc-mono">− {{ plata(c.monto) }}</dd>
+          }
+          <dt>
+            Alquiler del mes
+            @if (l.acuerdo?.vigenteDesde; as desde) {
+              <span class="oc-suave">(acuerdo desde {{ nombreMes(desde) }})</span>
+            } @else if (!l.acuerdo) {
+              <span class="oc-suave">(sin acuerdo)</span>
+            }
+          </dt>
+          <dd class="oc-mono">− {{ plata(l.alquiler) }}</dd>
+          @if (!l.cobraElCentro) {
+            <dt>Cobra el profesional</dt>
+            <dd class="oc-mono">− {{ plata(l.facturado) }}</dd>
+          }
+          <dt class="total">{{ textoSaldo(l.saldo, false) }}</dt>
+          <dd class="total oc-mono">{{ plata(abs(l.saldo)) }}</dd>
         </dl>
 
         <div class="firmas">
@@ -221,6 +245,10 @@ export class ComprobanteLiquidacion {
   protected readonly cargando = signal(true);
   protected readonly error = signal<string | null>(null);
   protected readonly plata = plata;
+  protected readonly nombreMes = nombreMes;
+  protected readonly textoComponente = textoComponente;
+  protected readonly textoSaldo = textoSaldo;
+  protected readonly abs = Math.abs;
   protected readonly nombreLiquidacion = NOMBRE_LIQUIDACION;
 
   protected readonly centro = computed(() => this.auth.sesion()?.centro?.nombre ?? '');

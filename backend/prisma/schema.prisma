@@ -172,6 +172,7 @@ model Centro {
   ordenes           Orden[]
   precios           Precio[]
   facturas          Factura[]
+  acuerdosAlquiler  AcuerdoAlquiler[]
   configsFiscales   ConfigFiscal[]
   notasSesion       NotaSesion[]
   cambiosAsistencia CambioAsistencia[]
@@ -249,19 +250,18 @@ model Miembro {
 }
 
 model Profesional {
-  id                    String  @id @default(uuid(7)) @db.Uuid
-  centroId              String  @map("centro_id") @db.Uuid
+  id         String  @id @default(uuid(7)) @db.Uuid
+  centroId   String  @map("centro_id") @db.Uuid
   /// Cuenta con la que inicia sesión (opcional: puede cargarse antes de tener acceso).
-  usuarioId             String? @map("usuario_id") @db.Uuid
-  nombre                String  @db.VarChar(80)
-  apellido              String  @db.VarChar(80)
-  disciplina            String  @db.VarChar(80)
-  matricula             String? @db.VarChar(40)
+  usuarioId  String? @map("usuario_id") @db.Uuid
+  nombre     String  @db.VarChar(80)
+  apellido   String  @db.VarChar(80)
+  disciplina String  @db.VarChar(80)
+  matricula  String? @db.VarChar(40)
   /// Porcentaje de lo cobrado que le corresponde al profesional (0 a 100).
   /// Porcentaje de lo facturado (prestaciones del mes) que le corresponde al
   /// profesional (0 a 100). El resto es la retención del centro.
-  porcentajeLiquidacion Decimal @default(0) @map("porcentaje_liquidacion") @db.Decimal(5, 2)
-  activo                Boolean @default(true)
+  activo     Boolean @default(true)
 
   centro        Centro                @relation(fields: [centroId], references: [id], onDelete: Cascade)
   usuario       Usuario?              @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
@@ -269,6 +269,7 @@ model Profesional {
   recurrencias  Recurrencia[]
   turnos        Turno[]
   liquidaciones Liquidacion[]
+  acuerdos      AcuerdoAlquiler[]
   prestaciones  Prestacion[]
   notasSesion   NotaSesion[]
   configFiscal  ConfigFiscal?
@@ -613,18 +614,25 @@ model Precio {
 /// Liquidación mensual de un profesional. Al generarla queda "cerrada": guarda los
 /// totales y ya no se puede cambiar la asistencia ni los montos de ese mes.
 model Liquidacion {
-  id             String            @id @default(uuid(7)) @db.Uuid
-  centroId       String            @map("centro_id") @db.Uuid
-  profesionalId  String            @map("profesional_id") @db.Uuid
+  id              String            @id @default(uuid(7)) @db.Uuid
+  centroId        String            @map("centro_id") @db.Uuid
+  profesionalId   String            @map("profesional_id") @db.Uuid
   /// Primer día del mes liquidado.
-  periodo        DateTime          @db.Date
-  sesiones       Int               @default(0)
-  totalBruto     Decimal           @map("total_bruto") @db.Decimal(12, 2)
-  porcentaje     Decimal           @db.Decimal(5, 2)
-  totalLiquidado Decimal           @map("total_liquidado") @db.Decimal(12, 2)
-  estado         EstadoLiquidacion @default(borrador)
-  cerradaEn      DateTime?         @map("cerrada_en") @db.Timestamptz(3)
-  pagadaEn       DateTime?         @map("pagada_en") @db.Timestamptz(3)
+  periodo         DateTime          @db.Date
+  sesiones        Int               @default(0)
+  /// Lo facturado en el mes por las sesiones del profesional.
+  totalBruto      Decimal           @map("total_bruto") @db.Decimal(12, 2)
+  /// Lo que el profesional le debe al centro por su acuerdo de alquiler.
+  alquiler        Decimal           @default(0) @db.Decimal(12, 2)
+  /// Copia del cálculo al cerrar: acuerdo, componentes, bases y montos.
+  detalleAlquiler Json?             @map("detalle_alquiler")
+  /// Si el centro cobra a los pacientes por el profesional (si no, cobra él).
+  cobraElCentro   Boolean           @default(true) @map("cobra_el_centro")
+  /// Saldo: positivo, el centro le paga al profesional; negativo, el profesional le debe al centro.
+  totalLiquidado  Decimal           @map("total_liquidado") @db.Decimal(12, 2)
+  estado          EstadoLiquidacion @default(borrador)
+  cerradaEn       DateTime?         @map("cerrada_en") @db.Timestamptz(3)
+  pagadaEn        DateTime?         @map("pagada_en") @db.Timestamptz(3)
 
   centro      Centro      @relation(fields: [centroId], references: [id], onDelete: Cascade)
   profesional Profesional @relation(fields: [centroId, profesionalId], references: [centroId, id], onDelete: Restrict)
@@ -632,6 +640,39 @@ model Liquidacion {
   @@unique([centroId, id])
   @@unique([centroId, profesionalId, periodo])
   @@map("liquidaciones")
+}
+
+/// Acuerdo de alquiler entre el centro y un profesional, vigente desde un mes.
+/// Lo que el profesional debe en el mes es la suma de los componentes cargados
+/// (todos opcionales): cuota fija, porcentaje de lo facturado, monto por sesión
+/// atendida, monto por hora de sala y el equivalente a N sesiones (al precio
+/// particular vigente). Un cambio es una fila nueva: los meses ya liquidados
+/// guardaron su cálculo y no cambian.
+model AcuerdoAlquiler {
+  id                   String   @id @default(uuid(7)) @db.Uuid
+  centroId             String   @map("centro_id") @db.Uuid
+  profesionalId        String   @map("profesional_id") @db.Uuid
+  /// Primer día del mes desde el que rige.
+  vigenteDesde         DateTime @map("vigente_desde") @db.Date
+  montoFijo            Decimal? @map("monto_fijo") @db.Decimal(12, 2)
+  /// Porcentaje de lo facturado por el profesional en el mes.
+  porcentaje           Decimal? @db.Decimal(5, 2)
+  montoPorSesion       Decimal? @map("monto_por_sesion") @db.Decimal(12, 2)
+  /// Por hora de turnos atendidos en una sala.
+  montoPorHora         Decimal? @map("monto_por_hora") @db.Decimal(12, 2)
+  /// Cuota equivalente a N sesiones al precio particular vigente.
+  sesionesEquivalentes Int?     @map("sesiones_equivalentes") @db.SmallInt
+  /// Si el centro cobra a los pacientes por el profesional y le liquida lo suyo.
+  cobraElCentro        Boolean  @default(true) @map("cobra_el_centro")
+  nota                 String?  @db.VarChar(200)
+  creadoEn             DateTime @default(now()) @map("creado_en") @db.Timestamptz(3)
+
+  centro      Centro      @relation(fields: [centroId], references: [id], onDelete: Cascade)
+  profesional Profesional @relation(fields: [centroId, profesionalId], references: [centroId, id], onDelete: Cascade)
+
+  @@unique([centroId, id])
+  @@unique([centroId, profesionalId, vigenteDesde])
+  @@map("acuerdos_alquiler")
 }
 
 /// Datos fiscales de un emisor: el centro (profesionalId null, una fila por centro)

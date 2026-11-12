@@ -20,6 +20,7 @@ export type DbCobros = Pick<
   | 'paciente'
   | 'profesional'
   | 'liquidacion'
+  | 'acuerdoAlquiler'
   | 'turno'
 >;
 

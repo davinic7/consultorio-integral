@@ -63,7 +63,11 @@ export class NotasService {
     private readonly cifrado: CifradoService,
   ) {}
 
-  async listar(centroId: string, quien: UsuarioAutenticado, pacienteId: string) {
+  async listar(
+    centroId: string,
+    quien: UsuarioAutenticado,
+    pacienteId: string,
+  ) {
     const db = this.prisma.paraCentro(centroId);
     const yo = await this.profesionalAsignado(db, quien, pacienteId);
     const notas = await db.notaSesion.findMany({
@@ -127,7 +131,9 @@ export class NotasService {
     if (actual.profesionalId !== yo) {
       // No se revela si existe una nota privada ajena.
       if (!actual.compartida) throw new NotFoundException('Nota no encontrada');
-      throw new ForbiddenException('Solo quien escribió la nota puede editarla');
+      throw new ForbiddenException(
+        'Solo quien escribió la nota puede editarla',
+      );
     }
     const data: Prisma.NotaSesionUncheckedUpdateInput = {};
     if (dto.compartida !== undefined) data.compartida = dto.compartida;

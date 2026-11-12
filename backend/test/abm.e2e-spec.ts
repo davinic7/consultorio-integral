@@ -33,7 +33,12 @@ describe.skipIf(!url)('ABM de salas, profesionales y pacientes (e2e)', () => {
     );
 
     const plan = await prisma.plan.create({
-      data: { codigo: 'basico', nombre: 'Básico', precioMensual: 0, modulos: TODOS_LOS_MODULOS },
+      data: {
+        codigo: 'basico',
+        nombre: 'Básico',
+        precioMensual: 0,
+        modulos: TODOS_LOS_MODULOS,
+      },
     });
     const a = await prisma.centro.create({
       data: { nombre: 'A', slug: 'a', planId: plan.id },
@@ -159,12 +164,11 @@ describe.skipIf(!url)('ABM de salas, profesionales y pacientes (e2e)', () => {
           nombre: 'Pablo',
           apellido: 'Pérez',
           disciplina: 'Psicología',
-          porcentajeLiquidacion: 60,
           usuarioId: usuarioProfId,
         })
         .expect(201);
       profId = res.body.id;
-      expect(res.body.porcentajeLiquidacion).toBe(60);
+      expect(res.body.usuarioId).toBe(usuarioProfId);
     });
 
     it('no vincula usuarios que no son profesionales del centro', async () => {
@@ -183,30 +187,30 @@ describe.skipIf(!url)('ABM de salas, profesionales y pacientes (e2e)', () => {
         .expect(400);
     });
 
-    it('valida el porcentaje (0 a 100)', async () => {
+    it('el acuerdo de alquiler solo lo ven el admin y el propio profesional', async () => {
       await http()
-        .post('/api/v1/profesionales')
+        .put(`/api/v1/profesionales/${profId}/acuerdos/2026-01`)
         .set(como('admin@a.com'))
-        .send({
-          nombre: 'X',
-          apellido: 'Y',
-          disciplina: 'Z',
-          porcentajeLiquidacion: 150,
-        })
-        .expect(400);
-    });
-
-    it('el porcentaje solo lo ven el admin y el propio profesional', async () => {
-      const recep = await http()
-        .get(`/api/v1/profesionales/${profId}`)
-        .set(como('recep@a.com'))
+        .send({ porcentaje: 40 })
         .expect(200);
-      expect(recep.body.porcentajeLiquidacion).toBeUndefined();
+      await http()
+        .get(`/api/v1/profesionales/${profId}/acuerdos`)
+        .set(como('recep@a.com'))
+        .expect(403);
       const propio = await http()
-        .get(`/api/v1/profesionales/${profId}`)
+        .get(`/api/v1/profesionales/${profId}/acuerdos`)
         .set(como('prof@a.com'))
         .expect(200);
-      expect(propio.body.porcentajeLiquidacion).toBe(60);
+      expect(propio.body[0]).toMatchObject({
+        vigenteDesde: '2026-01',
+        porcentaje: 40,
+      });
+      // El profesional no lo cambia.
+      await http()
+        .put(`/api/v1/profesionales/${profId}/acuerdos/2026-02`)
+        .set(como('prof@a.com'))
+        .send({ porcentaje: 0 })
+        .expect(403);
     });
 
     it('otro centro no lo ve', async () => {

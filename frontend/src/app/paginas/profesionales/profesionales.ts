@@ -3,11 +3,13 @@ import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angula
 import { mensajeDeError, ProfesionalesApi, UsuariosApi } from '../../core/api/api';
 import type { Miembro, Profesional } from '../../core/api/modelos';
 import { AuthService } from '../../core/auth/auth.service';
+import { tieneModulo } from '../../core/auth/modulos';
 import { puede } from '../../core/auth/roles';
+import { AcuerdoProfesional } from './acuerdo-profesional';
 
 @Component({
   selector: 'app-profesionales',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, AcuerdoProfesional],
   templateUrl: './profesionales.html',
 })
 export class Profesionales implements OnInit {
@@ -16,6 +18,12 @@ export class Profesionales implements OnInit {
   private readonly usuariosApi = inject(UsuariosApi);
 
   protected readonly esAdmin = computed(() => puede(this.auth.sesion()?.rol, 'admin'));
+  /** Los acuerdos de alquiler van con la liquidación del plan. */
+  protected readonly conAcuerdos = computed(
+    () => this.esAdmin() && tieneModulo(this.auth.sesion(), 'liquidacion'),
+  );
+  /** Profesional cuyo acuerdo de alquiler se está viendo. */
+  protected readonly acuerdoDe = signal<Profesional | null>(null);
   protected readonly profesionales = signal<Profesional[]>([]);
   protected readonly cargando = signal(true);
   protected readonly verInactivos = signal(false);
@@ -31,7 +39,6 @@ export class Profesionales implements OnInit {
     apellido: ['', [Validators.required, Validators.maxLength(80)]],
     disciplina: ['', [Validators.required, Validators.maxLength(80)]],
     matricula: ['', Validators.maxLength(40)],
-    porcentajeLiquidacion: [0, [Validators.required, Validators.min(0), Validators.max(100)]],
     usuarioId: [''],
   });
 
@@ -43,7 +50,9 @@ export class Profesionales implements OnInit {
   private async cargarCuentas(): Promise<void> {
     try {
       const miembros = await this.usuariosApi.listar();
-      this.cuentas.set(miembros.filter((m) => (m.rol === 'profesional' || m.rol === 'admin') && m.activo));
+      this.cuentas.set(
+        miembros.filter((m) => (m.rol === 'profesional' || m.rol === 'admin') && m.activo),
+      );
     } catch {
       this.cuentas.set([]);
     }
@@ -84,11 +93,15 @@ export class Profesionales implements OnInit {
       apellido: p.apellido,
       disciplina: p.disciplina,
       matricula: p.matricula ?? '',
-      porcentajeLiquidacion: p.porcentajeLiquidacion ?? 0,
       usuarioId: p.usuarioId ?? '',
     });
     this.formAbierto.set(true);
     this.error.set(null);
+  }
+
+  protected verAcuerdo(p: Profesional): void {
+    this.formAbierto.set(false);
+    this.acuerdoDe.set(p);
   }
 
   protected cerrar(): void {

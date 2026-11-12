@@ -193,3 +193,17 @@ Limitaciones conocidas:
 - **Tokens:** se pegan como texto (token y n.º de afiliado o DNI por línea) y se emparejan como `emparejar_tokens`: por afiliado, si no por DNI; un token repetido se descarta. Primero se revisa y después se guarda. Leerlos de las capturas con OCR queda para más adelante.
 - **Presentada:** la misma marca `facturada` de la sesión, que ya usaban Cobros y la conciliación.
 
+
+## 18. Tipografías desde Google Fonts (excepción autorizada)
+
+- La web carga sus tipografías desde Google Fonts (guía Órbita Cian). Google recibe la IP y el navegador de quien abre la app y el dominio de la app; no recibe datos de pacientes ni lo que se ve o se escribe.
+- Es una excepción a la regla de no usar servicios externos (AGENTS.md), decidida por el responsable del proyecto el 12/11/2026 porque todavía no hay clientes.
+- **Antes de salir al mercado** (y antes de la app móvil, que necesita las tipografías dentro del paquete para funcionar sin conexión) se pasan a servirse desde el propio servidor (`frontend/public/fuentes/`). Ver pendientes en [estado.md](estado.md).
+
+## 19. Dictado: transcripción en el propio servidor
+
+- Los profesionales dictan sobre todo desde el celular, entre sesión y sesión. Por eso la transcripción corre en **nuestro servidor** con un modelo abierto (Whisper): la calidad es la misma en cualquier teléfono y el audio no va a terceros.
+- El celular solo graba y sube el audio; el servidor lo transcribe en memoria y lo descarta. Solo queda el texto, que el profesional revisa y guarda como nota cifrada. Sin señal, la grabación espera en el dispositivo.
+- No se usa el reconocimiento de voz del navegador (Chrome y Safari mandan el audio a Google o Apple).
+- Más adelante, en la app móvil nativa, se puede sumar el reconocimiento del propio teléfono **sin conexión** (solo si el equipo garantiza que es en el dispositivo).
+- Costo: el servicio de Render necesita más memoria que el plan gratis (a confirmar con una prueba).

@@ -40,6 +40,7 @@ import {
 } from './liquidaciones.js';
 import { OrdenesController, OrdenesService } from './ordenes.js';
 import { PreciosController, PreciosService } from './precios.js';
+import { AcuerdosController, AcuerdosService } from './acuerdos.js';
 import { PresentacionController, PresentacionService } from './presentacion.js';
 import { PrestacionesService } from './prestaciones.service.js';
 
@@ -187,11 +188,13 @@ export class CobrosController {
     OrdenesController,
     PreciosController,
     LiquidacionesController,
+    AcuerdosController,
     PresentacionController,
   ],
   providers: [
     PrestacionesService,
     LiquidacionesService,
+    AcuerdosService,
     CobrosService,
     OrdenesService,
     PreciosService,

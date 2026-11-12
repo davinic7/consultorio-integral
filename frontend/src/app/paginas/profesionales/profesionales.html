@@ -7,7 +7,9 @@
           <input type="checkbox" [checked]="verInactivos()" (change)="alternarInactivos()" />
           Ver dados de baja
         </label>
-        <button type="button" class="oc-btn oc-btn--primario" (click)="nuevo()">Nuevo profesional</button>
+        <button type="button" class="oc-btn oc-btn--primario" (click)="nuevo()">
+          Nuevo profesional
+        </button>
       </div>
     }
   </div>
@@ -32,10 +34,6 @@
         <input formControlName="matricula" placeholder="Opcional" />
       </label>
       <label class="oc-campo">
-        <span>Porcentaje de liquidación (%)</span>
-        <input type="number" formControlName="porcentajeLiquidacion" min="0" max="100" step="0.5" />
-      </label>
-      <label class="oc-campo">
         <span>Cuenta para iniciar sesión</span>
         <select formControlName="usuarioId">
           <option value="">Sin cuenta</option>
@@ -49,16 +47,20 @@
       </label>
       @if (form.touched && form.invalid) {
         <small class="oc-campo__error campo--completo">
-          Completá nombre, apellido y disciplina. El porcentaje va de 0 a 100.
+          Completá nombre, apellido y disciplina.
         </small>
       }
       <div class="acciones campo--completo">
-        <button type="submit" class="oc-btn oc-btn--primario" [disabled]="guardando()">Guardar</button>
-        <button type="button" class="oc-btn oc-btn--chico" (click)="cerrar()">
-          Cancelar
+        <button type="submit" class="oc-btn oc-btn--primario" [disabled]="guardando()">
+          Guardar
         </button>
+        <button type="button" class="oc-btn oc-btn--chico" (click)="cerrar()">Cancelar</button>
       </div>
     </form>
+  }
+
+  @if (acuerdoDe(); as p) {
+    <app-acuerdo-profesional [profesional]="p" (cerrado)="acuerdoDe.set(null)" />
   }
 
   @if (error(); as mensaje) {
@@ -86,14 +88,14 @@
               @if (cuentaDe(p.usuarioId); as email) {
                 · {{ email }}
               }
-              @if (p.porcentajeLiquidacion !== undefined) {
-                · {{ p.porcentajeLiquidacion }} %
-              }
             </div>
           </div>
           @if (esAdmin()) {
             <div class="lista__acciones">
               <button type="button" class="enlace" (click)="editar(p)">Editar</button>
+              @if (conAcuerdos()) {
+                <button type="button" class="enlace" (click)="verAcuerdo(p)">Acuerdo</button>
+              }
               <button type="button" class="enlace" (click)="alternarActivo(p)">
                 {{ p.activo ? 'Dar de baja' : 'Reactivar' }}
               </button>

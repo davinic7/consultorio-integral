@@ -53,6 +53,8 @@ Los 10 pasos de [prototipo.md](prototipo.md) están hechos (versión 1.0).
 
 ## Pendientes chicos anotados
 
+- Tipografías: servirlas desde el propio servidor en vez de Google Fonts antes de salir al mercado o de la app móvil (hoy es una excepción autorizada, ver [decisiones.md](decisiones.md) §18).
+
 - ARCA: probar en homologación con un certificado real (seguir [arca-paso-a-paso.md](arca-paso-a-paso.md)) antes de pasar a producción.
 - Planes: el plan Profesional no incluye facturación ARCA; decidir si un profesional independiente la tiene en su plan.
 - Alta de centros por cuenta propia (registro público con plan y cobro del servicio): hoy solo el superadmin crea centros.

@@ -67,7 +67,12 @@ describe.skipIf(!url)('Cobros y liquidación (e2e)', () => {
       'TRUNCATE centros, planes, usuarios RESTART IDENTITY CASCADE',
     );
     const plan = await prisma.plan.create({
-      data: { codigo: 'integral', nombre: 'Integral', precioMensual: 0, modulos: TODOS_LOS_MODULOS },
+      data: {
+        codigo: 'integral',
+        nombre: 'Integral',
+        precioMensual: 0,
+        modulos: TODOS_LOS_MODULOS,
+      },
     });
     const a = await prisma.centro.create({
       data: { nombre: 'A', slug: 'a', planId: plan.id },
@@ -90,23 +95,31 @@ describe.skipIf(!url)('Cobros y liquidación (e2e)', () => {
     const u2 = await usuario('prof2@a.com', a.id, Rol.profesional);
     await usuario('admin@b.com', b.id, Rol.admin);
 
+    /** Profesional con un acuerdo de alquiler "porcentaje" (lo que retiene el centro). */
     const prof = async (
       nombre: string,
       usuarioId: string,
-      porcentaje: number,
-    ) =>
-      (
-        await prisma.profesional.create({
-          data: {
-            centroId: a.id,
-            nombre,
-            apellido: nombre === 'Pablo' ? 'Paz' : 'Ríos',
-            disciplina: 'Psicología',
-            usuarioId,
-            porcentajeLiquidacion: porcentaje,
-          },
-        })
-      ).id;
+      porcentajeProfesional: number,
+    ) => {
+      const p = await prisma.profesional.create({
+        data: {
+          centroId: a.id,
+          nombre,
+          apellido: nombre === 'Pablo' ? 'Paz' : 'Ríos',
+          disciplina: 'Psicología',
+          usuarioId,
+        },
+      });
+      await prisma.acuerdoAlquiler.create({
+        data: {
+          centroId: a.id,
+          profesionalId: p.id,
+          vigenteDesde: new Date('2000-01-01T00:00:00Z'),
+          porcentaje: 100 - porcentajeProfesional,
+        },
+      });
+      return p.id;
+    };
     ids.p1 = await prof('Pablo', u1, 70);
     ids.p2 = await prof('Laura', u2, 60);
 
@@ -452,9 +465,9 @@ describe.skipIf(!url)('Cobros y liquidación (e2e)', () => {
         cobradoPorMedio: [{ medio: 'transferencia', monto: 17000 }],
         cobradoPorDia: [{ fecha: '2026-11-05', monto: 17000 }],
       });
-      // Pablo (70 %): 32500 × 0,7
-      expect(res.body.aLiquidar).toBe(22750);
-      expect(res.body.retencion).toBe(9750);
+      // Pablo (alquiler 30 % de lo facturado): 32500 − 9750
+      expect(res.body.saldoProfesionales).toBe(22750);
+      expect(res.body.alquiler).toBe(9750);
     });
 
     it('conciliación: detecta presentes sin prestación y las genera', async () => {
@@ -492,7 +505,7 @@ describe.skipIf(!url)('Cobros y liquidación (e2e)', () => {
   });
 
   describe('liquidación', () => {
-    it('muestra por profesional lo facturado, el porcentaje y lo que le toca', async () => {
+    it('muestra por profesional lo facturado, el alquiler y el saldo', async () => {
       const res = await http()
         .get(`/api/v1/liquidaciones?mes=${MES}`)
         .set(como('admin@a.com'))
@@ -503,10 +516,13 @@ describe.skipIf(!url)('Cobros y liquidación (e2e)', () => {
       expect(pablo).toMatchObject({
         sesiones: 4,
         facturado: 32500,
-        porcentaje: 70,
-        retencionPorcentaje: 30,
-        aLiquidar: 22750,
-        retencion: 9750,
+        alquiler: 9750,
+        componentes: [
+          { tipo: 'porcentaje', valor: 30, base: 32500, monto: 9750 },
+        ],
+        cobraElCentro: true,
+        saldo: 22750,
+        acuerdo: { vigenteDesde: '2000-01' },
         liquidacion: null,
         sinMarcar: 1,
       });
@@ -525,7 +541,8 @@ describe.skipIf(!url)('Cobros y liquidación (e2e)', () => {
         .send({ profesionalId: ids.p1, mes: MES })
         .expect(201);
       expect(res.body).toMatchObject({
-        aLiquidar: 22750,
+        saldo: 22750,
+        alquiler: 9750,
         liquidacion: { estado: 'cerrada' },
       });
       ids.liqP1 = res.body.liquidacion.id;
@@ -548,10 +565,17 @@ describe.skipIf(!url)('Cobros y liquidación (e2e)', () => {
         .send({ medio: 'efectivo' })
         .expect(201);
       expect(a1.body).toMatchObject({ cerrada: true, estadoCobro: 'cobrada' });
-      // Un cambio de porcentaje no toca lo ya liquidado.
-      await prisma.profesional.update({
-        where: { id: ids.p1 },
-        data: { porcentajeLiquidacion: 50 },
+      // Un acuerdo nuevo no puede regir desde un mes ya liquidado…
+      const conflicto = await http()
+        .put(`/api/v1/profesionales/${ids.p1}/acuerdos/${MES}`)
+        .set(como('admin@a.com'))
+        .send({ porcentaje: 50 })
+        .expect(409);
+      expect(conflicto.body.message).toContain('ya está cerrada');
+      // …y aunque cambie el acuerdo vigente, lo liquidado guardó su cálculo.
+      await prisma.acuerdoAlquiler.updateMany({
+        where: { profesionalId: ids.p1 },
+        data: { porcentaje: 50 },
       });
       const lista = await http()
         .get(`/api/v1/liquidaciones?mes=${MES}`)
@@ -560,8 +584,12 @@ describe.skipIf(!url)('Cobros y liquidación (e2e)', () => {
       expect(
         lista.body.find(
           (t: { profesional: { id: string } }) => t.profesional.id === ids.p1,
-        ).aLiquidar,
+        ).saldo,
       ).toBe(22750);
+      await prisma.acuerdoAlquiler.updateMany({
+        where: { profesionalId: ids.p1 },
+        data: { porcentaje: 30 },
+      });
     });
 
     it('se marca pagada; una pagada no se reabre', async () => {
@@ -582,11 +610,12 @@ describe.skipIf(!url)('Cobros y liquidación (e2e)', () => {
         .set(como('admin@a.com'))
         .send({ profesionalId: ids.p2, mes: MES })
         .expect(201);
-      // Laura (60 %): la sesión de Ana del 8/10, a 7500.
+      // Laura (alquiler 40 %): la sesión de Ana del 8/10, a 7500.
       expect(res.body).toMatchObject({
         sesiones: 1,
         facturado: 7500,
-        aLiquidar: 4500,
+        alquiler: 3000,
+        saldo: 4500,
       });
       await marcar(ids.a2, 'ausente_con_aviso').expect(409);
       const reabierta = await http()

@@ -47,7 +47,12 @@ describe.skipIf(!url)('Agenda y avisos (e2e)', () => {
     );
 
     const plan = await prisma.plan.create({
-      data: { codigo: 'basico', nombre: 'Básico', precioMensual: 0, modulos: TODOS_LOS_MODULOS },
+      data: {
+        codigo: 'basico',
+        nombre: 'Básico',
+        precioMensual: 0,
+        modulos: TODOS_LOS_MODULOS,
+      },
     });
     const a = await prisma.centro.create({
       data: { nombre: 'A', slug: 'a', planId: plan.id },

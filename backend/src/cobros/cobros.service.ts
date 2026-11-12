@@ -60,7 +60,8 @@ export class CobrosService {
       }
     }
     const facturado = sumar(filas.map((p) => p.monto));
-    const aLiquidar = sumar(totales.map((t) => t.liquidado));
+    const alquiler = sumar(totales.map((t) => t.alquiler));
+    const saldoProfesionales = sumar(totales.map((t) => t.saldo));
     return {
       mes,
       sesiones: filas.length,
@@ -68,8 +69,10 @@ export class CobrosService {
       cobrado: num(cobrado),
       porCobrar: num(porCobrar),
       porCobrarSesiones,
-      aLiquidar: num(aLiquidar),
-      retencion: num(facturado.minus(aLiquidar)),
+      /** Lo que los profesionales le deben al centro por alquiler. */
+      alquiler: num(alquiler),
+      /** Suma de los saldos: lo que el centro les paga (menos lo que le deben). */
+      saldoProfesionales: num(saldoProfesionales),
       cobradoPorMedio: Object.values(MedioPago)
         .map((medio) => ({ medio, monto: num(porMedio.get(medio) ?? CERO) }))
         .filter((m) => m.monto > 0),

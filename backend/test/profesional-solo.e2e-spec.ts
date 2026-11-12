@@ -97,7 +97,10 @@ describe.skipIf(!url)('Profesional que trabaja solo (e2e)', () => {
       disciplina: 'Psicología',
       activo: true,
     });
-    expect(Number(prof.porcentajeLiquidacion)).toBe(100);
+    // Trabaja solo: sin acuerdo de alquiler, no le debe nada al centro.
+    expect(
+      await prisma.acuerdoAlquiler.count({ where: { profesionalId: prof.id } }),
+    ).toBe(0);
     ids.prof = prof.id;
   });
 

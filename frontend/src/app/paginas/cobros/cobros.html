@@ -106,17 +106,11 @@
       </div>
       <div class="oc-tarjeta oc-tarjeta--destacada">
         <div class="oc-kpi__titulo">
-          {{ esProfesional() ? 'Te corresponde' : 'A liquidar a profesionales' }}
+          {{ esProfesional() ? 'Tu saldo con el centro' : 'Saldo con los profesionales' }}
         </div>
-        <div class="oc-kpi__valor">{{ plata(r.aLiquidar) }}</div>
+        <div class="oc-kpi__valor">{{ plata(r.saldoProfesionales) }}</div>
         <div class="oc-suave cobros__nota">
-          @if (esProfesional()) {
-            Retención del centro: {{ plata(r.retencion) }}
-          } @else if (veLiquidacion()) {
-            {{ retencionTexto() }}
-          } @else {
-            Retención del centro: {{ plata(r.retencion) }}
-          }
+          {{ esProfesional() ? 'Tu alquiler' : 'Alquileres' }}: {{ plata(r.alquiler) }}
         </div>
       </div>
     </div>
@@ -447,17 +441,32 @@
             <dd class="oc-mono">{{ l.sesiones }}</dd>
             <dt>Facturado</dt>
             <dd class="oc-mono">{{ plata(l.facturado) }}</dd>
-            <dt>Retención {{ l.retencionPorcentaje }}%</dt>
-            <dd class="oc-mono">− {{ plata(l.retencion) }}</dd>
-            <dt class="cobros__liq-total">A liquidar</dt>
-            <dd class="oc-mono cobros__liq-total">{{ plata(l.aLiquidar) }}</dd>
+            @for (c of l.componentes; track $index) {
+              <dt>{{ textoComponente(c) }}</dt>
+              <dd class="oc-mono">− {{ plata(c.monto) }}</dd>
+            } @empty {
+              <dt>Alquiler</dt>
+              <dd class="oc-suave">{{ l.acuerdo ? 'Sin cargo' : 'Sin acuerdo' }}</dd>
+            }
+            @if (!l.cobraElCentro) {
+              <dt class="campo--completo oc-suave">
+                Cobra el profesional: lo facturado no pasa por el centro
+              </dt>
+              <dd></dd>
+            }
+            <dt class="cobros__liq-total">{{ textoSaldo(l.saldo, esProfesional()) }}</dt>
+            <dd class="oc-mono cobros__liq-total">{{ plata(abs(l.saldo)) }}</dd>
           </dl>
           <a
             class="enlace cobros__nota"
             [routerLink]="['/cobros/liquidacion', l.profesional.id]"
             [queryParams]="{ mes: mes() }"
           >
-            {{ estado === 'cerrada' || estado === 'pagada' ? 'Ver comprobante' : 'Ver borrador del comprobante' }}
+            {{
+              estado === 'cerrada' || estado === 'pagada'
+                ? 'Ver comprobante'
+                : 'Ver borrador del comprobante'
+            }}
           </a>
           @if (l.sinMarcar && estado !== 'cerrada' && estado !== 'pagada') {
             <p class="oc-alerta oc-alerta--aviso cobros__nota">

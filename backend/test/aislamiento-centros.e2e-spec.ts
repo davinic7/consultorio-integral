@@ -42,7 +42,12 @@ describe.skipIf(!url)('Aislamiento entre centros (PostgreSQL)', () => {
       'TRUNCATE centros, planes, usuarios RESTART IDENTITY CASCADE',
     );
     const plan = await prisma.plan.create({
-      data: { codigo: 'test', nombre: 'Test', precioMensual: 0, modulos: TODOS_LOS_MODULOS },
+      data: {
+        codigo: 'test',
+        nombre: 'Test',
+        precioMensual: 0,
+        modulos: TODOS_LOS_MODULOS,
+      },
     });
     a = await sembrarCentro(prisma, plan.id, 'centro-a');
     b = await sembrarCentro(prisma, plan.id, 'centro-b');
@@ -74,6 +79,29 @@ describe.skipIf(!url)('Aislamiento entre centros (PostgreSQL)', () => {
     const { count } = await a.db.sala.deleteMany({ where: { id: b.sala.id } });
     expect(count).toBe(0);
     expect(await b.db.sala.count()).toBe(1);
+  });
+
+  it('acuerdos de alquiler: cada centro ve los suyos y no apunta a un profesional ajeno', async () => {
+    const vigenteDesde = new Date('2026-01-01T00:00:00Z');
+    await a.db.acuerdoAlquiler.create({
+      data: {
+        profesionalId: a.profesional.id,
+        vigenteDesde,
+        porcentaje: 30,
+      } as any,
+    });
+    expect(await a.db.acuerdoAlquiler.count()).toBe(1);
+    expect(await b.db.acuerdoAlquiler.count()).toBe(0);
+    // La clave compuesta (centro_id, profesional_id) impide cruzar centros.
+    await expect(
+      a.db.acuerdoAlquiler.create({
+        data: {
+          profesionalId: b.profesional.id,
+          vigenteDesde,
+          porcentaje: 1,
+        } as any,
+      }),
+    ).rejects.toBeTruthy();
   });
 
   it('rechaza pedir datos de otro centro de forma explícita', async () => {

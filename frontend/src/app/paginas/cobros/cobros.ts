@@ -22,6 +22,8 @@ import {
   nombreMes,
   plata,
   sumarMes,
+  textoComponente,
+  textoSaldo,
 } from '../../core/cobros';
 import { colorDisciplina, iniciales } from '../../core/disciplina';
 import { ahoraEn } from '../../core/fechas';
@@ -54,8 +56,7 @@ export class Cobros {
   /** Recepción no ve liquidaciones; tampoco se ven si el plan no las incluye. */
   protected readonly veLiquidacion = computed(
     () =>
-      puede(this.rol(), 'admin', 'profesional') &&
-      tieneModulo(this.auth.sesion(), 'liquidacion'),
+      puede(this.rol(), 'admin', 'profesional') && tieneModulo(this.auth.sesion(), 'liquidacion'),
   );
   private readonly hoy = computed(() => ahoraEn(this.auth.sesion()?.centro?.zonaHoraria).fecha);
 
@@ -167,12 +168,9 @@ export class Cobros {
       .filter(([, n]) => n > 0)
       .map(([tipo, n]) => ({ tipo, n, texto: NOMBRE_AVISO[tipo] }));
   });
-  protected readonly retencionTexto = computed(() => {
-    const pcts = [...new Set(this.liquidaciones().map((l) => l.retencionPorcentaje))];
-    return pcts.length === 1
-      ? `Retención del centro: ${pcts[0]}%`
-      : 'Retención según cada profesional';
-  });
+  protected readonly textoComponente = textoComponente;
+  protected readonly textoSaldo = textoSaldo;
+  protected readonly abs = Math.abs;
 
   constructor() {
     // Recarga al cambiar de mes.

@@ -18,6 +18,8 @@ import type {
   DatosOrden,
   DatosPago,
   LiquidacionProfesional,
+  AcuerdoAlquiler,
+  DatosAcuerdo,
   MedioPago,
   Orden,
   Precio,
@@ -349,6 +351,32 @@ export class LiquidacionesApi {
   reabrir(id: string) {
     return firstValueFrom(
       this.http.post<LiquidacionProfesional>(`${API}/liquidaciones/${id}/reabrir`, {}),
+    );
+  }
+}
+
+/** Acuerdos de alquiler de un profesional con el centro. */
+@Injectable({ providedIn: 'root' })
+export class AcuerdosApi {
+  private readonly http = inject(HttpClient);
+
+  listar(profesionalId: string) {
+    return firstValueFrom(
+      this.http.get<AcuerdoAlquiler[]>(`${API}/profesionales/${profesionalId}/acuerdos`),
+    );
+  }
+  /** Carga o reemplaza el acuerdo que rige desde `mes` (YYYY-MM). */
+  guardar(profesionalId: string, mes: string, datos: DatosAcuerdo) {
+    return firstValueFrom(
+      this.http.put<AcuerdoAlquiler>(
+        `${API}/profesionales/${profesionalId}/acuerdos/${mes}`,
+        datos,
+      ),
+    );
+  }
+  borrar(profesionalId: string, mes: string) {
+    return firstValueFrom(
+      this.http.delete<void>(`${API}/profesionales/${profesionalId}/acuerdos/${mes}`),
     );
   }
 }

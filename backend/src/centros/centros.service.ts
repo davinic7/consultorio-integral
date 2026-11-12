@@ -28,7 +28,7 @@ export const crearCentroSchema = z.object({
   }),
   /**
    * El administrador también atiende (profesional que trabaja solo): se le crea su
-   * ficha de profesional vinculada, con el 100 % de lo facturado.
+   * ficha de profesional vinculada (sin acuerdo de alquiler: no le debe nada al centro).
    */
   atiende: z
     .object({
@@ -101,7 +101,6 @@ export class CentrosService {
               centroId: centro.id,
               usuarioId: admin.id,
               ...dto.atiende,
-              porcentajeLiquidacion: 100,
             },
           });
         }

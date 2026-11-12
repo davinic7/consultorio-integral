@@ -45,7 +45,12 @@ describe.skipIf(!url)('Asistencia y notas cifradas (e2e)', () => {
     );
 
     const plan = await prisma.plan.create({
-      data: { codigo: 'basico', nombre: 'Básico', precioMensual: 0, modulos: TODOS_LOS_MODULOS },
+      data: {
+        codigo: 'basico',
+        nombre: 'Básico',
+        precioMensual: 0,
+        modulos: TODOS_LOS_MODULOS,
+      },
     });
     const a = await prisma.centro.create({
       data: { nombre: 'Centro A', slug: 'a', planId: plan.id },
@@ -220,14 +225,11 @@ describe.skipIf(!url)('Asistencia y notas cifradas (e2e)', () => {
           profesionalId: ids.p1,
           periodo: new Date('2026-10-01T00:00:00Z'),
           totalBruto: 0,
-          porcentaje: 50,
           totalLiquidado: 0,
           estado: EstadoLiquidacion.cerrada,
         },
       });
-      await marcar('admin@a.com', ids.tPasado, 'ausente_con_aviso').expect(
-        409,
-      );
+      await marcar('admin@a.com', ids.tPasado, 'ausente_con_aviso').expect(409);
       // El de Laura, mismo mes, sigue abierto.
       await marcar('admin@a.com', ids.tLaura, 'presente').expect(200);
     });
@@ -282,9 +284,11 @@ describe.skipIf(!url)('Asistencia y notas cifradas (e2e)', () => {
           financiador: { nombre: 'OSEP' },
         },
       });
-      expect(
-        res.body.filas.map((f: { fecha: string }) => f.fecha),
-      ).toEqual([PASADO, PASADO, '2026-10-27']);
+      expect(res.body.filas.map((f: { fecha: string }) => f.fecha)).toEqual([
+        PASADO,
+        PASADO,
+        '2026-10-27',
+      ]);
       expect(res.body.profesionales).toHaveLength(2);
     });
 
@@ -302,7 +306,10 @@ describe.skipIf(!url)('Asistencia y notas cifradas (e2e)', () => {
       const res = await http()
         .post(`/api/v1/pacientes/${ids.juan}/notas`)
         .set(como('prof1@a.com'))
-        .send({ texto: 'Privada: dificultad con la lectura', turnoId: ids.tPasado })
+        .send({
+          texto: 'Privada: dificultad con la lectura',
+          turnoId: ids.tPasado,
+        })
         .expect(201);
       ids.notaPrivada = res.body.id;
       expect(res.body).toMatchObject({

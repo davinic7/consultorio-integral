@@ -10,10 +10,11 @@ const LIQ: LiquidacionProfesional = {
   sesiones: 2,
   facturado: 30000,
   cobrado: 30000,
-  porcentaje: 70,
-  retencionPorcentaje: 30,
-  aLiquidar: 21000,
-  retencion: 9000,
+  alquiler: 9000,
+  componentes: [{ tipo: 'porcentaje', valor: 30, base: 30000, monto: 9000 }],
+  cobraElCentro: true,
+  saldo: 21000,
+  acuerdo: { id: 'a1', vigenteDesde: '2026-01', nota: null },
   liquidacion: { id: 'l1', estado: 'cerrada', cerradaEn: '2026-11-01T10:00:00Z', pagadaEn: null },
   sinMarcar: 0,
   sinPrestacion: 0,
@@ -80,6 +81,8 @@ describe('ComprobanteLiquidacion', () => {
     expect(filas[1]).toContain('Particular');
     expect(el.textContent).toContain('Díaz, Laura');
     expect(el.textContent).toContain('Generada');
+    expect(el.textContent).toContain('30 % de lo facturado');
+    expect(el.textContent).toContain('El centro le paga');
     expect(el.textContent).not.toContain('Borrador');
   });
 
@@ -94,6 +97,20 @@ describe('ComprobanteLiquidacion', () => {
     expect(texto).toContain('Centro Norte · Liquidación de');
     expect(texto).toContain('Laura Díaz (Psicología)');
     expect(texto).toContain('Sesiones: 2');
-    expect(texto).toMatch(/A liquidar: \$\s?21\.000/);
+    expect(texto).toContain('Alquiler · 30 % de lo facturado');
+    expect(texto).toMatch(/El centro le paga: \$\s?21\.000/);
+  });
+
+  it('si cobra el profesional, el texto dice cuánto le debe al centro', () => {
+    const texto = textoComprobante('C', '2026-10', {
+      ...LIQ,
+      cobraElCentro: false,
+      componentes: [{ tipo: 'fijo', valor: 50000, base: null, monto: 50000 }],
+      alquiler: 50000,
+      saldo: -50000,
+    });
+    expect(texto).toContain('Cuota fija mensual');
+    expect(texto).toContain('Cobra el profesional');
+    expect(texto).toMatch(/Le debe al centro: \$\s?50\.000/);
   });
 });

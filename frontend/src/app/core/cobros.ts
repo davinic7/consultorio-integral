@@ -1,4 +1,10 @@
-import type { AvisoPrestacion, EstadoCobro, EstadoLiquidacion, MedioPago } from './api/modelos';
+import type {
+  AvisoPrestacion,
+  EstadoCobro,
+  EstadoLiquidacion,
+  MedioPago,
+  ComponenteAlquiler,
+} from './api/modelos';
 
 export const NOMBRE_MEDIO: Record<MedioPago, string> = {
   efectivo: 'Efectivo',
@@ -49,6 +55,30 @@ const PESOS = new Intl.NumberFormat('es-AR', {
 });
 
 /** 12000 → "$ 12.000". */
+/** Renglón del cálculo del alquiler, en palabras. */
+export function textoComponente(c: ComponenteAlquiler): string {
+  const base = c.base ?? 0;
+  switch (c.tipo) {
+    case 'fijo':
+      return 'Cuota fija mensual';
+    case 'porcentaje':
+      return `${c.valor} % de lo facturado (${plata(base)})`;
+    case 'por_sesion':
+      return `${base} ${base === 1 ? 'sesión' : 'sesiones'} × ${plata(c.valor)}`;
+    case 'por_hora':
+      return `${base.toLocaleString('es-AR')} h de sala × ${plata(c.valor)}`;
+    case 'sesiones_equivalentes':
+      return `Equivalente a ${c.valor} ${c.valor === 1 ? 'sesión' : 'sesiones'} (${plata(base)} c/u)`;
+  }
+}
+
+/** Qué significa el saldo, desde el centro o desde el profesional. */
+export function textoSaldo(saldo: number, paraProfesional: boolean): string {
+  if (saldo === 0) return 'Sin saldo';
+  if (saldo > 0) return paraProfesional ? 'Te paga el centro' : 'El centro le paga';
+  return paraProfesional ? 'Le debés al centro' : 'Le debe al centro';
+}
+
 export function plata(n: number | null | undefined): string {
   return n === null || n === undefined ? '—' : PESOS.format(n);
 }
