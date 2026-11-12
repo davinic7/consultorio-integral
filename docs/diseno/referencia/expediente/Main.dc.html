@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Expediente del paciente · escritorio</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:inherit}
+@keyframes pulso{0%,100%{box-shadow:0 0 0 0 rgba(34,211,238,.6)}50%{box-shadow:0 0 0 6px rgba(34,211,238,0)}}
+@keyframes titila{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes onda{0%{transform:scale(1);opacity:.7}100%{transform:scale(1.6);opacity:0}}
+@keyframes nivel{0%,100%{transform:scaleY(.3)}50%{transform:scaleY(1)}}
+@keyframes gira{to{transform:rotate(360deg)}}
+.vivo{animation:pulso 2s ease-in-out infinite}
+.titila{animation:titila 1.4s ease-in-out infinite}
+.onda{animation:onda 1.8s ease-out infinite}
+.onda2{animation-delay:.9s}
+.barra{animation:nivel 1s ease-in-out infinite;transform-origin:center}
+.gira{animation:gira 1.1s linear infinite;transform-origin:center}
+.btn{transition:transform .18s ease,box-shadow .18s ease,filter .18s ease;cursor:pointer}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.06);box-shadow:0 0 0 1px rgba(103,232,249,.6),0 10px 30px rgba(34,211,238,.4)}
+.sec{transition:border-color .15s ease,background-color .15s ease;cursor:pointer}
+.sec:hover{border-color:rgba(34,211,238,.5)!important}
+.nav{transition:background-color .15s ease}
+.nav:hover{background:rgba(34,211,238,.08)}
+.tema-oscuro :focus-visible{outline:3px solid #67E8F9;outline-offset:2px}
+.tema-claro :focus-visible{outline:3px solid #0E7490;outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+textarea::placeholder,input::placeholder{color:inherit;opacity:.7}
+@media (prefers-reduced-motion: reduce){.vivo,.titila,.onda,.barra,.gira{animation:none!important}.btn:hover{transform:none}}
+</style>
+</helmet>
+<div class="{{temaClase}}" style="min-height:100vh; box-sizing:border-box; display:flex; flex-wrap:wrap; color-scheme:{{cs}}; font-family:Sora, system-ui, sans-serif; color:{{t.text}}; background-color:{{t.bg}}; background-image:radial-gradient(900px 520px at 20% -10%, {{t.glow}}, transparent 62%), radial-gradient(800px 480px at 100% 0%, {{t.glow2}}, transparent 60%), linear-gradient({{t.grid}} 1px, transparent 1px), linear-gradient(90deg, {{t.grid}} 1px, transparent 1px); background-size:auto, auto, 48px 48px, 48px 48px">
+
+<nav aria-label="Navegación principal" style="flex:1 1 232px; max-width:100%; box-sizing:border-box; padding:22px 14px 16px; display:flex; flex-direction:column; gap:16px; border-right:1px solid {{t.line}}; background:{{t.side}}; font-size:13.5px">
+<a href="#" style="display:flex; align-items:center; gap:10px; padding:0 8px; text-decoration:none; color:{{t.text}}; font-size:15px; letter-spacing:-0.01em"><svg aria-hidden="true" width="32" height="32" viewBox="0 0 48 48" style="flex-shrink:0; filter:drop-shadow(0 0 8px rgba(34,211,238,.4))"><defs><linearGradient id="ciEx" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="{{t.ring1}}"></stop><stop offset="1" stop-color="{{t.ring2}}"></stop></linearGradient></defs><path d="M37.79 12.43 A18 18 0 1 0 37.79 35.57" fill="none" stroke="url(#ciEx)" stroke-width="4" stroke-linecap="round"></path><path d="M24 24 H40" stroke="{{t.acc}}" stroke-width="2" stroke-linecap="round" opacity=".7"></path><circle cx="24" cy="24" r="5" fill="{{t.acc}}"></circle><circle cx="42" cy="24" r="3" fill="{{t.sat}}"></circle></svg><span><span style="font-weight:600">Centro</span> <span style="font-weight:300">Integral</span></span></a>
+<div style="display:flex; flex-wrap:wrap; gap:4px">
+<a href="#" class="nav" style="flex:1 1 160px; display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; text-decoration:none; {{navOff}}"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="2"></rect><rect x="14" y="3" width="7" height="5" rx="2"></rect><rect x="14" y="12" width="7" height="9" rx="2"></rect><rect x="3" y="16" width="7" height="5" rx="2"></rect></svg>Panel</a>
+<a href="#" class="nav" style="flex:1 1 160px; display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; text-decoration:none; {{navOff}}"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg>Agenda</a>
+<a href="#" class="nav" style="flex:1 1 160px; display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; text-decoration:none; {{navOff}}"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"></rect><path d="m8 12 3 3 5-6"></path></svg>Asistencia</a>
+<a href="#" class="nav" aria-current="page" style="flex:1 1 160px; display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; text-decoration:none; {{navOn}}"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c1.8.7 3 2.5 3.5 5.2"></path></svg>Pacientes</a>
+<a href="#" class="nav" style="flex:1 1 160px; display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; text-decoration:none; {{navOff}}"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="3"></rect><path d="M3 10h18M16 15h2"></path></svg>Cobros y liquidación</a>
+</div>
+<div style="flex:1"></div>
+<span style="padding:0 8px; font:400 11px 'JetBrains Mono', monospace; color:{{t.muted}}">v2.0</span>
+</nav>
+
+<div style="flex:999 1 560px; min-width:0; display:flex; flex-direction:column">
+<header style="display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:14px clamp(16px, 3vw, 28px); border-bottom:1px solid {{t.line}}">
+<label for="buscar" style="flex:1 1 260px; max-width:440px; display:flex; align-items:center; gap:10px; height:42px; padding:0 14px; box-sizing:border-box; border-radius:12px; border:1px solid {{t.line}}; background:{{t.panel}}; color:{{t.muted}}; font-size:13px"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg><span class="sr">Buscar en todo el sistema</span><input id="buscar" placeholder="Buscar paciente, turno o profesional" style="flex:1; min-width:0; border:0; background:transparent; font:400 13px Sora, sans-serif; color:{{t.text}}; outline:none"></label>
+<div style="margin-left:auto; display:flex; align-items:center; gap:10px">
+<sc-if value="{{pill.mostrar}}" hint-placeholder-val="{{true}}"><span role="status" style="display:inline-flex; align-items:center; gap:8px; height:36px; padding:0 14px; border-radius:999px; font:600 12px 'JetBrains Mono', monospace; letter-spacing:.06em; {{pill.st}}"><span class="{{pill.clase}}" style="width:8px; height:8px; border-radius:999px; {{pill.dot}}"></span>{{pill.txt}}</span></sc-if>
+<button onClick="{{toggle}}" aria-label="{{temaLabel}}" title="{{temaLabel}}" style="width:42px; height:42px; border-radius:12px; border:1px solid {{t.line}}; background:{{t.panel}}; color:{{t.soft}}; display:flex; align-items:center; justify-content:center; cursor:pointer"><sc-if value="{{dark}}" hint-placeholder-val="{{true}}"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg></sc-if><sc-if value="{{light}}" hint-placeholder-val="{{false}}"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"></path></svg></sc-if></button>
+<span title="Flga. Gabriela Molina · Fonoaudiología" style="width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg, #A78BFA, #5B8DEF); color:#0B0820; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center">GM</span>
+</div>
+</header>
+
+<main style="padding:clamp(16px, 3vw, 28px); display:flex; flex-direction:column; gap:18px">
+<nav aria-label="Ubicación" style="font-size:13px; color:{{t.muted}}; display:flex; gap:8px"><a href="#" style="color:{{t.muted}}">Pacientes</a><span aria-hidden="true">/</span><span style="color:{{t.text}}">Lucía Pereyra</span></nav>
+
+<section aria-label="Paciente" style="display:flex; flex-wrap:wrap; align-items:center; gap:16px; padding:16px 20px; border-radius:20px; border:1px solid {{t.line}}; background:radial-gradient(500px 220px at 0% 0%, {{t.foBg}}, transparent 70%), {{t.panel}}">
+<span style="width:56px; height:56px; flex-shrink:0; border-radius:18px; display:flex; align-items:center; justify-content:center; font-size:19px; font-weight:600; background:{{t.foBg}}; color:{{t.foTx}}; border:1px solid {{t.foBd}}">LP</span>
+<div style="flex:1 1 280px; min-width:0; display:flex; flex-direction:column; gap:8px">
+<h1 style="margin:0; font-size:24px; font-weight:600; letter-spacing:-0.03em">Lucía Pereyra</h1>
+<div style="display:flex; flex-wrap:wrap; gap:8px; font-size:12.5px">
+<span style="padding:4px 10px; border-radius:999px; border:1px solid {{t.line}}; color:{{t.soft}}">8 años</span>
+<span style="padding:4px 10px; border-radius:999px; border:1px solid {{t.foBd}}; background:{{t.foBg}}; color:{{t.foTx}}">Fonoaudiología</span>
+<span style="padding:4px 10px; border-radius:999px; border:1px solid {{t.line}}; color:{{t.soft}}">OSEP · Plan A</span>
+<span style="display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; border:1px solid {{t.okBd}}; background:{{t.okBg}}; color:{{t.okTx}}"><span style="width:6px; height:6px; border-radius:999px; background:{{t.ok}}"></span>En tratamiento</span>
+</div>
+</div>
+<div style="display:flex; flex-direction:column; align-items:flex-end; gap:2px; font-size:12px; color:{{t.muted}}"><span>Turno de hoy</span><span style="font:500 15px 'JetBrains Mono', monospace; color:{{t.text}}">11:00 · Sala 2</span></div>
+</section>
+
+<div role="tablist" aria-label="Secciones de la ficha" style="display:flex; flex-wrap:wrap; gap:24px; border-bottom:1px solid {{t.line}}">
+<button role="tab" aria-selected="false" style="border:0; background:none; padding:12px 0; margin-bottom:-1px; font:500 14px Sora, sans-serif; cursor:pointer; color:{{t.muted}}; border-bottom:2px solid transparent">Resumen</button>
+<button role="tab" aria-selected="false" style="border:0; background:none; padding:12px 0; margin-bottom:-1px; font:500 14px Sora, sans-serif; cursor:pointer; color:{{t.muted}}; border-bottom:2px solid transparent">Sesiones</button>
+<button role="tab" aria-selected="true" style="display:inline-flex; align-items:center; gap:8px; border:0; background:none; padding:12px 0; margin-bottom:-1px; font:500 14px Sora, sans-serif; cursor:pointer; color:{{t.text}}; border-bottom:2px solid #22D3EE; box-shadow:0 6px 12px -8px rgba(34,211,238,.9)">Expediente<span style="font:500 11px 'JetBrains Mono', monospace; padding:2px 7px; border-radius:999px; border:1px solid {{t.line}}; color:{{t.soft}}">{{total}}</span></button>
+<button role="tab" aria-selected="false" style="border:0; background:none; padding:12px 0; margin-bottom:-1px; font:500 14px Sora, sans-serif; cursor:pointer; color:{{t.muted}}; border-bottom:2px solid transparent">Pagos</button>
+</div>
+
+<div style="display:flex; flex-wrap:wrap; gap:20px; align-items:flex-start">
+
+<section aria-labelledby="exp-t" style="flex:999 1 560px; min-width:0; display:flex; flex-direction:column; gap:14px">
+<div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px">
+<h2 id="exp-t" style="margin:0; font-size:18px; font-weight:600; letter-spacing:-0.02em">Expediente de Lucía</h2>
+<span title="Las evoluciones se guardan cifradas. Las privadas las ves solo vos; las compartidas, el equipo de la paciente." style="display:inline-flex; align-items:center; gap:6px; font:400 11.5px 'JetBrains Mono', monospace; color:{{t.muted}}"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg>Contenido cifrado</span>
+</div>
+
+<div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center">
+<label for="buscar-exp" style="flex:1 1 220px; display:flex; align-items:center; gap:10px; height:44px; padding:0 14px; box-sizing:border-box; border-radius:12px; border:1px solid {{t.line}}; background:{{t.panel}}; color:{{t.muted}}"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg><span class="sr">Buscar en el expediente</span><input id="buscar-exp" type="search" value="{{q}}" onChange="{{buscar}}" placeholder="Buscar en las evoluciones" style="flex:1; min-width:0; border:0; background:transparent; font:400 13.5px Sora, sans-serif; color:{{t.text}}; outline:none"></label>
+<div role="group" aria-label="Período" style="display:flex; padding:3px; gap:2px; border-radius:12px; border:1px solid {{t.line}}; background:{{t.panel}}">
+<sc-for list="{{periodos}}" as="p" hint-placeholder-count="4"><button aria-pressed="{{p.on}}" onClick="{{p.elegir}}" style="height:36px; padding:0 11px; border-radius:9px; font:500 12.5px Sora, sans-serif; cursor:pointer; {{p.st}}">{{p.n}}</button></sc-for>
+</div>
+<div role="group" aria-label="Autor" style="display:flex; padding:3px; gap:2px; border-radius:12px; border:1px solid {{t.line}}; background:{{t.panel}}">
+<sc-for list="{{quienes}}" as="p" hint-placeholder-count="3"><button aria-pressed="{{p.on}}" onClick="{{p.elegir}}" style="height:36px; padding:0 11px; border-radius:9px; font:500 12.5px Sora, sans-serif; cursor:pointer; {{p.st}}">{{p.n}}</button></sc-for>
+</div>
+</div>
+
+<sc-if value="{{hayAviso}}" hint-placeholder-val="{{false}}">
+<div role="status" style="display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:12px; border:1px solid {{t.okBd}}; background:{{t.okBg}}; color:{{t.okTx}}; font-size:13.5px"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"></path></svg><span style="flex:1">{{aviso}}</span><button onClick="{{cerrarAviso}}" aria-label="Cerrar aviso" style="width:32px; height:32px; border:0; border-radius:8px; background:transparent; color:inherit; cursor:pointer; display:flex; align-items:center; justify-content:center"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"></path></svg></button></div>
+</sc-if>
+
+<sc-if value="{{vacio}}" hint-placeholder-val="{{false}}">
+<div style="padding:48px 24px; border-radius:20px; border:1px dashed {{t.line2}}; background:{{t.panel}}; display:flex; flex-direction:column; align-items:center; text-align:center; gap:14px">
+<svg aria-hidden="true" width="96" height="96" viewBox="0 0 96 96"><circle cx="48" cy="48" r="42" fill="none" stroke="{{t.line2}}" stroke-width="1.5" stroke-dasharray="3 6"></circle><circle cx="48" cy="48" r="28" fill="none" stroke="{{t.line2}}" stroke-width="1.5"></circle><circle cx="86" cy="36" r="4" fill="{{t.lilac}}"></circle><rect x="42" y="34" width="12" height="20" rx="6" fill="none" stroke="{{t.soft}}" stroke-width="2"></rect><path d="M36 50a12 12 0 0 0 24 0M48 62v4" fill="none" stroke="{{t.soft}}" stroke-width="2" stroke-linecap="round"></path></svg>
+<h3 style="margin:0; font-size:18px; font-weight:600; letter-spacing:-0.02em">Todavía no hay evoluciones de Lucía</h3>
+<p style="margin:0; max-width:440px; font-size:14px; line-height:1.6; color:{{t.soft}}">Al terminar la sesión, dictala o escribila. Queda cifrada y la ves solo vos, salvo que elijas compartirla con el equipo de Lucía.</p>
+<div style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center">
+<button class="sec" onClick="{{irDictar}}" style="height:48px; padding:0 18px; display:flex; align-items:center; gap:8px; border-radius:12px; border:1px solid {{t.line2}}; background:{{t.panel2}}; color:{{t.text}}; font:600 14px Sora, sans-serif"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3M8.5 21h7"></path></svg>Dictar la primera</button>
+<button class="sec" onClick="{{irEscribir}}" style="height:48px; padding:0 18px; display:flex; align-items:center; gap:8px; border-radius:12px; border:1px solid {{t.line2}}; background:{{t.panel2}}; color:{{t.text}}; font:600 14px Sora, sans-serif"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"></path><path d="m13.5 6.5 4 4"></path></svg>Escribir la primera</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{sinResultados}}" hint-placeholder-val="{{false}}">
+<div style="padding:28px 20px; border-radius:18px; border:1px dashed {{t.line2}}; display:flex; flex-wrap:wrap; align-items:center; gap:12px; justify-content:space-between"><p style="margin:0; font-size:14px; color:{{t.soft}}">No hay evoluciones que coincidan con la búsqueda en este período.</p><button class="sec" onClick="{{limpiar}}" style="height:44px; padding:0 16px; border-radius:12px; border:1px solid {{t.line2}}; background:transparent; color:{{t.text}}; font:500 13.5px Sora, sans-serif">Limpiar filtros</button></div>
+</sc-if>
+
+<sc-if value="{{hayLista}}" hint-placeholder-val="{{true}}">
+<p style="margin:0; font-size:12.5px; color:{{t.muted}}">{{conteo}}</p>
+<sc-for list="{{grupos}}" as="g" hint-placeholder-count="2">
+<div style="display:flex; flex-direction:column; gap:12px">
+<h3 style="margin:6px 0 0 28px; font:500 11px 'JetBrains Mono', monospace; letter-spacing:.12em; color:{{t.muted}}">{{g.mes}}</h3>
+<sc-for list="{{g.items}}" as="e" hint-placeholder-count="3">
+<article aria-labelledby="{{e.hid}}" style="display:flex; gap:14px">
+<div aria-hidden="true" style="width:14px; flex-shrink:0; display:flex; flex-direction:column; align-items:center; padding-top:22px"><span style="width:12px; height:12px; flex-shrink:0; box-sizing:border-box; border-radius:999px; {{e.dotSt}}"></span><span style="flex:1; width:1px; margin-top:8px; background:{{t.line}}"></span></div>
+<div style="flex:1; min-width:0; padding:16px 18px; border-radius:16px; display:flex; flex-direction:column; gap:10px; {{e.cardSt}}">
+<div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px 10px">
+<h4 id="{{e.hid}}" style="margin:0; font:500 13.5px 'JetBrains Mono', monospace; color:{{t.text}}">{{e.fecha}}</h4>
+<span style="display:inline-flex; align-items:center; gap:6px; font-size:12px; color:{{t.muted}}"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg>{{e.turno}}</span>
+<span style="flex:1"></span>
+<sc-if value="{{e.priv}}" hint-placeholder-val="{{true}}"><span style="display:inline-flex; align-items:center; gap:5px; height:26px; padding:0 9px; border-radius:999px; font-size:12px; {{e.chip}}"><svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg>Privada</span></sc-if>
+<sc-if value="{{e.comp}}" hint-placeholder-val="{{false}}"><span style="display:inline-flex; align-items:center; gap:5px; height:26px; padding:0 9px; border-radius:999px; font-size:12px; {{e.chip}}"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c1.8.7 3 2.5 3.5 5.2"></path></svg>Compartida</span></sc-if>
+<sc-if value="{{e.dict}}" hint-placeholder-val="{{true}}"><span style="display:inline-flex; align-items:center; gap:5px; height:26px; padding:0 9px; border-radius:999px; font-size:12px; {{e.chip}}"><svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg>Dictada</span></sc-if>
+<sc-if value="{{e.escr}}" hint-placeholder-val="{{false}}"><span style="display:inline-flex; align-items:center; gap:5px; height:26px; padding:0 9px; border-radius:999px; font-size:12px; {{e.chip}}"><svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"></path></svg>Escrita</span></sc-if>
+</div>
+<div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px; font-size:13px; color:{{t.soft}}"><span aria-hidden="true" style="width:24px; height:24px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:600; {{e.avSt}}">{{e.ini}}</span><span>{{e.autor}}</span><sc-if value="{{e.ajena}}" hint-placeholder-val="{{false}}"><span style="font-size:12px; padding:3px 9px; border-radius:999px; border:1px solid {{t.pdBd}}; color:{{t.pdTx}}">Del equipo · solo lectura</span></sc-if></div>
+
+<sc-if value="{{e.cerrada}}" hint-placeholder-val="{{true}}"><p style="margin:0; font-size:14px; line-height:1.65; color:{{t.soft}}; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden">{{e.resumen}}</p></sc-if>
+
+<sc-if value="{{e.leyendo}}" hint-placeholder-val="{{false}}">
+<div style="display:flex; flex-direction:column; gap:16px; max-width:68ch; padding:4px 0 2px">
+<sc-for list="{{e.secciones}}" as="x" hint-placeholder-count="3"><div><sc-if value="{{x.tieneH}}" hint-placeholder-val="{{true}}"><h5 style="margin:0 0 4px; font:600 11.5px Sora, sans-serif; letter-spacing:.06em; text-transform:uppercase; color:{{t.muted}}">{{x.h}}</h5></sc-if><p style="margin:0; font-size:15px; line-height:1.75; color:{{t.text}}">{{x.p}}</p></div></sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{e.editando}}" hint-placeholder-val="{{false}}">
+<div style="display:flex; flex-direction:column; gap:10px">
+<label for="{{e.taid}}" class="sr">Texto de la evolución</label>
+<textarea id="{{e.taid}}" rows="10" style="box-sizing:border-box; width:100%; border:1px solid {{t.line2}}; border-radius:12px; padding:14px 16px; font:400 15px/1.7 Sora, sans-serif; color:{{t.text}}; background:{{t.input}}; resize:vertical">{{e.textoEdit}}</textarea>
+<div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center">
+<button class="btn" onClick="{{e.guardarEd}}" style="height:44px; padding:0 18px; border:0; border-radius:12px; background:#22D3EE; color:#04121A; font:600 14px Sora, sans-serif">Guardar cambios</button>
+<button class="sec" onClick="{{e.cancelar}}" style="height:44px; padding:0 16px; border-radius:12px; border:1px solid {{t.line2}}; background:transparent; color:{{t.text}}; font:500 14px Sora, sans-serif">Cancelar</button>
+<span style="font-size:12.5px; color:{{t.muted}}">Se registra la fecha de la edición.</span>
+</div>
+</div>
+</sc-if>
+
+<div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px">
+<sc-if value="{{e.noEditando}}" hint-placeholder-val="{{true}}"><button class="sec" onClick="{{e.alternar}}" aria-expanded="{{e.abierta}}" style="height:38px; padding:0 14px; border-radius:10px; border:1px solid {{t.line}}; background:transparent; color:{{t.text}}; font:500 13px Sora, sans-serif">{{e.leerLbl}}</button></sc-if>
+<sc-if value="{{e.puedeEditar}}" hint-placeholder-val="{{true}}"><button class="sec" onClick="{{e.editar}}" style="height:38px; padding:0 14px; display:inline-flex; align-items:center; gap:6px; border-radius:10px; border:1px solid {{t.line}}; background:transparent; color:{{t.text}}; font:500 13px Sora, sans-serif"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"></path><path d="m13.5 6.5 4 4"></path></svg>Editar</button></sc-if>
+<sc-if value="{{e.verVis}}" hint-placeholder-val="{{false}}"><div role="group" aria-label="Quién ve esta evolución" style="display:flex; padding:3px; gap:2px; border-radius:11px; border:1px solid {{t.line}}"><button aria-pressed="{{e.privOn}}" onClick="{{e.hacerPriv}}" style="height:32px; padding:0 10px; display:inline-flex; align-items:center; gap:5px; border-radius:8px; font:500 12.5px Sora, sans-serif; cursor:pointer; {{e.privSt}}"><svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg>Privada</button><button aria-pressed="{{e.compOn}}" onClick="{{e.hacerComp}}" style="height:32px; padding:0 10px; display:inline-flex; align-items:center; gap:5px; border-radius:8px; font:500 12.5px Sora, sans-serif; cursor:pointer; {{e.compSt}}"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7"></path></svg>Compartida</button></div><span style="font-size:12.5px; color:{{t.muted}}">{{e.quienVe}}</span></sc-if>
+<span style="margin-left:auto; font:400 11.5px 'JetBrains Mono', monospace; color:{{t.muted}}">{{e.pie}}</span>
+</div>
+</div>
+</article>
+</sc-for>
+</div>
+</sc-for>
+</sc-if>
+</section>
+
+<aside aria-labelledby="nueva-t" style="flex:1 1 400px; max-width:460px; min-width:0; box-sizing:border-box; position:relative; padding:20px; border-radius:20px; display:flex; flex-direction:column; gap:16px; {{comp.cardSt}}">
+<div style="display:flex; align-items:center; justify-content:space-between; gap:10px; min-height:36px">
+<h2 id="nueva-t" style="margin:0; font-size:16px; font-weight:600; letter-spacing:-0.01em">{{comp.titulo}}</h2>
+<sc-if value="{{comp.cerrable}}" hint-placeholder-val="{{true}}"><button onClick="{{pedirSalir}}" aria-label="Cerrar la nueva evolución" style="width:40px; height:40px; border-radius:10px; border:1px solid {{t.line}}; background:transparent; color:{{t.soft}}; cursor:pointer; display:flex; align-items:center; justify-content:center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"></path></svg></button></sc-if>
+</div>
+
+<div style="display:flex; flex-direction:column; gap:6px">
+<label for="sesion" style="font-size:12.5px; color:{{t.muted}}">Sesión</label>
+<select id="sesion" value="{{sesion}}" onChange="{{elegirSesion}}" style="width:100%; height:48px; box-sizing:border-box; padding:0 12px; border-radius:12px; border:1px solid {{t.line}}; background:{{t.input}}; color:{{t.text}}; font:400 13.5px Sora, sans-serif"><option value="0">Hoy 12/11 · 11:00 · Sala 2 (turno de hoy)</option><option value="1">Lun 09/11 · 11:00 · Sala 2</option><option value="2">Sin turno: llamada, reunión o informe</option></select>
+</div>
+
+<sc-if value="{{comp.inicio}}" hint-placeholder-val="{{false}}">
+<div style="display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px">
+<button class="sec" onClick="{{irDictar}}" style="min-height:124px; padding:16px; border-radius:16px; border:1px solid {{t.line2}}; background:{{t.panel2}}; color:{{t.text}}; display:flex; flex-direction:column; align-items:flex-start; justify-content:space-between; gap:14px; text-align:left; font-family:Sora, sans-serif"><span aria-hidden="true" style="width:46px; height:46px; border-radius:14px; display:flex; align-items:center; justify-content:center; border:1px solid {{t.line2}}; color:{{t.text}}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3M8.5 21h7"></path></svg></span><span><span style="display:block; font-size:16px; font-weight:600">Dictar</span><span style="display:block; margin-top:3px; font-size:12.5px; color:{{t.muted}}">Hablás y queda en texto</span></span></button>
+<button class="sec" onClick="{{irEscribir}}" style="min-height:124px; padding:16px; border-radius:16px; border:1px solid {{t.line2}}; background:{{t.panel2}}; color:{{t.text}}; display:flex; flex-direction:column; align-items:flex-start; justify-content:space-between; gap:14px; text-align:left; font-family:Sora, sans-serif"><span aria-hidden="true" style="width:46px; height:46px; border-radius:14px; display:flex; align-items:center; justify-content:center; border:1px solid {{t.line2}}; color:{{t.text}}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"></path><path d="m13.5 6.5 4 4"></path></svg></span><span><span style="display:block; font-size:16px; font-weight:600">Escribir</span><span style="display:block; margin-top:3px; font-size:12.5px; color:{{t.muted}}">Con el teclado, a tu ritmo</span></span></button>
+</div>
+<div style="border-radius:14px; border:1px solid {{t.line}}">
+<button onClick="{{toggleGuia}}" aria-expanded="{{guiaAbierta}}" aria-controls="guia" style="width:100%; min-height:48px; display:flex; align-items:center; gap:10px; padding:0 14px; border:0; background:transparent; color:{{t.text}}; font:500 13.5px Sora, sans-serif; cursor:pointer; text-align:left"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"></path></svg><span style="flex:1">Guía de estructura <span style="color:{{t.muted}}; font-weight:400">· opcional</span></span><span style="font-size:12px; color:{{t.muted}}">{{guiaEstado}}</span><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate({{guiaGiro}}deg); transition:transform .2s ease"><path d="m6 9 6 6 6-6"></path></svg></button>
+<sc-if value="{{guiaAbierta}}" hint-placeholder-val="{{true}}">
+<div id="guia" style="padding:0 14px 14px; display:flex; flex-direction:column; gap:10px">
+<ol style="margin:0; padding:0; list-style:none; display:flex; flex-wrap:wrap; gap:6px; font-size:12.5px">
+<li style="padding:5px 10px; border-radius:999px; border:1px solid {{t.line}}; color:{{t.soft}}">Motivo</li>
+<li style="padding:5px 10px; border-radius:999px; border:1px solid {{t.line}}; color:{{t.soft}}">Desarrollo de la sesión</li>
+<li style="padding:5px 10px; border-radius:999px; border:1px solid {{t.line}}; color:{{t.soft}}">Observaciones</li>
+<li style="padding:5px 10px; border-radius:999px; border:1px solid {{t.line}}; color:{{t.soft}}">Plan</li>
+</ol>
+<label for="usar-guia" style="display:flex; align-items:center; gap:10px; min-height:40px; font-size:13px; color:{{t.soft}}"><input id="usar-guia" type="checkbox" checked="{{guiaUsar}}" onChange="{{toggleUsar}}" style="width:18px; height:18px; accent-color:#22D3EE">Usarla en esta evolución</label>
+<p style="margin:0; font-size:12.5px; line-height:1.5; color:{{t.muted}}">Se suman como títulos al borrador. Podés borrarlos o escribir sin ellos.</p>
+</div>
+</sc-if>
+</div>
+<p style="margin:0; display:flex; gap:8px; align-items:flex-start; font-size:12.5px; line-height:1.55; color:{{t.muted}}"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-top:2px"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg><span>Si dictás, el audio no se guarda: se convierte en texto en forma privada y se borra. Queda solo el texto, cifrado.</span></p>
+</sc-if>
+
+<sc-if value="{{comp.listo}}" hint-placeholder-val="{{false}}">
+<div style="display:flex; flex-direction:column; align-items:center; gap:14px; padding:14px 0 4px; text-align:center">
+<button class="btn" onClick="{{empezar}}" aria-label="Empezar a dictar" style="width:112px; height:112px; border-radius:999px; border:0; background:#22D3EE; color:#04121A; display:flex; align-items:center; justify-content:center; box-shadow:0 0 0 8px {{t.accBg}}, 0 14px 40px rgba(34,211,238,.35)"><svg aria-hidden="true" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3M8.5 21h7"></path></svg></button>
+<div style="font-size:15px; font-weight:600">Hacé clic para empezar a dictar</div>
+<p style="margin:0; max-width:320px; font-size:13px; line-height:1.55; color:{{t.muted}}">Contá la sesión como se la contarías a un colega. Después revisás el texto. Hasta 10 minutos por tramo.</p>
+<button class="sec" onClick="{{irEscribir}}" style="height:44px; padding:0 16px; border-radius:12px; border:1px solid {{t.line}}; background:transparent; color:{{t.text}}; font:500 13.5px Sora, sans-serif">Mejor la escribo</button>
+</div>
+</sc-if>
+
+<sc-if value="{{comp.grabando}}" hint-placeholder-val="{{true}}">
+<div style="display:flex; flex-direction:column; gap:16px">
+<div style="display:flex; align-items:center; justify-content:space-between; gap:10px">
+<span role="status" style="display:inline-flex; align-items:center; gap:8px; height:32px; padding:0 12px; border-radius:999px; font:600 12px 'JetBrains Mono', monospace; letter-spacing:.08em; {{rec.badgeSt}}"><sc-if value="{{rec.vivo}}" hint-placeholder-val="{{true}}"><span class="titila" style="width:8px; height:8px; border-radius:999px; background:#04121A"></span></sc-if><sc-if value="{{rec.pausa}}" hint-placeholder-val="{{false}}"><svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"></rect><rect x="14" y="5" width="4" height="14" rx="1"></rect></svg></sc-if>{{rec.badge}}</span>
+<span style="font:400 12px 'JetBrains Mono', monospace; color:{{t.muted}}">Tramo {{tramos}} · máx. 10:00</span>
+</div>
+<div style="display:flex; align-items:center; gap:20px">
+<div aria-hidden="true" style="position:relative; width:100px; height:100px; flex-shrink:0">
+<sc-if value="{{rec.vivo}}" hint-placeholder-val="{{true}}"><span class="onda" style="position:absolute; inset:6px; border-radius:999px; border:2px solid rgba(34,211,238,.75)"></span><span class="onda onda2" style="position:absolute; inset:6px; border-radius:999px; border:2px solid rgba(34,211,238,.75)"></span></sc-if>
+<span style="position:absolute; inset:10px; border-radius:999px; display:flex; align-items:center; justify-content:center; box-sizing:border-box; {{rec.micSt}}"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3M8.5 21h7"></path></svg></span>
+</div>
+<div style="flex:1; min-width:0">
+<div role="timer" aria-label="Tiempo grabado" style="font:500 46px 'JetBrains Mono', monospace; letter-spacing:-0.03em; line-height:1">{{rec.tiempo}}</div>
+<div style="height:5px; border-radius:5px; background:{{t.track}}; margin-top:14px; overflow:hidden"><div style="height:100%; width:{{rec.pct}}%; background:{{rec.barCol}}; border-radius:5px"></div></div>
+<div style="display:flex; justify-content:space-between; margin-top:6px; font:400 11.5px 'JetBrains Mono', monospace; color:{{t.muted}}"><span>{{rec.resta}}</span><span>10:00</span></div>
+</div>
+</div>
+<div aria-hidden="true" style="height:52px; display:flex; align-items:center; gap:3px; padding:0 10px; border-radius:12px; background:{{t.input}}; border:1px solid {{t.line}}">
+<sc-for list="{{rec.barras}}" as="b" hint-placeholder-count="32"><span class="{{b.clase}}" style="flex:1; border-radius:2px; height:{{b.h}}px; background:{{b.col}}; animation-delay:{{b.d}}s"></span></sc-for>
+</div>
+<sc-if value="{{rec.casi}}" hint-placeholder-val="{{false}}"><p role="status" style="margin:0; display:flex; gap:8px; align-items:flex-start; padding:10px 12px; border-radius:12px; border:1px solid {{t.wBd}}; background:{{t.wBg}}; color:{{t.wTx}}; font-size:13px; line-height:1.5"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-top:1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg><span>Queda menos de un minuto. A los 10:00 el tramo termina solo y podés dictar otro.</span></p></sc-if>
+<div style="display:grid; grid-template-columns:52px minmax(0, 1fr) minmax(0, 1.3fr); gap:8px">
+<button class="sec" onClick="{{pedirDescartar}}" aria-label="Descartar la grabación" title="Descartar" style="width:52px; height:52px; border-radius:14px; border:1px solid {{t.line2}}; background:transparent; color:{{t.bTx}}; display:flex; align-items:center; justify-content:center"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"></path></svg></button>
+<button class="sec" onClick="{{pausar}}" style="height:52px; border-radius:14px; border:1px solid {{t.line2}}; background:{{t.panel2}}; color:{{t.text}}; display:flex; align-items:center; justify-content:center; gap:8px; font:600 14.5px Sora, sans-serif"><sc-if value="{{rec.esPausa}}" hint-placeholder-val="{{true}}"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"></rect><rect x="14" y="5" width="4" height="14" rx="1"></rect></svg></sc-if><sc-if value="{{rec.esReanudar}}" hint-placeholder-val="{{false}}"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M7 5v14l12-7z"></path></svg></sc-if>{{rec.pausaLbl}}</button>
+<button class="btn" onClick="{{terminar}}" style="height:52px; border:0; border-radius:14px; background:#22D3EE; color:#04121A; display:flex; align-items:center; justify-content:center; gap:8px; font:600 15px Sora, sans-serif; box-shadow:0 0 0 1px rgba(103,232,249,.5), 0 8px 24px rgba(34,211,238,.32)"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"></path></svg>Terminar</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{comp.transcribiendo}}" hint-placeholder-val="{{false}}">
+<div style="display:flex; flex-direction:column; gap:14px">
+<div style="display:flex; align-items:center; gap:14px"><svg class="gira" aria-hidden="true" width="40" height="40" viewBox="0 0 40 40" style="flex-shrink:0"><circle cx="20" cy="20" r="16" fill="none" stroke="{{t.track}}" stroke-width="4"></circle><path d="M20 4a16 16 0 0 1 16 16" fill="none" stroke="#22D3EE" stroke-width="4" stroke-linecap="round"></path></svg><div><div style="font-size:15px; font-weight:600">Transcribiendo {{rec.dur}} de audio</div><div style="font-size:12.5px; color:{{t.muted}}; margin-top:2px">Puede tardar de unos segundos a un minuto.</div></div></div>
+<div role="progressbar" aria-label="Progreso de la transcripción" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{prog}}" style="height:8px; border-radius:8px; background:{{t.track}}; overflow:hidden"><div style="height:100%; width:{{prog}}%; background:#22D3EE; border-radius:8px; box-shadow:0 0 12px rgba(34,211,238,.6); transition:width .8s ease"></div></div>
+<ol style="margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:10px; font-size:13px">
+<li style="display:flex; gap:10px; align-items:center; color:{{t.soft}}"><span aria-hidden="true" style="width:22px; height:22px; border-radius:999px; display:flex; align-items:center; justify-content:center; background:{{t.okBg}}; color:{{t.okTx}}; border:1px solid {{t.okBd}}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"></path></svg></span>Audio grabado, guardado cifrado en este equipo</li>
+<li style="display:flex; gap:10px; align-items:center; color:{{t.text}}; font-weight:500"><span aria-hidden="true" class="vivo" style="width:22px; height:22px; box-sizing:border-box; border-radius:999px; border:2px solid #22D3EE; display:flex; align-items:center; justify-content:center"><span style="width:8px; height:8px; border-radius:999px; background:#22D3EE"></span></span>Convirtiendo la voz en texto · {{prog}}%</li>
+<li style="display:flex; gap:10px; align-items:center; color:{{t.muted}}"><span aria-hidden="true" style="width:22px; height:22px; box-sizing:border-box; border-radius:999px; border:1px dashed {{t.line2}}"></span>Borrador listo para revisar; el audio se borra</li>
+</ol>
+<p style="margin:0; font-size:12.5px; line-height:1.55; color:{{t.muted}}">Podés seguir mirando el expediente. El aviso de arriba te muestra cuándo está listo.</p>
+</div>
+</sc-if>
+
+<sc-if value="{{comp.revisar}}" hint-placeholder-val="{{false}}">
+<div style="display:flex; flex-direction:column; gap:12px">
+<div style="display:flex; align-items:center; justify-content:space-between; gap:8px"><label for="borrador" style="font-size:13.5px; font-weight:600">Borrador transcripto</label><span style="font:400 11.5px 'JetBrains Mono', monospace; color:{{t.muted}}">{{tramosTxt}}</span></div>
+<p style="margin:0; display:flex; gap:8px; align-items:flex-start; padding:10px 12px; border-radius:12px; border:1px solid {{t.wBd}}; background:{{t.wBg}}; color:{{t.wTx}}; font-size:12.5px; line-height:1.5"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-top:1px"><path d="M12 3 2 20h20z"></path><path d="M12 10v4M12 17h.01"></path></svg><span>Revisá los términos clínicos: la transcripción puede confundir palabras técnicas. El audio ya se borró.</span></p>
+<textarea id="borrador" rows="13" onChange="{{editarBorrador}}" style="box-sizing:border-box; width:100%; border:1px solid {{t.line2}}; border-radius:12px; padding:14px 16px; font:400 14.5px/1.7 Sora, sans-serif; color:{{t.text}}; background:{{t.input}}; resize:vertical">{{borradorTxt}}</textarea>
+<button class="sec" onClick="{{otroTramo}}" style="height:48px; border-radius:12px; border:1px solid {{t.line2}}; background:{{t.panel2}}; color:{{t.text}}; display:flex; align-items:center; justify-content:center; gap:8px; font:500 14px Sora, sans-serif"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg>Dictar otro tramo · se suma al final</button>
+<fieldset style="margin:0; padding:0; border:0; min-width:0">
+<legend style="padding:0; margin-bottom:8px; font-size:12.5px; color:{{t.muted}}">¿Quién la ve?</legend>
+<div style="display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px">
+<button aria-pressed="{{visPriv}}" onClick="{{ponerPriv}}" style="min-height:60px; padding:10px 12px; border-radius:12px; display:flex; align-items:center; gap:10px; text-align:left; cursor:pointer; font-family:Sora, sans-serif; {{visPrivSt}}"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg><span><span style="display:block; font-size:13.5px; font-weight:600">Privada</span><span style="display:block; font-size:12px; opacity:.85">Solo vos</span></span></button>
+<button aria-pressed="{{visComp}}" onClick="{{ponerComp}}" style="min-height:60px; padding:10px 12px; border-radius:12px; display:flex; align-items:center; gap:10px; text-align:left; cursor:pointer; font-family:Sora, sans-serif; {{visCompSt}}"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7"></path></svg><span><span style="display:block; font-size:13.5px; font-weight:600">Compartida</span><span style="display:block; font-size:12px; opacity:.85">Equipo de Lucía</span></span></button>
+</div>
+</fieldset>
+<div style="display:flex; gap:8px"><button class="sec" onClick="{{pedirSalir}}" style="height:50px; padding:0 16px; border-radius:12px; border:1px solid {{t.line2}}; background:transparent; color:{{t.text}}; font:500 14px Sora, sans-serif">Descartar</button><button class="btn" onClick="{{guardar}}" style="flex:1; height:50px; border:0; border-radius:12px; background:#22D3EE; color:#04121A; font:600 15px Sora, sans-serif; box-shadow:0 0 0 1px rgba(103,232,249,.5), 0 8px 24px rgba(34,211,238,.3)">Guardar evolución</button></div>
+</div>
+</sc-if>
+
+<sc-if value="{{comp.escribir}}" hint-placeholder-val="{{false}}">
+<div style="display:flex; flex-direction:column; gap:12px">
+<label for="texto-nuevo" style="font-size:13.5px; font-weight:600">Evolución</label>
+<textarea id="texto-nuevo" rows="14" onChange="{{editarTexto}}" placeholder="Escribí qué trabajaron en la sesión" style="box-sizing:border-box; width:100%; border:1px solid {{t.line2}}; border-radius:12px; padding:14px 16px; font:400 14.5px/1.7 Sora, sans-serif; color:{{t.text}}; background:{{t.input}}; resize:vertical">{{plantilla}}</textarea>
+<button class="sec" onClick="{{irDictar}}" style="height:46px; border-radius:12px; border:1px solid {{t.line2}}; background:{{t.panel2}}; color:{{t.text}}; display:flex; align-items:center; justify-content:center; gap:8px; font:500 14px Sora, sans-serif"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg>Pasar a dictar</button>
+<fieldset style="margin:0; padding:0; border:0; min-width:0">
+<legend style="padding:0; margin-bottom:8px; font-size:12.5px; color:{{t.muted}}">¿Quién la ve?</legend>
+<div style="display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px">
+<button aria-pressed="{{visPriv}}" onClick="{{ponerPriv}}" style="min-height:52px; padding:8px 12px; border-radius:12px; display:flex; align-items:center; gap:8px; cursor:pointer; font:600 13.5px Sora, sans-serif; {{visPrivSt}}"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg>Privada</button>
+<button aria-pressed="{{visComp}}" onClick="{{ponerComp}}" style="min-height:52px; padding:8px 12px; border-radius:12px; display:flex; align-items:center; gap:8px; cursor:pointer; font:600 13.5px Sora, sans-serif; {{visCompSt}}"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"></path></svg>Compartida</button>
+</div>
+</fieldset>
+<div style="display:flex; gap:8px"><button class="sec" onClick="{{pedirSalir}}" style="height:50px; padding:0 16px; border-radius:12px; border:1px solid {{t.line2}}; background:transparent; color:{{t.text}}; font:500 14px Sora, sans-serif">Descartar</button><button class="btn" onClick="{{guardar}}" style="flex:1; height:50px; border:0; border-radius:12px; background:#22D3EE; color:#04121A; font:600 15px Sora, sans-serif">Guardar evolución</button></div>
+</div>
+</sc-if>
+
+<sc-if value="{{hayConfirmar}}" hint-placeholder-val="{{false}}">
+<div style="position:absolute; inset:0; z-index:2; border-radius:20px; background:{{t.velo}}; display:flex; align-items:center; justify-content:center; padding:20px">
+<div role="alertdialog" aria-modal="true" aria-labelledby="conf-t" aria-describedby="conf-d" style="width:100%; max-width:340px; box-sizing:border-box; padding:22px; border-radius:18px; border:1px solid {{t.line2}}; background:{{t.sheet}}; display:flex; flex-direction:column; gap:12px; box-shadow:0 24px 60px rgba(0,0,0,.4)">
+<h3 id="conf-t" style="margin:0; font-size:17px; font-weight:600">{{conf.titulo}}</h3>
+<p id="conf-d" style="margin:0 0 4px; font-size:13.5px; line-height:1.55; color:{{t.soft}}">{{conf.texto}}</p>
+<button class="btn" onClick="{{seguir}}" style="height:50px; border:0; border-radius:12px; background:#22D3EE; color:#04121A; font:600 14.5px Sora, sans-serif">{{conf.seguir}}</button>
+<button onClick="{{descartar}}" style="height:50px; border-radius:12px; border:1px solid {{t.bBd}}; background:transparent; color:{{t.bTx}}; font:500 14px Sora, sans-serif; cursor:pointer">{{conf.descartar}}</button>
+</div>
+</div>
+</sc-if>
+</aside>
+
+</div>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"oscuro":{"editor":"boolean","default":true},"vacio":{"editor":"boolean","default":false},"estadoInicial":{"editor":"enum","options":["inicio","listo","grabando","transcribiendo","revisar","escribir"],"default":"grabando"},"segundosIniciales":{"editor":"int","min":0,"max":595,"step":5,"default":167},"$preview":{"width":1440,"height":1320}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    const m = props.estadoInicial ?? 'grabando';
+    this.state = {
+      dark: props.oscuro ?? true, modo: m, guiaAbierta: false, guiaUsar: true,
+      pausa: false, seg: props.segundosIniciales ?? 167, ultimo: 167, prog: m === 'transcribiendo' ? 40 : 0, tramos: 1,
+      vis: 'privada', sesion: '0', texto: '', borradorEd: null, borradorBase: null,
+      abierta: 'e1', editando: null, visEdit: {}, editadas: {}, confirmar: null,
+      nuevas: [], aviso: '', periodo: 'todo', quien: 'todas', q: ''
+    };
+  }
+  componentDidMount() {
+    this.iv = setInterval(() => {
+      const s = this.state;
+      if (s.modo === 'grabando' && !s.pausa && !s.confirmar) {
+        if (s.seg >= 600) this.terminar(); else this.setState({ seg: s.seg + 1 });
+      } else if (s.modo === 'transcribiendo') {
+        if (s.prog >= 100) this.setState({ modo: 'revisar', borradorEd: null });
+        else this.setState({ prog: Math.min(100, s.prog + 12) });
+      }
+    }, 1000);
+  }
+  componentDidUpdate(prev) {
+    const p = this.props;
+    if (prev.oscuro !== p.oscuro) this.setState({ dark: p.oscuro ?? true });
+    if (prev.estadoInicial !== p.estadoInicial) this.setState({ modo: p.estadoInicial ?? 'grabando', prog: 40, confirmar: null, pausa: false });
+    if (prev.segundosIniciales !== p.segundosIniciales) this.setState({ seg: p.segundosIniciales ?? 167 });
+  }
+  componentWillUnmount() { clearInterval(this.iv); }
+  mmss(n) { return String(Math.floor(n / 60)).padStart(2, '0') + ':' + String(n % 60).padStart(2, '0'); }
+  terminar() { this.setState({ modo: 'transcribiendo', prog: 4, pausa: false, ultimo: this.state.seg, confirmar: null }); }
+  primerTramo() {
+    if (this.state.guiaUsar) return 'Motivo\nSeguimiento de fonemas vibrantes y grupos consonánticos.\n\nDesarrollo de la sesión\nEmpezamos con prácticas linguales, cinco minutos. Después trabajamos la erre en sílaba media con el juego de la oca: logra siete de diez en repetición. En lenguaje espontáneo todavía la cambia por ele.\n\nObservaciones\nVino más cansada que otras veces. La mamá cuenta que durmió poco.\n\nPlan\nSeguir con sílaba media y sumar trabadas con ere la próxima sesión.';
+    return 'Seguimiento de fonemas vibrantes y grupos consonánticos. Empezamos con prácticas linguales, cinco minutos. Después trabajamos la erre en sílaba media con el juego de la oca: logra siete de diez en repetición. En lenguaje espontáneo todavía la cambia por ele.\n\nVino más cansada que otras veces. La mamá cuenta que durmió poco. Seguimos con sílaba media y sumamos trabadas con ere la próxima sesión.';
+  }
+  borrador() {
+    const s = this.state;
+    const extra = '\n\nAl cierre acordamos con la mamá diez minutos diarios con las tarjetas nuevas.';
+    if (s.borradorBase != null) return s.borradorBase + (s.tramos > 1 ? extra : '');
+    return this.primerTramo();
+  }
+  parse(txt) {
+    const H = ['Motivo', 'Desarrollo de la sesión', 'Observaciones', 'Plan'];
+    const out = []; let h = ''; let buf = [];
+    const flush = () => { const p = buf.join(' ').replace(/\s+/g, ' ').trim(); if (p) out.push({ h: h, p: p }); buf = []; };
+    String(txt || '').split('\n').forEach((l) => {
+      const x = l.trim();
+      if (H.indexOf(x) >= 0) { flush(); h = x; }
+      else if (!x) { if (buf.length) { flush(); h = ''; } }
+      else buf.push(x);
+    });
+    flush();
+    return out;
+  }
+  guardar() {
+    const s = this.state;
+    const txt = s.modo === 'revisar' ? (s.borradorEd ?? this.borrador()) : s.texto;
+    const secc = this.parse(txt);
+    if (!secc.length) { this.setState({ aviso: 'La evolución está vacía: escribí algo antes de guardar.' }); return; }
+    const ses = [{ f: 'Jue 12/11 · 11:00', t: 'Turno 11:00 · Sala 2' }, { f: 'Lun 09/11 · 11:00', t: 'Turno 11:00 · Sala 2' }, { f: 'Jue 12/11 · 11:52', t: 'Sin turno' }][Number(s.sesion) || 0];
+    const n = { id: 'n' + (s.nuevas.length + 1), mes: 'nov', fecha: ses.f, turno: ses.t, propia: true, autor: 'Vos · Flga. Gabriela Molina', ini: 'GM', vis: s.vis, dict: s.modo === 'revisar', pie: 'Guardada hoy a las 11:52', dias: 0, secciones: secc };
+    this.setState({ nuevas: [n].concat(s.nuevas), modo: 'inicio', texto: '', borradorEd: null, borradorBase: null, tramos: 1, seg: 0, abierta: n.id, editando: null, confirmar: null, vis: 'privada', aviso: s.vis === 'privada' ? 'Evolución guardada y cifrada. La ves solo vos.' : 'Evolución guardada y cifrada. La ve también el equipo de Lucía.' });
+  }
+  tokens(dark) {
+    if (dark) return {bg:'#05080F',bgSolid:'#05080F',grid:'rgba(148,197,255,.045)',glow:'rgba(34,211,238,.12)',glow2:'rgba(91,141,239,.10)',side:'rgba(255,255,255,.02)',panel:'rgba(255,255,255,.035)',panel2:'rgba(255,255,255,.05)',sheet:'#0B1220',velo:'rgba(5,8,15,.78)',line:'rgba(148,197,255,.12)',line2:'rgba(148,197,255,.24)',text:'#E8F1FF',muted:'#8FA3BF',soft:'#C9D6EA',acc:'#22D3EE',accTx:'#67E8F9',accBg:'rgba(34,211,238,.10)',accBd:'rgba(34,211,238,.4)',accSoft:'#A5F3FC',input:'rgba(5,8,15,.55)',track:'rgba(148,197,255,.16)',wave:'#22D3EE',ok:'#34D399',okTx:'#6EE7B7',okBg:'rgba(52,211,153,.10)',okBd:'rgba(52,211,153,.35)',wTx:'#FCD34D',wBg:'rgba(251,191,36,.10)',wBd:'rgba(251,191,36,.4)',bTx:'#FCA5A5',bBd:'rgba(248,113,113,.45)',lilac:'#A78BFA',foBg:'rgba(167,139,250,.16)',foBd:'rgba(167,139,250,.5)',foTx:'#DDD6FE',pd:'#FBBF24',pdBg:'rgba(251,191,36,.08)',pdBd:'rgba(251,191,36,.32)',pdTx:'#FDE68A',ring1:'#FFFFFF',ring2:'#67E8F9',sat:'#E8F1FF'};
+    return {bg:'#F3F7FC',bgSolid:'#F3F7FC',grid:'rgba(14,116,144,.055)',glow:'rgba(34,211,238,.18)',glow2:'rgba(91,141,239,.10)',side:'rgba(255,255,255,.7)',panel:'#FFFFFF',panel2:'#F7FAFD',sheet:'#FFFFFF',velo:'rgba(243,247,252,.86)',line:'#DCE6F2',line2:'#C3D2E4',text:'#0B1726',muted:'#4A5B73',soft:'#2A3B52',acc:'#06B6D4',accTx:'#0E7490',accBg:'#E3F6FA',accBd:'#7FD3E4',accSoft:'#0B5566',input:'#F7FAFD',track:'#E3ECF6',wave:'#0891B2',ok:'#10B981',okTx:'#046C4E',okBg:'#E6F7EF',okBd:'#A7E3C8',wTx:'#7A4503',wBg:'#FEF4DF',wBd:'#F0C878',bTx:'#B42318',bBd:'#F5B9B3',lilac:'#6D4BD8',foBg:'#ECE7FB',foBd:'#B3A1EE',foTx:'#46309A',pd:'#B7791F',pdBg:'#FEF8EC',pdBd:'#F2D9A6',pdTx:'#6E3F03',ring1:'#0B1726',ring2:'#0E7490',sat:'#0B1726'};
+  }
+  renderVals() {
+    const s = this.state, dark = s.dark, t = this.tokens(dark);
+    const segOn = 'border:1px solid ' + t.accBd + '; background:' + t.accBg + '; color:' + (dark ? t.accSoft : t.accSoft);
+    const segOff = 'border:1px solid transparent; background:transparent; color:' + t.muted;
+    const opOff = 'border:1px solid ' + t.line2 + '; background:transparent; color:' + t.soft;
+    const chip = 'border:1px solid ' + t.line + '; color:' + t.soft;
+    const base = [
+      { id: 'e1', mes: 'nov', dias: 3, fecha: 'Lun 09/11 · 11:00', turno: 'Turno 11:00 · Sala 2', propia: true, autor: 'Vos · Flga. Gabriela Molina', ini: 'GM', vis: 'privada', dict: true, pie: 'Creada el 09/11 a las 11:52', secciones: [
+        { h: 'Motivo', p: 'Seguimiento de fonemas vibrantes.' },
+        { h: 'Desarrollo de la sesión', p: 'Trabajamos /r/ simple en sílaba inicial con tarjetas y un juego de memoria. Logra 7 de 10 en repetición y 4 de 10 en lenguaje espontáneo. Después de los 30 minutos baja la atención; cerramos con un juego motor.' },
+        { h: 'Observaciones', p: 'La mamá cuenta que en casa practica más con el hermano mayor.' },
+        { h: 'Plan', p: 'Sumar /r/ en sílaba media. Pedir a la escuela un registro de lectura en voz alta.' } ] },
+      { id: 'e2', mes: 'nov', dias: 6, fecha: 'Vie 06/11 · 15:30', turno: 'Turno 15:30 · Consultorio 4', propia: false, autor: 'Lic. Rocío Herrera · Psicopedagogía', ini: 'RH', vis: 'compartida', dict: false, pie: 'Creada el 06/11 a las 16:20', secciones: [
+        { h: '', p: 'Se trabajó lectura de sílabas complejas, trabadas con l y con r. Lee con apoyo silábico y mejora cuando anticipa con imágenes. Coordino una reunión con la escuela para el 20/11. Sugiero reforzar /bl/ y /pl/ en las sesiones de fono.' } ] },
+      { id: 'e3', mes: 'nov', dias: 8, fecha: 'Mié 04/11 · 11:00', turno: 'Turno 11:00 · Sala 2', propia: true, autor: 'Vos · Flga. Gabriela Molina', ini: 'GM', vis: 'compartida', dict: false, pie: 'Editada el 04/11 a las 18:20', secciones: [
+        { h: '', p: 'Mejoró la articulación de /r/ en palabras aisladas. Seguimos con juegos de repetición en casa, 10 minutos por día. Le entregamos a la familia una hoja con 20 palabras para practicar.' } ] },
+      { id: 'e4', mes: 'oct', dias: 17, fecha: 'Lun 26/10 · 11:00', turno: 'Turno 11:00 · Sala 2 · evaluación', propia: true, autor: 'Vos · Flga. Gabriela Molina', ini: 'GM', vis: 'compartida', dict: true, pie: 'Creada el 26/10 a las 12:05', secciones: [
+        { h: 'Motivo', p: 'Evaluación inicial por dificultades de articulación, derivada por pediatría.' },
+        { h: 'Desarrollo de la sesión', p: 'Se toma una prueba de articulación y una muestra de lenguaje espontáneo. Sustituye /r/ por /l/ y simplifica grupos consonánticos. La comprensión es acorde a la edad.' },
+        { h: 'Plan', p: 'Plan de 12 sesiones, dos por semana, con foco en fonemas vibrantes.' } ] },
+      { id: 'e5', mes: 'sep', dias: 65, fecha: 'Mar 08/09 · 18:05', turno: 'Sin turno · llamada', propia: true, autor: 'Vos · Flga. Gabriela Molina', ini: 'GM', vis: 'privada', dict: false, pie: 'Creada el 08/09 a las 18:20', secciones: [
+        { h: '', p: 'Llamada con la mamá antes de la admisión. Cuenta que en el jardín le costaba hacerse entender y que la derivó la pediatra. Quedamos en una evaluación inicial a fines de octubre.' } ] }
+    ];
+    const todos = s.nuevas.concat(base);
+    const lim = { d7: 7, d30: 30, anio: 365, todo: 99999 }[s.periodo];
+    const q = s.q.trim().toLowerCase();
+    const filtrados = todos.filter((e) => e.dias <= lim && (s.quien === 'todas' || (s.quien === 'mias' ? e.propia : !e.propia)) && (!q || (e.autor + ' ' + e.secciones.map((x) => x.h + ' ' + x.p).join(' ')).toLowerCase().indexOf(q) >= 0));
+    const mk = (e) => {
+      const vis = s.visEdit[e.id] || e.vis, priv = vis === 'privada';
+      const abierta = s.abierta === e.id, editando = s.editando === e.id;
+      return {
+        hid: 'ev-' + e.id, taid: 'ta-' + e.id, fecha: e.fecha, turno: e.turno, autor: e.autor, ini: e.ini,
+        priv: priv, comp: !priv, dict: e.dict, escr: !e.dict, ajena: !e.propia,
+        cerrada: !abierta && !editando, leyendo: abierta && !editando, editando: editando, noEditando: !editando,
+        puedeEditar: e.propia && !editando, verVis: e.propia && abierta && !editando, abierta: abierta,
+        resumen: e.secciones.map((x) => (x.h ? x.h + ': ' : '') + x.p).join('  '),
+        textoEdit: e.secciones.map((x) => (x.h ? x.h + '\n' : '') + x.p).join('\n\n'),
+        secciones: e.secciones.map((x) => ({ h: x.h, p: x.p, tieneH: !!x.h })),
+        leerLbl: abierta ? 'Cerrar' : 'Leer completa',
+        pie: s.editadas[e.id] ? 'Editada hoy a las 11:58' : e.pie,
+        quienVe: priv ? 'La ves solo vos' : 'La ven vos y Lic. Rocío Herrera',
+        dotSt: e.propia ? 'background:' + t.lilac + '; box-shadow:0 0 0 4px ' + t.foBg : 'background:' + t.bgSolid + '; border:2px solid ' + t.pd,
+        cardSt: editando ? 'border:1px solid ' + t.accBd + '; background:' + t.panel + '; box-shadow:0 0 0 3px ' + t.accBg : (e.propia ? 'border:1px solid ' + (abierta ? t.line2 : t.line) + '; background:' + t.panel : 'border:1px solid ' + t.pdBd + '; background:linear-gradient(160deg, ' + t.pdBg + ', transparent 60%), ' + t.panel),
+        avSt: e.propia ? 'background:' + t.foBg + '; color:' + t.foTx + '; border:1px solid ' + t.foBd : 'background:' + t.pdBg + '; color:' + t.pdTx + '; border:1px solid ' + t.pdBd,
+        chip: chip, privOn: priv, compOn: !priv, privSt: priv ? segOn : segOff, compSt: priv ? segOff : segOn,
+        alternar: () => this.setState({ abierta: abierta ? null : e.id, editando: null }),
+        editar: () => this.setState({ editando: e.id, abierta: e.id }),
+        cancelar: () => this.setState({ editando: null }),
+        guardarEd: () => this.setState({ editando: null, editadas: Object.assign({}, this.state.editadas, { [e.id]: true }), aviso: 'Cambios guardados. Queda registrada la fecha de la edición.' }),
+        hacerPriv: () => this.setState({ visEdit: Object.assign({}, this.state.visEdit, { [e.id]: 'privada' }), aviso: 'Ahora la evolución es privada: la ves solo vos.' }),
+        hacerComp: () => this.setState({ visEdit: Object.assign({}, this.state.visEdit, { [e.id]: 'compartida' }), aviso: 'Ahora la evolución la ve también el equipo de Lucía.' })
+      };
+    };
+    const meses = [['nov', 'NOVIEMBRE 2026'], ['oct', 'OCTUBRE 2026'], ['sep', 'SEPTIEMBRE 2026']];
+    const grupos = meses.map((m) => ({ mes: m[1], items: filtrados.filter((e) => e.mes === m[0]).map(mk) })).filter((g) => g.items.length);
+    const vacio = !!this.props.vacio && s.nuevas.length === 0;
+    const propias = filtrados.filter((e) => e.propia).length;
+    const opt = (key, val, n) => ({ n: n, on: s[key] === val, st: s[key] === val ? segOn : segOff, elegir: () => this.setState({ [key]: val }) });
+    const m = s.modo, vivo = m === 'grabando' && !s.pausa, casi = s.seg >= 540;
+    const hs = [10, 18, 26, 14, 30, 22, 12, 34, 20, 28, 16, 36, 24, 14, 30, 18, 26, 38, 22, 12, 28, 20, 32, 16, 24, 34, 14, 26, 18, 30, 22, 12];
+    const conf = s.confirmar === 'grabacion'
+      ? { titulo: '¿Descartar esta grabación?', texto: s.tramos > 1 ? 'Se borra el audio de este tramo y no se transcribe. Lo que ya está en el borrador no se toca.' : 'Se borra el audio y no se transcribe. No queda nada guardado.', seguir: 'Seguir grabando', descartar: 'Descartar la grabación' }
+      : { titulo: '¿Salir sin guardar?', texto: 'El borrador de esta evolución todavía no está guardado. Si salís ahora, se pierde.', seguir: 'Seguir editando', descartar: 'Descartar el borrador' };
+    let pill = { mostrar: false, txt: '', st: '', dot: '', clase: '' };
+    if (vivo) pill = { mostrar: true, txt: 'GRABANDO · ' + this.mmss(s.seg), st: 'background:#22D3EE; color:#04121A; box-shadow:0 0 0 1px rgba(103,232,249,.6), 0 0 22px rgba(34,211,238,.45)', dot: 'background:#04121A', clase: 'titila' };
+    else if (m === 'grabando') pill = { mostrar: true, txt: 'EN PAUSA · ' + this.mmss(s.seg), st: 'border:1px solid ' + t.line2 + '; color:' + t.soft, dot: 'background:' + t.muted, clase: '' };
+    else if (m === 'transcribiendo') pill = { mostrar: true, txt: 'TRANSCRIBIENDO · ' + s.prog + '%', st: 'border:1px solid ' + t.accBd + '; background:' + t.accBg + '; color:' + t.accSoft, dot: 'background:#22D3EE', clase: 'vivo' };
+    else if (m === 'revisar' || m === 'escribir') pill = { mostrar: true, txt: 'BORRADOR SIN GUARDAR', st: 'border:1px solid ' + t.wBd + '; background:' + t.wBg + '; color:' + t.wTx, dot: 'background:' + t.pd, clase: '' };
+    const titulos = { inicio: 'Nueva evolución', listo: 'Dictar la evolución', grabando: 'Dictando la evolución', transcribiendo: 'Transcribiendo', revisar: 'Revisá el borrador', escribir: 'Escribir la evolución' };
+    return {
+      t: t, dark: dark, light: !dark, cs: dark ? 'dark' : 'light', temaClase: dark ? 'tema-oscuro' : 'tema-claro',
+      navOn: 'background:' + t.accBg + '; border:1px solid ' + t.accBd + '; color:' + t.accSoft + '; font-weight:500',
+      navOff: 'border:1px solid transparent; color:' + t.muted,
+      temaLabel: dark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro',
+      toggle: () => this.setState({ dark: !this.state.dark }),
+      total: todos.length, pill: pill,
+      q: s.q, buscar: (ev) => this.setState({ q: ev.target.value }),
+      periodos: [opt('periodo', 'd7', '7 días'), opt('periodo', 'd30', '30 días'), opt('periodo', 'anio', 'Este año'), opt('periodo', 'todo', 'Todo')],
+      quienes: [opt('quien', 'todas', 'Todas'), opt('quien', 'mias', 'Mías'), opt('quien', 'equipo', 'Del equipo')],
+      limpiar: () => this.setState({ q: '', periodo: 'todo', quien: 'todas' }),
+      vacio: vacio, hayLista: !vacio && grupos.length > 0, sinResultados: !vacio && grupos.length === 0,
+      grupos: grupos,
+      conteo: filtrados.length + (filtrados.length === 1 ? ' evolución' : ' evoluciones') + ' · ' + propias + ' tuyas · ' + (filtrados.length - propias) + ' del equipo · de la más nueva a la más vieja',
+      hayAviso: !!s.aviso, aviso: s.aviso, cerrarAviso: () => this.setState({ aviso: '' }),
+      comp: {
+        titulo: titulos[m], cerrable: m !== 'inicio' && m !== 'transcribiendo',
+        inicio: m === 'inicio', listo: m === 'listo', grabando: m === 'grabando', transcribiendo: m === 'transcribiendo', revisar: m === 'revisar', escribir: m === 'escribir',
+        cardSt: vivo ? 'border:1px solid rgba(34,211,238,.65); background:' + t.panel + '; box-shadow:0 0 0 1px rgba(34,211,238,.22), 0 0 44px rgba(34,211,238,.16)' : 'border:1px solid ' + t.line + '; background:' + t.panel
+      },
+      sesion: s.sesion, elegirSesion: (ev) => this.setState({ sesion: ev.target.value }),
+      guiaAbierta: s.guiaAbierta, guiaUsar: s.guiaUsar, guiaEstado: s.guiaUsar ? 'Activada' : 'Sin usar', guiaGiro: s.guiaAbierta ? 180 : 0,
+      toggleGuia: () => this.setState({ guiaAbierta: !this.state.guiaAbierta }),
+      toggleUsar: () => this.setState({ guiaUsar: !this.state.guiaUsar }),
+      irDictar: () => this.setState({ modo: 'listo', seg: 0, tramos: 1, borradorBase: null, aviso: '' }),
+      irEscribir: () => this.setState({ modo: 'escribir', texto: this.state.guiaUsar ? 'Motivo\n\n\nDesarrollo de la sesión\n\n\nObservaciones\n\n\nPlan\n' : '', aviso: '' }),
+      empezar: () => this.setState({ modo: 'grabando', pausa: false, seg: 0 }),
+      pausar: () => this.setState({ pausa: !this.state.pausa }),
+      terminar: () => this.terminar(),
+      pedirDescartar: () => this.setState({ confirmar: 'grabacion' }),
+      pedirSalir: () => { const mm = this.state.modo; if (mm === 'grabando') this.setState({ confirmar: 'grabacion' }); else if (mm === 'revisar' || mm === 'escribir') this.setState({ confirmar: 'borrador' }); else this.setState({ modo: 'inicio' }); },
+      hayConfirmar: !!s.confirmar, conf: conf,
+      seguir: () => this.setState({ confirmar: null }),
+      descartar: () => {
+        const st = this.state;
+        if (st.confirmar === 'grabacion') {
+          if (st.tramos > 1) this.setState({ confirmar: null, modo: 'revisar', tramos: st.tramos - 1, pausa: false, borradorEd: null });
+          else this.setState({ confirmar: null, modo: 'listo', pausa: false, seg: 0 });
+        } else this.setState({ confirmar: null, modo: 'inicio', texto: '', borradorEd: null, borradorBase: null, tramos: 1, seg: 0 });
+      },
+      rec: {
+        vivo: vivo, pausa: m === 'grabando' && s.pausa, esPausa: !s.pausa, esReanudar: s.pausa,
+        badge: vivo ? 'GRABANDO' : 'EN PAUSA',
+        badgeSt: vivo ? 'background:#22D3EE; color:#04121A; box-shadow:0 0 18px rgba(34,211,238,.45)' : 'border:1px solid ' + t.line2 + '; color:' + t.soft,
+        micSt: vivo ? 'background:#22D3EE; color:#04121A; box-shadow:0 0 34px rgba(34,211,238,.55)' : 'background:' + t.panel2 + '; color:' + t.soft + '; border:2px solid ' + t.line2,
+        tiempo: this.mmss(s.seg), pct: Math.min(100, Math.round(s.seg / 6)), barCol: casi ? t.pd : '#22D3EE',
+        resta: 'Quedan ' + this.mmss(Math.max(0, 600 - s.seg)), casi: casi && m === 'grabando',
+        pausaLbl: s.pausa ? 'Reanudar' : 'Pausar', dur: this.mmss(s.ultimo),
+        barras: hs.map((h, i) => ({ clase: vivo ? 'barra' : '', h: vivo ? h : 4, col: vivo ? (casi ? t.pd : t.wave) : t.track, d: (-(i * 0.083)).toFixed(2) }))
+      },
+      tramos: s.tramos, prog: s.prog,
+      tramosTxt: s.tramos > 1 ? s.tramos + ' tramos dictados' : '1 tramo · ' + this.mmss(s.ultimo),
+      borradorTxt: s.borradorEd ?? this.borrador(),
+      editarBorrador: (ev) => this.setState({ borradorEd: ev.target.value }),
+      otroTramo: () => this.setState({ modo: 'grabando', pausa: false, seg: 0, borradorBase: this.state.borradorEd ?? this.borrador(), tramos: this.state.tramos + 1, borradorEd: null }),
+      plantilla: s.texto, editarTexto: (ev) => this.setState({ texto: ev.target.value }),
+      visPriv: s.vis === 'privada', visComp: s.vis !== 'privada',
+      visPrivSt: s.vis === 'privada' ? segOn : opOff, visCompSt: s.vis !== 'privada' ? segOn : opOff,
+      ponerPriv: () => this.setState({ vis: 'privada' }), ponerComp: () => this.setState({ vis: 'compartida' }),
+      guardar: () => this.guardar()
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -63,7 +63,7 @@ Los 10 pasos de [prototipo.md](prototipo.md) están hechos (versión 1.0).
 - Tipografías: servirlas desde el propio servidor en vez de Google Fonts antes de salir al mercado o de la app móvil (hoy es una excepción autorizada, ver [decisiones.md](decisiones.md) §18).
 
 - ARCA: probar en homologación con un certificado real (seguir [arca-paso-a-paso.md](arca-paso-a-paso.md)) antes de pasar a producción.
-- **Expediente con dictado** (etapa 4): transcripción en el propio servidor ([decisiones.md](decisiones.md) §19). Falta el diseño de la pantalla (pedido para Claude Design) y elegir el servicio de Render con más memoria.
+- **Expediente con dictado** (etapa 4): transcripción en el propio servidor ([decisiones.md](decisiones.md) §19). El diseño está listo: guía en [diseno/expediente-dictado.md](diseno/expediente-dictado.md) y tableros en `diseno/referencia/expediente/`. Falta implementarlo (pasos 2 a 4 de la guía) y elegir el servicio de Render con más memoria.
 - Precios de los planes: hoy en 0, falta la política comercial.
 - Alta de centros por cuenta propia (registro público con plan y cobro del servicio): hoy solo el superadmin crea centros.
 - Obras sociales: leer órdenes y tokens desde fotos (la referencia usaba OCR en el navegador) y planilla de la orden en PDF.

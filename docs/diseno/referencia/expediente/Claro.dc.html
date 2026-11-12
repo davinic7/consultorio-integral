@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Expediente · muestra en tema claro</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+@keyframes titila{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes onda{0%{transform:scale(1);opacity:.6}100%{transform:scale(1.45);opacity:0}}
+@keyframes nivel{0%,100%{transform:scaleY(.3)}50%{transform:scaleY(1)}}
+.titila{animation:titila 1.4s ease-in-out infinite}
+.onda{animation:onda 2s ease-out infinite}
+.onda2{animation-delay:.66s}
+.onda3{animation-delay:1.33s}
+.barra{animation:nivel 1s ease-in-out infinite;transform-origin:center}
+@media (prefers-reduced-motion: reduce){.titila,.onda,.barra{animation:none!important}}
+</style>
+</helmet>
+<div style="width:1410px; height:1100px; box-sizing:border-box; padding:56px 64px; display:flex; flex-direction:column; gap:32px; font-family:Sora, system-ui, sans-serif; color:#0B1726; background-color:#F3F7FC; background-image:radial-gradient(900px 520px at 20% -10%, rgba(34,211,238,.18), transparent 62%), linear-gradient(rgba(14,116,144,.055) 1px, transparent 1px), linear-gradient(90deg, rgba(14,116,144,.055) 1px, transparent 1px); background-size:auto, 48px 48px, 48px 48px">
+
+<header style="display:flex; flex-direction:column; gap:8px">
+<span style="font:500 12px 'JetBrains Mono', monospace; letter-spacing:.12em; color:#4A5B73">CELULAR · TEMA CLARO · MISMA ESTRUCTURA</span>
+<h1 style="margin:0; font-size:36px; font-weight:600; letter-spacing:-0.03em">Expediente, grabando y revisión en claro</h1>
+<p style="margin:0; max-width:900px; font-size:14px; line-height:1.55; color:#4A5B73">El cian de la acción principal no cambia (#22D3EE con texto #04121A). Los textos en cian pasan a #0E7490 para llegar a AA sobre blanco. En escritorio, el botón de sol y luna de la barra superior alterna los dos temas.</p>
+</header>
+
+<div style="display:flex; gap:48px; align-items:flex-start">
+
+<div style="width:395px; display:flex; flex-direction:column; gap:14px">
+<span style="font:500 11px 'JetBrains Mono', monospace; letter-spacing:.1em; color:#4A5B73">1 · EXPEDIENTE</span>
+<div style="width:395px; height:832px; box-sizing:border-box; padding:10px; border-radius:46px; background:#1A2433; border:1px solid #C3D2E4; box-shadow:0 30px 70px rgba(11,23,38,.18)">
+<div style="position:relative; height:100%; border-radius:37px; overflow:hidden; display:flex; flex-direction:column; background:#F3F7FC">
+<div style="padding:18px 16px 0; display:flex; align-items:center; gap:10px">
+<button aria-label="Volver a pacientes" style="width:44px; height:44px; flex-shrink:0; border-radius:14px; border:1px solid #DCE6F2; background:#FFFFFF; color:#2A3B52; display:flex; align-items:center; justify-content:center"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></button>
+<span aria-hidden="true" style="width:40px; height:40px; flex-shrink:0; border-radius:13px; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:600; background:#ECE7FB; color:#46309A; border:1px solid #B3A1EE">LP</span>
+<div style="flex:1; min-width:0"><div style="font-size:16px; font-weight:600">Lucía Pereyra</div><div style="font-size:12px; color:#4A5B73">8 años · Fonoaudiología</div></div>
+</div>
+<div role="tablist" aria-label="Secciones de la ficha" style="display:flex; gap:20px; padding:0 18px; margin-top:10px; border-bottom:1px solid #DCE6F2">
+<button role="tab" aria-selected="false" style="min-height:44px; border:0; background:none; padding:0; font:500 13.5px Sora, sans-serif; color:#4A5B73">Resumen</button>
+<button role="tab" aria-selected="false" style="min-height:44px; border:0; background:none; padding:0; font:500 13.5px Sora, sans-serif; color:#4A5B73">Sesiones</button>
+<button role="tab" aria-selected="true" style="min-height:44px; border:0; border-bottom:2px solid #06B6D4; margin-bottom:-1px; background:none; padding:0; font:600 13.5px Sora, sans-serif; color:#0B1726">Expediente</button>
+<button role="tab" aria-selected="false" style="min-height:44px; border:0; background:none; padding:0; font:500 13.5px Sora, sans-serif; color:#4A5B73">Pagos</button>
+</div>
+<div style="flex:1; padding:14px 14px 0; display:flex; flex-direction:column; gap:10px; overflow:hidden">
+<div style="display:flex; gap:6px; align-items:center">
+<button aria-pressed="true" style="height:34px; padding:0 12px; border-radius:999px; border:1px solid #7FD3E4; background:#E3F6FA; color:#0B5566; font:500 12.5px Sora, sans-serif">Todas</button>
+<button aria-pressed="false" style="height:34px; padding:0 12px; border-radius:999px; border:1px solid #DCE6F2; background:#FFFFFF; color:#2A3B52; font:500 12.5px Sora, sans-serif">Mías</button>
+<button aria-pressed="false" style="height:34px; padding:0 12px; border-radius:999px; border:1px solid #DCE6F2; background:#FFFFFF; color:#2A3B52; font:500 12.5px Sora, sans-serif">Del equipo</button>
+<span style="flex:1"></span>
+<span style="display:inline-flex; align-items:center; gap:5px; font:400 11px 'JetBrains Mono', monospace; color:#4A5B73"><svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg>Cifrado</span>
+</div>
+<span style="margin-top:4px; font:500 10.5px 'JetBrains Mono', monospace; letter-spacing:.12em; color:#4A5B73">NOVIEMBRE 2026</span>
+<article style="padding:14px; border-radius:16px; border:1px solid #DCE6F2; background:#FFFFFF; display:flex; flex-direction:column; gap:8px">
+<div style="display:flex; align-items:center; gap:8px"><span aria-hidden="true" style="width:9px; height:9px; border-radius:999px; background:#6D4BD8; box-shadow:0 0 0 3px #ECE7FB"></span><span style="font:500 13px 'JetBrains Mono', monospace">Lun 09/11 · 11:00</span><span style="flex:1"></span><span style="display:inline-flex; align-items:center; gap:4px; font-size:11.5px; color:#2A3B52"><svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg>Privada</span><span style="display:inline-flex; align-items:center; gap:4px; font-size:11.5px; color:#2A3B52"><svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg>Dictada</span></div>
+<div style="font-size:12px; color:#4A5B73">Vos · Turno 11:00 · Sala 2</div>
+<p style="margin:0; font-size:14px; line-height:1.55; color:#2A3B52">Motivo: seguimiento de fonemas vibrantes. Trabajamos /r/ simple en sílaba inicial con tarjetas y un juego de…</p>
+</article>
+<article style="padding:14px; border-radius:16px; border:1px solid #F2D9A6; background:linear-gradient(160deg, #FEF8EC, #FFFFFF 60%); display:flex; flex-direction:column; gap:8px">
+<div style="display:flex; align-items:center; gap:8px"><span aria-hidden="true" style="width:9px; height:9px; box-sizing:border-box; border-radius:999px; border:2px solid #B7791F"></span><span style="font:500 13px 'JetBrains Mono', monospace">Vie 06/11 · 15:30</span><span style="flex:1"></span><span style="display:inline-flex; align-items:center; gap:4px; font-size:11.5px; color:#2A3B52"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"></path></svg>Compartida</span></div>
+<div style="font-size:12px; color:#6E3F03">Lic. Rocío Herrera · Psicopedagogía · solo lectura</div>
+<p style="margin:0; font-size:14px; line-height:1.55; color:#2A3B52">Se trabajó lectura de sílabas complejas, trabadas con l y con r. Lee con apoyo silábico…</p>
+</article>
+</div>
+<div style="position:absolute; left:0; right:0; bottom:0; padding:28px 14px 22px; background:linear-gradient(180deg, rgba(243,247,252,0), #F3F7FC 32%); display:flex; flex-direction:column; gap:8px">
+<span style="font-size:12px; color:#4A5B73; text-align:center">Nueva evolución · turno de hoy, 11:00</span>
+<div style="display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px">
+<button style="height:56px; border-radius:16px; border:1px solid #C3D2E4; background:#FFFFFF; color:#0B1726; display:flex; align-items:center; justify-content:center; gap:8px; font:600 15px Sora, sans-serif; box-shadow:0 4px 14px rgba(11,23,38,.06)"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3M8.5 21h7"></path></svg>Dictar</button>
+<button style="height:56px; border-radius:16px; border:1px solid #C3D2E4; background:#FFFFFF; color:#0B1726; display:flex; align-items:center; justify-content:center; gap:8px; font:600 15px Sora, sans-serif; box-shadow:0 4px 14px rgba(11,23,38,.06)"><svg aria-hidden="true" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"></path><path d="m13.5 6.5 4 4"></path></svg>Escribir</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div style="width:395px; display:flex; flex-direction:column; gap:14px">
+<span style="font:500 11px 'JetBrains Mono', monospace; letter-spacing:.1em; color:#0E7490">3.3 · GRABANDO</span>
+<div style="width:395px; height:832px; box-sizing:border-box; padding:10px; border-radius:46px; background:#1A2433; border:1px solid #7FD3E4; box-shadow:0 30px 70px rgba(11,23,38,.18), 0 0 50px rgba(34,211,238,.25)">
+<div style="position:relative; height:100%; border-radius:37px; overflow:hidden; display:flex; flex-direction:column; background:#F3F7FC; box-shadow:inset 0 0 0 2px #22D3EE, inset 0 0 70px rgba(34,211,238,.18)">
+<div role="status" style="height:54px; flex-shrink:0; display:flex; align-items:center; justify-content:center; gap:10px; background:#22D3EE; color:#04121A; font:600 14px 'JetBrains Mono', monospace; letter-spacing:.12em"><span class="titila" style="width:10px; height:10px; border-radius:999px; background:#04121A"></span>GRABANDO</div>
+<div style="padding:14px 16px 0; display:flex; align-items:center; gap:10px">
+<div style="flex:1; min-width:0"><div style="font-size:15px; font-weight:600">Lucía Pereyra</div><div style="font-size:12px; color:#4A5B73">Hoy 11:00 · Sala 2 · tramo 1</div></div>
+<button aria-label="Achicar: sigue grabando mientras mirás el expediente" style="width:44px; height:44px; flex-shrink:0; border-radius:14px; border:1px solid #DCE6F2; background:#FFFFFF; color:#2A3B52; display:flex; align-items:center; justify-content:center"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg></button>
+</div>
+<div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:22px">
+<div aria-hidden="true" style="position:relative; width:220px; height:220px">
+<svg width="220" height="220" viewBox="0 0 220 220" style="position:absolute; inset:0"><circle cx="110" cy="110" r="104" fill="none" stroke="#E3ECF6" stroke-width="4"></circle><circle cx="110" cy="110" r="104" fill="none" stroke="#0891B2" stroke-width="4" stroke-linecap="round" stroke-dasharray="183 654" transform="rotate(-90 110 110)"></circle></svg>
+<span class="onda" style="position:absolute; inset:40px; border-radius:999px; border:2px solid rgba(6,182,212,.7)"></span>
+<span class="onda onda2" style="position:absolute; inset:40px; border-radius:999px; border:2px solid rgba(6,182,212,.7)"></span>
+<span class="onda onda3" style="position:absolute; inset:40px; border-radius:999px; border:2px solid rgba(6,182,212,.7)"></span>
+<span style="position:absolute; inset:46px; border-radius:999px; display:flex; align-items:center; justify-content:center; background:#22D3EE; color:#04121A; box-shadow:0 0 40px rgba(34,211,238,.5)"><svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3M8.5 21h7"></path></svg></span>
+</div>
+<div style="display:flex; flex-direction:column; align-items:center; gap:6px"><div role="timer" aria-label="Tiempo grabado" style="font:500 64px 'JetBrains Mono', monospace; letter-spacing:-0.04em; line-height:1">02:47</div><span style="font:400 12.5px 'JetBrains Mono', monospace; color:#4A5B73">de 10:00 · quedan 07:13</span></div>
+<div aria-hidden="true" style="width:300px; height:48px; display:flex; align-items:center; gap:3px"><sc-for list="{{barras}}" as="b" hint-placeholder-count="28"><span class="barra" style="flex:1; border-radius:2px; height:{{b.h}}px; background:#0891B2; animation-delay:{{b.d}}s"></span></sc-for></div>
+</div>
+<div style="padding:8px 18px 26px; display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); align-items:end; gap:6px">
+<button style="display:flex; flex-direction:column; align-items:center; gap:8px; border:0; background:none; color:#2A3B52; font:500 13px Sora, sans-serif"><span aria-hidden="true" style="width:62px; height:62px; border-radius:999px; display:flex; align-items:center; justify-content:center; border:1px solid #C3D2E4; background:#FFFFFF; color:#B42318"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"></path></svg></span>Descartar</button>
+<button style="display:flex; flex-direction:column; align-items:center; gap:8px; border:0; background:none; color:#0B1726; font:600 14px Sora, sans-serif"><span aria-hidden="true" style="width:88px; height:88px; border-radius:999px; display:flex; align-items:center; justify-content:center; background:#22D3EE; color:#04121A; box-shadow:0 0 0 6px rgba(34,211,238,.18), 0 12px 30px rgba(8,145,178,.35)"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"></path></svg></span>Terminar</button>
+<button style="display:flex; flex-direction:column; align-items:center; gap:8px; border:0; background:none; color:#2A3B52; font:500 13px Sora, sans-serif"><span aria-hidden="true" style="width:62px; height:62px; border-radius:999px; display:flex; align-items:center; justify-content:center; border:1px solid #C3D2E4; background:#FFFFFF; color:#0B1726"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"></rect><rect x="14" y="5" width="4" height="14" rx="1"></rect></svg></span>Pausar</button>
+</div>
+</div>
+</div>
+</div>
+
+<div style="width:395px; display:flex; flex-direction:column; gap:14px">
+<span style="font:500 11px 'JetBrains Mono', monospace; letter-spacing:.1em; color:#4A5B73">3.6 · REVISAR EL TEXTO</span>
+<div style="width:395px; height:832px; box-sizing:border-box; padding:10px; border-radius:46px; background:#1A2433; border:1px solid #C3D2E4; box-shadow:0 30px 70px rgba(11,23,38,.18)">
+<div style="position:relative; height:100%; border-radius:37px; overflow:hidden; display:flex; flex-direction:column; background:#F3F7FC">
+<div style="padding:18px 16px 8px; display:flex; align-items:center; gap:10px">
+<button aria-label="Cerrar" style="width:44px; height:44px; flex-shrink:0; border-radius:14px; border:1px solid #DCE6F2; background:#FFFFFF; color:#2A3B52; display:flex; align-items:center; justify-content:center"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
+<div style="flex:1; min-width:0"><div style="font-size:16px; font-weight:600">Revisá el borrador</div><div style="font-size:12px; color:#4A5B73">Lucía Pereyra · Hoy 11:00 · 1 tramo</div></div>
+</div>
+<div style="flex:1; padding:4px 14px 0; display:flex; flex-direction:column; gap:10px; min-height:0">
+<p style="margin:0; display:flex; gap:8px; align-items:flex-start; padding:10px 12px; border-radius:12px; border:1px solid #F0C878; background:#FEF4DF; color:#7A4503; font-size:12.5px; line-height:1.5"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-top:1px"><path d="M12 3 2 20h20z"></path><path d="M12 10v4M12 17h.01"></path></svg><span>Revisá los términos clínicos: la transcripción puede confundirlos. El audio ya se borró.</span></p>
+<label for="c6" style="position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0)">Borrador transcripto</label>
+<textarea id="c6" style="flex:1; min-height:0; box-sizing:border-box; width:100%; border:1px solid #C3D2E4; border-radius:16px; padding:14px 16px; font:400 16px/1.65 Sora, sans-serif; color:#0B1726; background:#FFFFFF; resize:none">Motivo
+Seguimiento de fonemas vibrantes.
+
+Desarrollo de la sesión
+Empezamos con prácticas linguales, cinco minutos. Después trabajamos la erre en sílaba media con el juego de la oca: siete de diez en repetición. En lenguaje espontáneo todavía la cambia por ele.
+
+Observaciones
+Vino más cansada que otras veces.</textarea>
+<div style="display:flex; flex-wrap:wrap; align-items:center; gap:6px"><span style="font-size:12px; color:#7A4503">Para revisar:</span><button style="height:36px; padding:0 10px; border-radius:10px; border:1px dashed #D19A2E; background:#FEF4DF; color:#7A4503; font:500 13px Sora, sans-serif">prácticas linguales</button><button style="height:36px; padding:0 10px; border-radius:10px; border:1px dashed #D19A2E; background:#FEF4DF; color:#7A4503; font:500 13px Sora, sans-serif">erre</button><button style="height:36px; padding:0 10px; border-radius:10px; border:1px dashed #D19A2E; background:#FEF4DF; color:#7A4503; font:500 13px Sora, sans-serif">ele</button></div>
+</div>
+<div style="padding:10px 14px 22px; display:flex; flex-direction:column; gap:8px">
+<div style="display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1fr); gap:8px">
+<button style="height:48px; border-radius:14px; border:1px solid #C3D2E4; background:#FFFFFF; color:#0B1726; display:flex; align-items:center; justify-content:center; gap:6px; font:500 13.5px Sora, sans-serif"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg>Dictar otro tramo</button>
+<div role="group" aria-label="Quién la ve" style="display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:3px; padding:3px; border-radius:14px; border:1px solid #DCE6F2; background:#FFFFFF">
+<button aria-pressed="true" aria-label="Privada: solo vos" style="border-radius:11px; border:1px solid #7FD3E4; background:#E3F6FA; color:#0B5566; display:flex; align-items:center; justify-content:center; gap:4px; font:600 12.5px Sora, sans-serif"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg>Privada</button>
+<button aria-pressed="false" aria-label="Compartida con el equipo" style="border-radius:11px; border:1px solid transparent; background:transparent; color:#2A3B52; display:flex; align-items:center; justify-content:center; gap:4px; font:500 12.5px Sora, sans-serif"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5"></path></svg>Equipo</button>
+</div>
+</div>
+<button style="height:56px; border:0; border-radius:16px; background:#22D3EE; color:#04121A; font:600 16px Sora, sans-serif; box-shadow:0 0 0 1px rgba(8,145,178,.35), 0 10px 26px rgba(8,145,178,.28)">Guardar evolución</button>
+</div>
+</div>
+</div>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1410,"height":1100}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const hs = [12, 20, 30, 16, 36, 24, 14, 40, 22, 32, 18, 44, 28, 16, 34, 20, 30, 46, 24, 14, 32, 22, 38, 18, 28, 40, 16, 26];
+    return { barras: hs.map((h, i) => ({ h: h, d: (-(i * 0.09)).toFixed(2) })) };
+  }
+}
+</script>
+</body>
+</html>

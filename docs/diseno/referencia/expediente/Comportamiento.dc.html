@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Notas de comportamiento del dictado</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width:1280px; height:1200px; box-sizing:border-box; padding:56px 64px; display:flex; flex-direction:column; gap:32px; font-family:Sora, system-ui, sans-serif; color:#E8F1FF; background-color:#05080F; background-image:linear-gradient(rgba(148,197,255,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(148,197,255,.045) 1px, transparent 1px); background-size:48px 48px, 48px 48px">
+
+<header style="display:flex; flex-direction:column; gap:8px">
+<span style="font:500 12px 'JetBrains Mono', monospace; letter-spacing:.12em; color:#8FA3BF">PARA DESARROLLO</span>
+<h1 style="margin:0; font-size:36px; font-weight:600; letter-spacing:-0.03em">Cómo se comporta</h1>
+</header>
+
+<div style="display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:24px; align-items:start">
+
+<section aria-labelledby="n1" style="padding:22px; border-radius:20px; border:1px solid rgba(148,197,255,.12); background:rgba(255,255,255,.035); display:flex; flex-direction:column; gap:12px">
+<h2 id="n1" style="margin:0; display:flex; align-items:center; gap:10px; font-size:17px; font-weight:600"><span style="font:600 12px 'JetBrains Mono', monospace; color:#67E8F9">01</span>Transiciones</h2>
+<ul style="margin:0; padding:0 0 0 18px; display:flex; flex-direction:column; gap:9px; font-size:13.5px; line-height:1.55; color:#C9D6EA">
+<li><strong style="color:#E8F1FF; font-weight:600">Listo → grabando:</strong> el botón se abre en anillo y la franja cian entra desde arriba (200 ms). Vibración corta al empezar y al terminar, si el teléfono la tiene.</li>
+<li><strong style="color:#E8F1FF; font-weight:600">Pausa:</strong> el anillo se apaga y queda quieto, el tiempo se detiene y la franja pasa a «EN PAUSA», neutra.</li>
+<li><strong style="color:#E8F1FF; font-weight:600">Terminar → transcribiendo:</strong> el mismo anillo se vuelve la barra de progreso, para que se lea como continuación.</li>
+<li><strong style="color:#E8F1FF; font-weight:600">Listo el texto:</strong> no se saca a nadie de donde está. La tarjeta de la línea de tiempo pasa a «Borrador para revisar» y la píldora avisa.</li>
+<li><strong style="color:#E8F1FF; font-weight:600">Guardar:</strong> la evolución entra arriba de la lista con un fundido de 250 ms y un aviso de que quedó guardada y cifrada.</li>
+<li><strong style="color:#E8F1FF; font-weight:600">Movimiento reducido:</strong> sin ondas ni titileo; el estado se sigue leyendo por texto, ícono y tiempo.</li>
+</ul>
+</section>
+
+<section aria-labelledby="n2" style="padding:22px; border-radius:20px; border:1px solid rgba(148,197,255,.12); background:rgba(255,255,255,.035); display:flex; flex-direction:column; gap:12px">
+<h2 id="n2" style="margin:0; display:flex; align-items:center; gap:10px; font-size:17px; font-weight:600"><span style="font:600 12px 'JetBrains Mono', monospace; color:#67E8F9">02</span>Al girar el teléfono</h2>
+<ul style="margin:0; padding:0 0 0 18px; display:flex; flex-direction:column; gap:9px; font-size:13.5px; line-height:1.55; color:#C9D6EA">
+<li>La grabación no se corta ni se reinicia al girar.</li>
+<li><strong style="color:#E8F1FF; font-weight:600">Vertical:</strong> controles abajo, en fila, con Terminar al centro.</li>
+<li><strong style="color:#E8F1FF; font-weight:600">Horizontal:</strong> anillo y tiempo a la izquierda; Descartar, Terminar y Pausar en columna a la derecha, al alcance del pulgar.</li>
+<li>En Revisar, horizontal le da más ancho al texto; Guardar queda fijo abajo a la derecha.</li>
+<li><strong style="color:#E8F1FF; font-weight:600">Escritorio angosto:</strong> menos de 900 px, el panel de nueva evolución pasa debajo de la lista; menos de 600 px, se abre a pantalla completa como en el celular.</li>
+</ul>
+</section>
+
+<section aria-labelledby="n3" style="padding:22px; border-radius:20px; border:1px solid rgba(34,211,238,.4); background:linear-gradient(160deg, rgba(34,211,238,.07), transparent 60%), rgba(255,255,255,.035); display:flex; flex-direction:column; gap:12px">
+<h2 id="n3" style="margin:0; display:flex; align-items:center; gap:10px; font-size:17px; font-weight:600"><span style="font:600 12px 'JetBrains Mono', monospace; color:#67E8F9">03</span>Pantalla bloqueada mientras graba</h2>
+<ul style="margin:0; padding:0 0 0 18px; display:flex; flex-direction:column; gap:9px; font-size:13.5px; line-height:1.55; color:#C9D6EA">
+<li>Mientras graba se pide mantener la pantalla encendida, para que no se bloquee sola.</li>
+<li>Si igual se bloquea, entra una llamada o se cambia de app, el navegador puede cortar el micrófono. Lo grabado hasta ese segundo queda guardado como tramo.</li>
+<li>Al volver: «Se pausó al bloquear la pantalla · 02:47», con Reanudar (sigue en el mismo borrador) o Terminar.</li>
+<li>Nunca se graba escondido: si no se ve la pantalla de dictado ni la píldora, no se está grabando.</li>
+</ul>
+</section>
+
+<section aria-labelledby="n4" style="padding:22px; border-radius:20px; border:1px solid rgba(148,197,255,.12); background:rgba(255,255,255,.035); display:flex; flex-direction:column; gap:12px">
+<h2 id="n4" style="margin:0; display:flex; align-items:center; gap:10px; font-size:17px; font-weight:600"><span style="font:600 12px 'JetBrains Mono', monospace; color:#67E8F9">04</span>Borradores y audio</h2>
+<ul style="margin:0; padding:0 0 0 18px; display:flex; flex-direction:column; gap:9px; font-size:13.5px; line-height:1.55; color:#C9D6EA">
+<li>El borrador de texto se guarda solo en el equipo cada pocos segundos, cifrado, hasta que se guarda o se descarta. Si se cierra la app, al volver aparece «Tenés un borrador sin guardar de Lucía Pereyra».</li>
+<li>El audio queda en el equipo, cifrado, solo hasta tener el texto. Después se borra.</li>
+<li>Sin señal: se reintenta sola al volver la conexión, hasta 3 veces; después queda como error con Reintentar.</li>
+<li>Los registros llevan solo ids, duración y códigos (TR-02). Nunca texto ni audio.</li>
+</ul>
+</section>
+
+<section aria-labelledby="n5" style="padding:22px; border-radius:20px; border:1px solid rgba(148,197,255,.12); background:rgba(255,255,255,.035); display:flex; flex-direction:column; gap:12px">
+<h2 id="n5" style="margin:0; display:flex; align-items:center; gap:10px; font-size:17px; font-weight:600"><span style="font:600 12px 'JetBrains Mono', monospace; color:#67E8F9">05</span>Accesibilidad</h2>
+<ul style="margin:0; padding:0 0 0 18px; display:flex; flex-direction:column; gap:9px; font-size:13.5px; line-height:1.55; color:#C9D6EA">
+<li>Cada estado se dice con texto, ícono y tiempo, no solo con color.</li>
+<li>Lector de pantalla: se anuncian «Grabando», «En pausa», «Transcripción lista» y los errores, sin repetir el tiempo cada segundo.</li>
+<li>Foco visible de 3 px: #67E8F9 en oscuro, #0E7490 en claro.</li>
+<li>Escritorio, con el foco en el panel: Espacio pausa o reanuda, Enter termina, Esc pide confirmar la salida.</li>
+<li>Celular: botones de 48 px como mínimo; el principal, 88 px.</li>
+</ul>
+</section>
+
+<section aria-labelledby="n6" style="padding:22px; border-radius:20px; border:1px solid rgba(251,191,36,.35); background:linear-gradient(160deg, rgba(251,191,36,.06), transparent 60%), rgba(255,255,255,.035); display:flex; flex-direction:column; gap:12px">
+<h2 id="n6" style="margin:0; display:flex; align-items:center; gap:10px; font-size:17px; font-weight:600"><span style="font:600 12px 'JetBrains Mono', monospace; color:#FCD34D">06</span>Para decidir antes de construir</h2>
+<ul style="margin:0; padding:0 0 0 18px; display:flex; flex-direction:column; gap:9px; font-size:13.5px; line-height:1.55; color:#C9D6EA">
+<li><strong style="color:#E8F1FF; font-weight:600">Dónde se transcribe:</strong> ya está decidido (decisiones.md §19): en el propio servidor, con Whisper. El celular graba y sube el audio; el servidor lo transcribe en memoria y lo descarta. Falta elegir el servicio de Render con más memoria, después de una prueba.</li>
+<li><strong style="color:#E8F1FF; font-weight:600">Términos para revisar:</strong> Whisper puede informar qué tan seguro está de cada palabra; se listan las de menor seguridad. Si en la prueba no rinde, la lista se oculta y queda solo el aviso.</li>
+<li><strong style="color:#E8F1FF; font-weight:600">Límite por tramo:</strong> 10 minutos, propuesto. Se puede ajustar sin cambiar el diseño.</li>
+<li><strong style="color:#E8F1FF; font-weight:600">Guía de estructura:</strong> se recuerda por profesional; más adelante, una guía por disciplina.</li>
+</ul>
+</section>
+
+</div>
+
+<p style="margin:0; font-size:13px; line-height:1.55; color:#8FA3BF">Palabras que usamos: «en forma privada», «cifrado», «solo queda el texto». Palabras que no: nombres de empresas, «nube», «IA».</p>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1200}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
