@@ -241,11 +241,7 @@
   &--ocupado {
     cursor: default;
     border-color: var(--oc-borde);
-    background: repeating-linear-gradient(
-      45deg,
-      var(--oc-carril) 0 6px,
-      transparent 6px 12px
-    );
+    background: repeating-linear-gradient(45deg, var(--oc-carril) 0 6px, transparent 6px 12px);
     color: var(--oc-texto-suave);
   }
 }
@@ -366,4 +362,16 @@
   .agenda-nuevo {
     display: none;
   }
+}
+
+/* Arrastrar y soltar */
+.turno[draggable='true'] {
+  cursor: grab;
+}
+.calendario__columna.destino {
+  outline: 2px dashed var(--oc-acento);
+  outline-offset: -2px;
+}
+.agenda-recordatorios {
+  margin-bottom: 1rem;
 }

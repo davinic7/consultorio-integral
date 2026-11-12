@@ -42,10 +42,12 @@ import {
   Bloque,
   HORA_FIN,
   HORA_INICIO,
+  horaAlSoltar,
   horaEnPosicion,
   PX_POR_HORA,
   ubicarBloques,
 } from './bloques';
+import { enlaceRecordatorio } from '../../core/recordatorio';
 
 type Vista = 'semana' | 'dia' | 'salas';
 
@@ -114,6 +116,14 @@ export class Agenda implements OnInit {
   /** Panel lateral: alta, detalle o edición de un turno. */
   protected readonly panel = signal<'nuevo' | 'detalle' | 'editar' | null>(null);
   protected readonly seleccionado = signal<Turno | null>(null);
+  /** Turno que se está arrastrando y a qué altura del turno se lo agarró. */
+  private arrastrado: { turno: Turno; yAgarre: number } | null = null;
+  /** Columna sobre la que se está por soltar (para resaltarla). */
+  protected readonly columnaDestino = signal<string | null>(null);
+  /** Recordatorios de mañana: turnos pendientes y el enlace de cada uno (null: sin teléfono). */
+  protected readonly recordatorios = signal<
+    { turno: Turno; enlace: string | null; enviado: boolean }[] | null
+  >(null);
   protected readonly guardando = signal(false);
   protected readonly errorPanel = signal<string | null>(null);
   protected form: FormTurno = this.formVacio();
@@ -313,6 +323,113 @@ export class Agenda implements OnInit {
   protected puedeGestionar(t: Turno): boolean {
     if (t.estado !== 'pendiente') return false;
     return !this.esProfesional() || t.profesional.id === this.miProfesional()?.id;
+  }
+
+  // ───────── Arrastrar y soltar ─────────
+
+  protected arrastrar(t: Turno, evento: DragEvent): void {
+    if (!this.puedeGestionar(t)) {
+      evento.preventDefault();
+      return;
+    }
+    const caja = (evento.currentTarget as HTMLElement).getBoundingClientRect();
+    this.arrastrado = { turno: t, yAgarre: evento.clientY - caja.top };
+    evento.dataTransfer?.setData('text/plain', t.id);
+    if (evento.dataTransfer) evento.dataTransfer.effectAllowed = 'move';
+  }
+
+  protected sobreColumna(col: Columna, evento: DragEvent): void {
+    if (!this.arrastrado) return;
+    evento.preventDefault();
+    if (evento.dataTransfer) evento.dataTransfer.dropEffect = 'move';
+    this.columnaDestino.set(col.clave);
+  }
+
+  protected terminarArrastre(): void {
+    this.arrastrado = null;
+    this.columnaDestino.set(null);
+  }
+
+  /** Suelta el turno: misma duración, nuevo día y hora (y sala, en la vista por sala). */
+  protected async soltar(col: Columna, evento: DragEvent): Promise<void> {
+    const a = this.arrastrado;
+    this.terminarArrastre();
+    if (!a) return;
+    evento.preventDefault();
+    const caja = (evento.currentTarget as HTMLElement).getBoundingClientRect();
+    const hora = horaAlSoltar(evento.clientY - caja.top, a.yAgarre);
+    const t = a.turno;
+    const salaId = this.vista() === 'salas' ? col.salaId : (t.sala?.id ?? null);
+    if (col.fecha === t.fecha && hora === t.hora && salaId === (t.sala?.id ?? null)) return;
+    const sala = salaId ? this.salas().find((s) => s.id === salaId)?.nombre : null;
+    const destino = `${etiquetaDia(col.fecha)} ${hora}${sala ? ' · ' + sala : ''}`;
+    if (!confirm(`¿Mover el turno de ${t.paciente.apellido}, ${t.paciente.nombre} al ${destino}?`))
+      return;
+    this.error.set(null);
+    try {
+      await this.turnosApi.mover(t.id, {
+        fecha: col.fecha,
+        hora,
+        duracionMin: t.duracionMin,
+        salaId,
+      });
+      this.aviso.set(`Turno movido al ${destino}.`);
+      await this.cargar();
+    } catch (e) {
+      this.error.set(mensajeDeError(e, 'No se pudo mover el turno.'));
+    }
+  }
+
+  // ───────── Recordatorios por WhatsApp ─────────
+
+  /** Abre WhatsApp con el recordatorio del turno elegido (lo manda quien lo abre). */
+  protected async recordar(t: Turno): Promise<void> {
+    this.errorPanel.set(null);
+    try {
+      const enlace = await this.enlaceDe(t);
+      if (!enlace) {
+        this.errorPanel.set('El paciente no tiene un teléfono válido cargado (ni su responsable).');
+        return;
+      }
+      window.open(enlace, '_blank', 'noopener');
+    } catch (e) {
+      this.errorPanel.set(mensajeDeError(e));
+    }
+  }
+
+  /** Lista de los turnos pendientes de mañana, cada uno con su enlace para recordar. */
+  protected async recordarManana(): Promise<void> {
+    this.error.set(null);
+    const manana = sumarDias(hoyEn(this.zona()), 1);
+    try {
+      const turnos = (await this.turnosApi.listar({ desde: manana, hasta: manana }))
+        .filter((t) => t.estado === 'pendiente' && this.puedeGestionar(t))
+        .sort((x, y) => x.hora.localeCompare(y.hora));
+      const filas = await Promise.all(
+        turnos.map(async (turno) => ({
+          turno,
+          enlace: await this.enlaceDe(turno),
+          enviado: false,
+        })),
+      );
+      this.recordatorios.set(filas);
+    } catch (e) {
+      this.error.set(mensajeDeError(e, 'No se pudieron cargar los turnos de mañana.'));
+    }
+  }
+
+  protected marcarEnviado(i: number): void {
+    this.recordatorios.update((l) => l && l.map((r, j) => (j === i ? { ...r, enviado: true } : r)));
+  }
+
+  private async enlaceDe(t: Turno): Promise<string | null> {
+    const paciente = await this.pacientesApi.obtener(t.paciente.id);
+    return enlaceRecordatorio(
+      t,
+      paciente,
+      this.auth.sesion()?.centro?.nombre ?? 'el centro',
+      hoyEn(this.zona()),
+    );
   }
 
   protected tocarHueco(col: Columna, evento: MouseEvent): void {

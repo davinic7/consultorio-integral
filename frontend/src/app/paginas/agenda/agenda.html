@@ -18,7 +18,51 @@
         Nuevo turno
       </button>
     }
+    @if (puedeCrear()) {
+      <button type="button" class="oc-btn agenda-recordar" (click)="recordarManana()">
+        Recordar los turnos de mañana
+      </button>
+    }
   </div>
+
+  @if (recordatorios(); as lista) {
+    <section class="oc-tarjeta agenda-recordatorios" aria-labelledby="rec-t">
+      <h2 id="rec-t">Recordar los turnos de mañana</h2>
+      @if (lista.length === 0) {
+        <p class="oc-suave">No hay turnos pendientes para mañana.</p>
+      } @else {
+        <p class="oc-suave">
+          Cada botón abre WhatsApp con el mensaje listo; lo enviás vos desde tu teléfono o tu
+          computadora. No se manda nada automáticamente.
+        </p>
+        <ul class="lista">
+          @for (r of lista; track r.turno.id; let i = $index) {
+            <li class="lista__item">
+              <span>
+                <strong>{{ r.turno.hora }}</strong> {{ r.turno.paciente.apellido }},
+                {{ r.turno.paciente.nombre }}
+                <span class="oc-suave">· {{ r.turno.profesional.apellido }}</span>
+              </span>
+              @if (r.enlace) {
+                <a
+                  class="oc-btn oc-btn--chico"
+                  [href]="r.enlace"
+                  target="_blank"
+                  rel="noopener"
+                  (click)="marcarEnviado(i)"
+                >
+                  {{ r.enviado ? 'Abierto ✓' : 'Enviar por WhatsApp' }}
+                </a>
+              } @else {
+                <span class="oc-estado oc-estado--aviso">Sin teléfono</span>
+              }
+            </li>
+          }
+        </ul>
+      }
+      <button type="button" class="enlace" (click)="recordatorios.set(null)">Cerrar</button>
+    </section>
+  }
 
   <div class="agenda-controles">
     <div class="oc-segmentado" role="group" aria-label="Vista">
@@ -134,7 +178,11 @@
             class="calendario__columna"
             [class.hoy]="col.esHoy"
             [class.clickeable]="puedeCrear()"
+            [class.destino]="columnaDestino() === col.clave"
             (click)="tocarHueco(col, $event)"
+            (dragover)="sobreColumna(col, $event)"
+            (dragleave)="columnaDestino.set(null)"
+            (drop)="soltar(col, $event)"
             (keydown.enter)="abrirNuevo(col.fecha, '09:00', col.salaId)"
             [attr.tabindex]="puedeCrear() ? 0 : null"
             [attr.role]="puedeCrear() ? 'button' : null"
@@ -162,6 +210,10 @@
                 [style.left.%]="b.izquierda"
                 [style.width.%]="b.ancho"
                 [disabled]="!t"
+                [attr.draggable]="t && puedeGestionar(t) ? 'true' : null"
+                [attr.title]="t && puedeGestionar(t) ? 'Arrastralo para moverlo' : null"
+                (dragstart)="t && arrastrar(t, $event)"
+                (dragend)="terminarArrastre()"
                 (click)="verTurno(t, $event)"
               >
                 @if (t) {
@@ -268,6 +320,9 @@
                 <div class="acciones">
                   <button type="button" class="oc-btn oc-btn--primario" (click)="editar()">
                     Mover o editar
+                  </button>
+                  <button type="button" class="oc-btn" (click)="recordar(t)">
+                    Recordar por WhatsApp
                   </button>
                 </div>
                 <label class="oc-campo">

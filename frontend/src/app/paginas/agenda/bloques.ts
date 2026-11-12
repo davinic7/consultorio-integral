@@ -78,3 +78,12 @@ export function horaEnPosicion(y: number): string {
   const m = String(acotado % 60).padStart(2, '0');
   return `${h}:${m}`;
 }
+
+/**
+ * Hora en la que cae un turno al soltarlo sobre una columna: la posición del
+ * puntero menos la distancia desde el borde de arriba del turno donde se lo
+ * agarró (así el turno queda donde se ve), redondeada a 15 minutos.
+ */
+export function horaAlSoltar(yEnColumna: number, yDesdeArribaDelTurno: number): string {
+  return horaEnPosicion(Math.max(0, yEnColumna - yDesdeArribaDelTurno));
+}
