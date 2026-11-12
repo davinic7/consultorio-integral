@@ -54,6 +54,15 @@ export const routes: Routes = [
         loadComponent: () => import('./paginas/cobros/cobros').then((m) => m.Cobros),
       },
       {
+        path: 'cobros/liquidacion/:profesionalId',
+        canActivate: [rolGuard('admin', 'profesional'), moduloGuard('liquidacion')],
+        title: 'Comprobante de liquidación · Centro Integral',
+        loadComponent: () =>
+          import('./paginas/comprobante-liquidacion/comprobante-liquidacion').then(
+            (m) => m.ComprobanteLiquidacion,
+          ),
+      },
+      {
         path: 'facturacion',
         canActivate: [rolGuard('admin', 'recepcion'), moduloGuard('facturacion_arca')],
         title: 'Facturación · Centro Integral',

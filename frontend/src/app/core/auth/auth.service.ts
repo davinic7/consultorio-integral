@@ -92,6 +92,7 @@ export class AuthService {
       usuario: r.usuario,
       centro: r.centro,
       rol: r.rol,
+      atiende: r.atiende ?? false,
       centros: r.centros,
     };
     this._sesion.set(datos);

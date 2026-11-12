@@ -61,6 +61,13 @@ describe('AuthService + authInterceptor', () => {
     expect(guardado).toBe('refresh-1');
   });
 
+  it('guarda si atiende (admin que también es profesional)', async () => {
+    const p = auth.login('a@b.com', 'clave');
+    http.expectOne('/api/v1/auth/login').flush(respuesta(1, { atiende: true }));
+    await p;
+    expect(auth.sesion()?.atiende).toBe(true);
+  });
+
   it('pide elegir centro si tiene varios y entró sin centro', async () => {
     const p = auth.login('a@b.com', 'clave');
     http.expectOne('/api/v1/auth/login').flush(

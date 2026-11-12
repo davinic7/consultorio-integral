@@ -452,6 +452,13 @@
             <dt class="cobros__liq-total">A liquidar</dt>
             <dd class="oc-mono cobros__liq-total">{{ plata(l.aLiquidar) }}</dd>
           </dl>
+          <a
+            class="enlace cobros__nota"
+            [routerLink]="['/cobros/liquidacion', l.profesional.id]"
+            [queryParams]="{ mes: mes() }"
+          >
+            {{ estado === 'cerrada' || estado === 'pagada' ? 'Ver comprobante' : 'Ver borrador del comprobante' }}
+          </a>
           @if (l.sinMarcar && estado !== 'cerrada' && estado !== 'pagada') {
             <p class="oc-alerta oc-alerta--aviso cobros__nota">
               {{ l.sinMarcar === 1 ? 'Queda 1 turno' : 'Quedan ' + l.sinMarcar + ' turnos' }} del
