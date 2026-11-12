@@ -69,7 +69,7 @@ Los 10 pasos de [prototipo.md](prototipo.md) están hechos (versión 1.0).
 - Precios de los planes: hoy en 0, falta la política comercial.
 - Alta de centros por cuenta propia (registro público con plan y cobro del servicio): hoy solo el superadmin crea centros.
 - Obras sociales: leer órdenes y tokens desde fotos (la referencia usaba OCR en el navegador) y planilla de la orden en PDF.
-- Tests de frontend para las pantallas de salas, profesionales, pacientes, agenda, planilla y notas (hoy probadas a mano).
+- Tests de frontend de la pantalla de notas (pasa a ser el Expediente; los suma la etapa 4). Salas, profesionales, pacientes, agenda y planilla ya tienen los suyos.
 - Lint del backend: Windows (Control de aplicaciones) bloquea `tsgolint.exe`, el ejecutable de las reglas con tipos. Se corre `oxlint` sin `--type-aware` hasta resolverlo.
 - Agenda: arrastrar y soltar turnos para moverlos (hoy se mueven desde el panel) y horario visible configurable por centro (hoy 07:00 a 22:00).
 - Avisos: hoy se consultan cada minuto; más adelante, notificaciones push en la app móvil.

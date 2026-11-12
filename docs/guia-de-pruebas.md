@@ -382,7 +382,7 @@ cd frontend && npx ng test --watch=false
 | --- | --- | --- |
 | Backend unitarios | 62 | variables de entorno, contraseñas, filtro por centro, búsqueda sin tildes, fechas y zonas horarias, cifrado de notas, reglas de cobro y liquidación, acuerdos de alquiler, regla de faltazo, cliente ARCA (firma CMS, ticket, Factura C, QR), fechas a declarar y tokens |
 | Backend e2e | 167 | auth y roles, sesión web en cookie, límites de planes, acuerdos de alquiler, faltazos, ABM, agenda (superposición, pedidos simultáneos, semanales), avisos, asistencia (permisos, mes cerrado, registro de cambios), historial, planilla, notas cifradas y quién las ve, obras sociales y sus reglas, cobros (precios, órdenes, pagos, conciliación) y liquidación, planes y módulos, facturación (simulada y contra un ARCA de prueba), presentación a obras sociales, aislamiento entre centros, contra PostgreSQL real |
-| Frontend | 59 | sesión, "Recordarme", renovación de token, login, tema claro/oscuro, fechas, ubicación de turnos en el calendario, cuándo se puede marcar asistencia, colores por disciplina, enlaces de WhatsApp y edad, formato de pesos y meses |
+| Frontend | 86 | pantallas de salas, profesionales (acuerdos y faltazos según el plan), pacientes (búsqueda y páginas), agenda (salas según el plan y pregunta del faltazo) y planilla; sesión, "Recordarme", renovación de token, login, tema claro/oscuro, fechas, ubicación de turnos en el calendario, cuándo se puede marcar asistencia, colores por disciplina, enlaces de WhatsApp y edad, formato de pesos y meses |
 
 Los e2e usan la base `centro_integral_test` (`TEST_DATABASE_URL`), que se vacía en cada corrida: nunca tocan los datos de desarrollo.
 
