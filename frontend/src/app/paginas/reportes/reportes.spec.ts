@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { ReportesApi } from '../../core/api/api';
 import type { Reporte } from '../../core/api/modelos';
 import { AuthService } from '../../core/auth/auth.service';
-import { alturas, mesCorto, Reportes } from './reportes';
+import { alturas, hojasDeReporte, mesCorto, Reportes } from './reportes';
 
 const conteo = {
   turnos: 4,
@@ -79,6 +79,71 @@ describe('Reportes', () => {
     expect(el.textContent).toContain('Díaz, Laura');
     expect(el.textContent).toContain('Particular');
     expect(el.textContent).toContain('1 nuevos');
+  });
+
+  it('hojasDeReporte lleva las tablas de la pantalla', () => {
+    const hojas = hojasDeReporte(REPORTE);
+    expect(hojas.map((h) => h.nombre)).toEqual([
+      'Resumen',
+      'Por mes',
+      'Por profesional',
+      'Por cobertura',
+    ]);
+    const [resumen, porMes, porProf, porCob] = hojas;
+    expect(resumen!.filas[0]).toEqual(['Período', 'Octubre 2026 a Noviembre 2026']);
+    expect(resumen!.filas).toContainEqual(['Asistencia', { valor: 0.75, formato: 'porcentaje' }]);
+    expect(resumen!.filas).toContainEqual(['Falta cobrar', { valor: 18000, formato: 'plata' }]);
+    expect(resumen!.filas.at(-1)).toEqual(['Pacientes nuevos', 1]);
+    expect(porMes!.filas[0]).toEqual([
+      'Octubre 2026',
+      4,
+      3,
+      0,
+      1,
+      { valor: 0.75, formato: 'porcentaje' },
+      2,
+      28000,
+      10000,
+    ]);
+    // Un mes sin turnos no tiene porcentaje.
+    expect(porMes!.filas[1]![5]).toEqual({ valor: null, formato: 'porcentaje' });
+    expect(porMes!.total![0]).toBe('Total');
+    expect(porMes!.total!.slice(-2)).toEqual([28000, 10000]);
+    expect(porProf!.filas[0]!.slice(0, 2)).toEqual(['Díaz, Laura', 'Psicología']);
+    expect(porCob!.filas[0]).toEqual(['Particular', 3, 28000]);
+  });
+
+  it('el Excel de un profesional no lleva la hoja por profesional ni los nuevos', () => {
+    const hojas = hojasDeReporte({
+      ...REPORTE,
+      soloProfesional: true,
+      total: { ...REPORTE.total, pacientesNuevos: null },
+    });
+    expect(hojas.map((h) => h.nombre)).toEqual(['Resumen', 'Por mes', 'Por cobertura']);
+    expect(hojas[0]!.filas.at(-1)![0]).toBe('Pacientes atendidos');
+  });
+
+  it('Descargar Excel baja el reporte del rango que se ve', async () => {
+    const original = URL.createObjectURL;
+    URL.createObjectURL = vi.fn().mockReturnValue('blob:prueba');
+    let bajado = '';
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
+      this: HTMLAnchorElement,
+    ) {
+      bajado = this.download;
+    });
+    try {
+      const { el } = await crear(REPORTE);
+      const boton = [...el.querySelectorAll('button')].find((b) =>
+        b.textContent.includes('Descargar Excel'),
+      )!;
+      expect(boton.disabled).toBe(false);
+      boton.click();
+      expect(bajado).toBe('reporte-2026-10-a-2026-11.xlsx');
+    } finally {
+      click.mockRestore();
+      URL.createObjectURL = original;
+    }
   });
 
   it('para un profesional no muestra la tabla por profesional', async () => {

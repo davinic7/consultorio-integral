@@ -4,7 +4,9 @@ import type {
   EstadoLiquidacion,
   MedioPago,
   ComponenteAlquiler,
+  LiquidacionProfesional,
 } from './api/modelos';
+import type { Hoja } from './excel';
 
 export const NOMBRE_MEDIO: Record<MedioPago, string> = {
   efectivo: 'Efectivo',
@@ -77,6 +79,75 @@ export function textoSaldo(saldo: number, paraProfesional: boolean): string {
   if (saldo === 0) return 'Sin saldo';
   if (saldo > 0) return paraProfesional ? 'Te paga el centro' : 'El centro le paga';
   return paraProfesional ? 'Le debés al centro' : 'Le debe al centro';
+}
+
+/**
+ * La hoja del Excel de liquidación de un mes: un renglón por profesional, con lo
+ * mismo que muestran las tarjetas. El saldo va con signo (negativo: le debe al centro).
+ */
+export function hojasDeLiquidacion(
+  mes: string,
+  liquidaciones: LiquidacionProfesional[],
+  paraProfesional: boolean,
+): Hoja[] {
+  const suma = (campo: (l: LiquidacionProfesional) => number) =>
+    Math.round(liquidaciones.reduce((n, l) => n + campo(l), 0) * 100) / 100;
+  return [
+    {
+      nombre: `Liquidación ${nombreMes(mes)}`,
+      columnas: [
+        { titulo: 'Profesional' },
+        { titulo: 'Disciplina', ancho: 22 },
+        { titulo: 'Sesiones', formato: 'entero' },
+        { titulo: 'Faltazos cobrables', formato: 'entero' },
+        { titulo: 'Monto de faltazos', formato: 'plata' },
+        { titulo: 'Facturado', formato: 'plata' },
+        { titulo: 'Cobrado', formato: 'plata' },
+        { titulo: 'Alquiler', formato: 'plata' },
+        { titulo: 'Detalle del alquiler', ancho: 48 },
+        { titulo: 'Quién cobra', ancho: 16 },
+        { titulo: 'Saldo', formato: 'plata' },
+        { titulo: 'Qué significa el saldo', ancho: 24 },
+        { titulo: 'Estado', ancho: 14 },
+      ],
+      filas: liquidaciones.map((l) => [
+        `${l.profesional.apellido}, ${l.profesional.nombre}`,
+        l.profesional.disciplina,
+        l.sesiones,
+        l.faltazos,
+        l.montoFaltazos,
+        l.facturado,
+        l.cobrado,
+        l.alquiler,
+        l.componentes.length
+          ? l.componentes.map((c) => `${textoComponente(c)}: ${plata(c.monto)}`).join(' + ')
+          : l.acuerdo
+            ? 'Sin cargo'
+            : 'Sin acuerdo',
+        l.cobraElCentro ? 'El centro' : 'El profesional',
+        l.saldo,
+        textoSaldo(l.saldo, paraProfesional),
+        l.liquidacion ? NOMBRE_LIQUIDACION[l.liquidacion.estado] : 'Sin generar',
+      ]),
+      // El total solo tiene sentido con más de un profesional.
+      total:
+        liquidaciones.length > 1
+          ? [
+              'Total',
+              null,
+              suma((l) => l.sesiones),
+              suma((l) => l.faltazos),
+              suma((l) => l.montoFaltazos),
+              suma((l) => l.facturado),
+              suma((l) => l.cobrado),
+              suma((l) => l.alquiler),
+              null,
+              null,
+              suma((l) => l.saldo),
+            ]
+          : undefined,
+    },
+  ];
 }
 
 export function plata(n: number | null | undefined): string {

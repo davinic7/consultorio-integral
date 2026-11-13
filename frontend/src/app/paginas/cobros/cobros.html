@@ -69,6 +69,16 @@
             Liquidación
           </button>
         </div>
+        @if (seccion() === 'liquidacion') {
+          <button
+            type="button"
+            class="oc-btn"
+            [disabled]="!liquidaciones().length"
+            (click)="descargarLiquidacion()"
+          >
+            Descargar Excel
+          </button>
+        }
       }
     </div>
   </div>

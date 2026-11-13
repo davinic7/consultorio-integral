@@ -5,12 +5,17 @@
       <h1>Reportes</h1>
       <p class="oc-suave">{{ rango() }}</p>
     </div>
-    <div class="oc-segmentado" role="group" aria-label="Período">
-      @for (n of opciones; track n) {
-        <button type="button" [attr.aria-pressed]="cantidad() === n" (click)="elegir(n)">
-          {{ n }} meses
-        </button>
-      }
+    <div class="acciones">
+      <div class="oc-segmentado" role="group" aria-label="Período">
+        @for (n of opciones; track n) {
+          <button type="button" [attr.aria-pressed]="cantidad() === n" (click)="elegir(n)">
+            {{ n }} meses
+          </button>
+        }
+      </div>
+      <button type="button" class="oc-btn" [disabled]="!reporte()" (click)="descargar()">
+        Descargar Excel
+      </button>
     </div>
   </div>
 

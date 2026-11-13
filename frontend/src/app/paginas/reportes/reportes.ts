@@ -3,6 +3,7 @@ import { mensajeDeError, ReportesApi } from '../../core/api/api';
 import type { Reporte } from '../../core/api/modelos';
 import { AuthService } from '../../core/auth/auth.service';
 import { nombreMes, plata, sumarMes } from '../../core/cobros';
+import { descargarExcel, type Celda, type Hoja } from '../../core/excel';
 import { hoyEn } from '../../core/fechas';
 
 const MESES_CORTOS = [
@@ -30,6 +31,114 @@ export function mesCorto(mes: string): string {
 export function alturas(valores: number[]): number[] {
   const max = Math.max(...valores, 0);
   return valores.map((v) => (max ? Math.max((v / max) * 100, v ? 2 : 0) : 0));
+}
+
+const pct = (n: number | null): Celda => ({
+  valor: n === null ? null : n / 100,
+  formato: 'porcentaje',
+});
+const pesos = (valor: number): Celda => ({ valor, formato: 'plata' });
+
+/** Las hojas del Excel del reporte: las mismas tablas que se ven en pantalla. */
+export function hojasDeReporte(r: Reporte): Hoja[] {
+  const t = r.total;
+  const resumen: Hoja = {
+    nombre: 'Resumen',
+    columnas: [
+      { titulo: 'Dato', ancho: 28 },
+      { titulo: 'Valor', formato: 'entero', ancho: 26 },
+    ],
+    filas: [
+      ['Período', `${nombreMes(r.desde)} a ${nombreMes(r.hasta)}`],
+      ['Turnos', t.turnos],
+      ['Sesiones atendidas', t.presentes],
+      ['Faltas con aviso', t.ausentesConAviso],
+      ['Faltas sin aviso', t.ausentesSinAviso],
+      ['Cancelados por el profesional', t.cancelados],
+      ['Sin marcar', t.pendientes],
+      ['Asistencia', pct(t.asistencia)],
+      ['Facturado', pesos(t.facturado)],
+      ['Cobrado', pesos(t.cobrado)],
+      ['Falta cobrar', pesos(t.facturado - t.cobrado)],
+      ['Pacientes atendidos', t.pacientes],
+      ...(t.pacientesNuevos === null ? [] : [['Pacientes nuevos', t.pacientesNuevos]]),
+    ],
+  };
+  const porMes: Hoja = {
+    nombre: 'Por mes',
+    columnas: [
+      { titulo: 'Mes', ancho: 18 },
+      { titulo: 'Turnos', formato: 'entero' },
+      { titulo: 'Atendidas', formato: 'entero' },
+      { titulo: 'Faltas con aviso', formato: 'entero' },
+      { titulo: 'Faltas sin aviso', formato: 'entero' },
+      { titulo: 'Asistencia', formato: 'porcentaje' },
+      { titulo: 'Pacientes', formato: 'entero' },
+      { titulo: 'Facturado', formato: 'plata' },
+      { titulo: 'Cobrado', formato: 'plata' },
+    ],
+    filas: r.meses.map((m) => [
+      nombreMes(m.mes),
+      m.turnos,
+      m.presentes,
+      m.ausentesConAviso,
+      m.ausentesSinAviso,
+      pct(m.asistencia),
+      m.pacientes,
+      m.facturado,
+      m.cobrado,
+    ]),
+    total: [
+      'Total',
+      t.turnos,
+      t.presentes,
+      t.ausentesConAviso,
+      t.ausentesSinAviso,
+      pct(t.asistencia),
+      t.pacientes,
+      t.facturado,
+      t.cobrado,
+    ],
+  };
+  const porProfesional: Hoja = {
+    nombre: 'Por profesional',
+    columnas: [
+      { titulo: 'Profesional' },
+      { titulo: 'Disciplina', ancho: 22 },
+      { titulo: 'Turnos', formato: 'entero' },
+      { titulo: 'Atendidas', formato: 'entero' },
+      { titulo: 'Faltas con aviso', formato: 'entero' },
+      { titulo: 'Faltas sin aviso', formato: 'entero' },
+      { titulo: 'Asistencia', formato: 'porcentaje' },
+      { titulo: 'Facturado', formato: 'plata' },
+      { titulo: 'Cobrado', formato: 'plata' },
+    ],
+    filas: r.porProfesional.map((p) => [
+      `${p.profesional.apellido}, ${p.profesional.nombre}`,
+      p.profesional.disciplina,
+      p.turnos,
+      p.presentes,
+      p.ausentesConAviso,
+      p.ausentesSinAviso,
+      pct(p.asistencia),
+      p.facturado,
+      p.cobrado,
+    ]),
+  };
+  const porCobertura: Hoja = {
+    nombre: 'Por cobertura',
+    columnas: [
+      { titulo: 'Cobertura' },
+      { titulo: 'Sesiones', formato: 'entero' },
+      { titulo: 'Facturado', formato: 'plata' },
+    ],
+    filas: r.porCobertura.map((c) => [
+      c.financiador?.nombre ?? 'Particular',
+      c.sesiones,
+      c.facturado,
+    ]),
+  };
+  return [resumen, porMes, ...(r.soloProfesional ? [] : [porProfesional]), porCobertura];
 }
 
 interface Barra {
@@ -84,6 +193,12 @@ export class Reportes {
 
   protected elegir(n: number): void {
     this.cantidad.set(n);
+  }
+
+  /** Baja lo que se está viendo, por ejemplo "reporte-2026-06-a-2026-11.xlsx". */
+  protected descargar(): void {
+    const r = this.reporte();
+    if (r) descargarExcel(`reporte-${r.desde}-a-${r.hasta}`, hojasDeReporte(r));
   }
 
   protected porcentaje(n: number | null): string {

@@ -14,6 +14,7 @@ import { tieneModulo } from '../../core/auth/modulos';
 import { puede } from '../../core/auth/roles';
 import {
   CLASE_COBRO,
+  hojasDeLiquidacion,
   MEDIOS,
   NOMBRE_AVISO,
   NOMBRE_COBRO,
@@ -26,6 +27,7 @@ import {
   textoSaldo,
 } from '../../core/cobros';
 import { colorDisciplina, iniciales } from '../../core/disciplina';
+import { descargarExcel } from '../../core/excel';
 import { ahoraEn } from '../../core/fechas';
 import { DetalleCobro } from './detalle-cobro';
 
@@ -262,6 +264,15 @@ export class Cobros {
   }
 
   // ───────── Liquidación ─────────
+
+  /** Baja la liquidación del mes que se está viendo, por ejemplo "liquidacion-2026-11.xlsx". */
+  protected descargarLiquidacion(): void {
+    const mes = this.mes();
+    descargarExcel(
+      `liquidacion-${mes}`,
+      hojasDeLiquidacion(mes, this.liquidaciones(), this.esProfesional()),
+    );
+  }
 
   protected async generarLiquidacion(l: LiquidacionProfesional): Promise<void> {
     await this.hacer(() => this.liquidacionesApi.generar(l.profesional.id, this.mes()));
