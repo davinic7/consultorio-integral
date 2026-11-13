@@ -271,6 +271,36 @@ export interface BorradorNota {
   actualizadoEn: string;
 }
 
+// ───────── Dictado ─────────
+
+export interface EstadoDictado {
+  /** Hay motor de transcripción en el servidor. */
+  disponible: boolean;
+  /** Máximo de un tramo, en segundos. */
+  maxSegundos: number;
+}
+
+/** Clave pública (ECDH P-256) con la que el teléfono cifra cada grabación. */
+export interface ClaveDictado {
+  version: number;
+  clave: JsonWebKey;
+}
+
+/** Cómo va un dictado. Sin texto: el texto va directo al borrador del servidor. */
+export interface TrabajoDictado {
+  id: string;
+  estado: 'en_cola' | 'transcribiendo' | 'listo' | 'error';
+  duracionSeg: number;
+  procesadoSeg: number;
+  /** Dictados en la cola antes que este. */
+  antes: number;
+  /** Palabras que el motor entendió con poca seguridad. */
+  dudosas: string[];
+  codigo: string | null;
+  /** No se entendió nada (silencio o ruido). */
+  sinTexto: boolean;
+}
+
 // ───────── Cobros y liquidación ─────────
 
 export type MedioPago = 'efectivo' | 'transferencia' | 'tarjeta' | 'otro';

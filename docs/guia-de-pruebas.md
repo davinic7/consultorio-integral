@@ -289,13 +289,25 @@ Arranca en **modo simulado**: no se conecta con ARCA y las facturas no tienen va
 - [ ] Prepaga Salud (pide token): "Cargar tokens" → pegar `AB12CD 30111222` (token y DNI) → "Revisar" muestra a qué paciente y sesión va → "Guardar". Un token repetido aparece como "Repetido".
 - [ ] "Marcar presentadas" en un paciente → sus sesiones con fecha quedan presentadas (también en Cobros).
 
-### 4.11 Notas de sesión (profesional)
+### 4.11 Expediente y dictado (profesional)
 
-- [ ] Entrar con `profesional@demo.local` → Pacientes → abrir uno → pestaña **Notas** → escribir una nota y "Agregar nota" → aparece como "Privada".
-- [ ] Escribir otra con "Compartir con el equipo" → aparece como "Compartida". "Editar" cambia el texto o si se comparte.
-- [ ] Con admin o recepción, la ficha del paciente **no** muestra notas.
-- [ ] En la base (sección 6), `SELECT texto FROM notas_sesion;` muestra solo texto cifrado (`v1:…`), nunca la nota.
-- [ ] Para probar el compartir entre profesionales hace falta un segundo profesional con cuenta, asignado al mismo paciente (hoy se vincula por API; las pantallas de usuarios son un pendiente).
+- [ ] Entrar con `profesional@demo.local` → Pacientes → abrir uno → pestaña **Expediente** → "Escribir" → escribir y "Guardar evolución" → aparece arriba en la línea de tiempo como "Privada" y "Escrita".
+- [ ] Escribir otra y elegir "Compartida" → la ve el equipo del paciente. "Editar" cambia el texto; cambiar solo quién la ve no cuenta como edición.
+- [ ] Dejar un texto a medio escribir y cerrar → "El borrador quedó guardado"; al volver aparece "Seguir el borrador".
+- [ ] Con admin o recepción, la ficha del paciente **no** muestra el expediente.
+- [ ] En la base (sección 6), `SELECT texto FROM notas_sesion;` y `SELECT texto FROM borradores_nota;` muestran solo texto cifrado (`v1:…`).
+- [ ] Para probar el compartir entre profesionales hace falta un segundo profesional con cuenta, asignado al mismo paciente.
+
+**Dictado.** Hace falta el módulo Dictado en el plan del centro: hoy solo lo trae Individual Full. Para Centro Demo, como superadmin, en Centros y planes, editar Centro Full y tildar Dictado (y sacarlo al terminar, si se quiere dejar como estaba). Sin `DICTADO_MOTOR` en el `.env`, el backend usa el motor simulado.
+
+- [ ] "Dictar" → la primera vez explica y pide el micrófono → tocar el micrófono → franja "GRABANDO", el tiempo y la píldora en la barra superior. Pausar → "EN PAUSA"; Reanudar; Terminar → "Pasando tu voz a texto" → el borrador muestra "Texto de prueba del dictado: N segundos de audio." y el aviso de revisar los términos clínicos.
+- [ ] "Dictar otro tramo" suma el texto al final, después de una línea en blanco.
+- [ ] Grabando, ir a otra pantalla: la píldora sigue con el tiempo y al tocarla vuelve al expediente del paciente.
+- [ ] Descartar mientras graba → pregunta, y lo que ya estaba en el borrador no se toca.
+- [ ] Con el micrófono bloqueado en el navegador → "El micrófono está bloqueado" con los pasos para habilitarlo.
+- [ ] Sin señal: F12 → Red → "Sin conexión" → grabar y Terminar → "No hay señal", "EN ESPERA · 1" y la píldora "1 SIN ENVIAR". En F12 → Aplicación → IndexedDB → `ci-dictado` queda solo el paquete cifrado con ids, fecha y duración (sin nombre ni texto). Volver a conectar → se transcribe sola y llega al borrador.
+- [ ] Cerrar sesión con grabaciones sin enviar → avisa antes, y se borran del dispositivo.
+- [ ] En el log del backend aparecen solo el id del dictado, la duración y las partes, nunca texto.
 
 ### 4.12 Celular
 
@@ -380,9 +392,9 @@ cd frontend && npx ng test --watch=false
 
 | Suite | Cantidad | Qué cubre |
 | --- | --- | --- |
-| Backend unitarios | 62 | variables de entorno, contraseñas, filtro por centro, búsqueda sin tildes, fechas y zonas horarias, cifrado de notas, reglas de cobro y liquidación, acuerdos de alquiler, regla de faltazo, cliente ARCA (firma CMS, ticket, Factura C, QR), fechas a declarar y tokens |
-| Backend e2e | 176 | auth y roles, sesión web en cookie, límites de planes, acuerdos de alquiler, faltazos, ABM, agenda (superposición, pedidos simultáneos, semanales), avisos, asistencia (permisos, mes cerrado, registro de cambios), historial, planilla, notas cifradas y quién las ve, expediente (origen, fecha de edición, sesiones, borradores cifrados, su vencimiento y el turno borrado), obras sociales y sus reglas, cobros (precios, órdenes, pagos, conciliación) y liquidación, planes y módulos, facturación (simulada y contra un ARCA de prueba), presentación a obras sociales, aislamiento entre centros, contra PostgreSQL real |
-| Frontend | 114 | pantallas de salas, profesionales (acuerdos y faltazos según el plan), pacientes (búsqueda y páginas), agenda (arrastrar y soltar, recordatorios por WhatsApp) (salas según el plan y pregunta del faltazo), planilla y expediente (línea de tiempo por mes, filtros, guía de estructura, borrador y guardado); sesión, "Recordarme", renovación de token, login, tema claro/oscuro, fechas, ubicación de turnos en el calendario, cuándo se puede marcar asistencia, colores por disciplina, enlaces de WhatsApp y edad, formato de pesos y meses |
+| Backend unitarios | 79 | variables de entorno, contraseñas, filtro por centro, búsqueda sin tildes, fechas y zonas horarias, cifrado de notas, reglas de cobro y liquidación, acuerdos de alquiler, regla de faltazo, cliente ARCA (firma CMS, ticket, Factura C, QR), fechas a declarar y tokens, dictado (paquete cifrado, WAV y cortes, cola de trabajos y límites, motores) |
+| Backend e2e | 186 | auth y roles, sesión web en cookie, límites de planes, acuerdos de alquiler, faltazos, ABM, agenda (superposición, pedidos simultáneos, semanales), avisos, asistencia (permisos, mes cerrado, registro de cambios), historial, planilla, notas cifradas y quién las ve, expediente (origen, fecha de edición, sesiones, borradores cifrados, su vencimiento y el turno borrado), dictado (claves y su renovación, transcripción al borrador, grabaciones rechazadas, permisos y módulos), obras sociales y sus reglas, cobros (precios, órdenes, pagos, conciliación) y liquidación, planes y módulos, facturación (simulada y contra un ARCA de prueba), presentación a obras sociales, aislamiento entre centros, contra PostgreSQL real |
+| Frontend | 147 | pantallas de salas, profesionales (acuerdos y faltazos según el plan), pacientes (búsqueda y páginas), agenda (arrastrar y soltar, recordatorios por WhatsApp) (salas según el plan y pregunta del faltazo), planilla y expediente (línea de tiempo por mes, filtros, guía de estructura, borrador y guardado), dictado (WAV, cifrado, estados del panel, píldora, cola sin señal, subida con avance); sesión, "Recordarme", renovación de token, login, tema claro/oscuro, fechas, ubicación de turnos en el calendario, cuándo se puede marcar asistencia, colores por disciplina, enlaces de WhatsApp y edad, formato de pesos y meses |
 
 Los e2e usan la base `centro_integral_test` (`TEST_DATABASE_URL`), que se vacía en cada corrida: nunca tocan los datos de desarrollo.
 

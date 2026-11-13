@@ -71,16 +71,18 @@ export class AuthGuard implements CanActivate {
         throw new ForbiddenException('Tu rol no tiene acceso a esta sección');
       }
     }
-    const modulo = this.reflector.getAllAndOverride<Modulo | undefined>(
+    const modulos = this.reflector.getAllAndOverride<Modulo[] | undefined>(
       CLAVE_MODULO,
       destino,
     );
-    if (modulo) {
+    if (modulos?.length) {
       if (!payload.cid)
         throw new ForbiddenException('Elegí un centro para continuar');
-      if (!(await this.modulos.de(payload.cid)).has(modulo)) {
+      const delPlan = await this.modulos.de(payload.cid);
+      const falta = modulos.find((m) => !delPlan.has(m));
+      if (falta) {
         throw new ForbiddenException(
-          `El plan del centro no incluye ${NOMBRE_MODULO[modulo]}`,
+          `El plan del centro no incluye ${NOMBRE_MODULO[falta]}`,
         );
       }
     }

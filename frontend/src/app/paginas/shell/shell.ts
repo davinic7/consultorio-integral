@@ -18,9 +18,11 @@ import type { Modulo } from '../../core/auth/auth.models';
 import { tieneModulo } from '../../core/auth/modulos';
 import { NOMBRE_ROL, puede } from '../../core/auth/roles';
 import { AvisosService } from '../../core/avisos.service';
+import { DictadoService } from '../../core/dictado/dictado.service';
 import { Isotipo, SelloDavinic } from '../../core/marca/marca';
 import { TemaService } from '../../core/tema.service';
 import { ICONOS, type Icono } from './iconos';
+import { PildoraDictado } from './pildora-dictado';
 
 interface ItemMenu {
   ruta: string;
@@ -105,7 +107,7 @@ const MENU_PLATAFORMA: ItemMenu[] = [
  */
 @Component({
   selector: 'app-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, Isotipo, SelloDavinic],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, Isotipo, SelloDavinic, PildoraDictado],
   templateUrl: './shell.html',
   styleUrl: './shell.scss',
 })
@@ -113,6 +115,7 @@ export class Shell {
   protected readonly auth = inject(AuthService);
   protected readonly avisos = inject(AvisosService);
   protected readonly tema = inject(TemaService);
+  private readonly dictado = inject(DictadoService);
   private readonly router = inject(Router);
   private readonly sanitizer = inject(DomSanitizer);
 
@@ -195,6 +198,17 @@ export class Shell {
   }
 
   protected async salir(): Promise<void> {
+    // Las grabaciones sin enviar se borran del dispositivo al cerrar sesión (decisiones.md §20).
+    const pendientes = this.dictado.pendientes().length;
+    if (this.dictado.ocupado() || pendientes) {
+      const motivo = this.dictado.ocupado()
+        ? 'Hay un dictado en curso.'
+        : `Tenés ${pendientes} ${pendientes === 1 ? 'dictado' : 'dictados'} sin enviar.`;
+      if (!confirm(`${motivo} Si salís, se borra de este dispositivo y no se transcribe.`)) return;
+      const fase = this.dictado.fase();
+      if (fase === 'grabando' || fase === 'pausado') this.dictado.descartarGrabacion();
+      await this.dictado.olvidarPendientes();
+    }
     this.avisos.detener();
     await this.auth.logout();
     await this.router.navigateByUrl('/login');

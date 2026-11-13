@@ -24,11 +24,11 @@ import { PrismaService } from '../prisma/prisma.service.js';
 export const CLAVE_MODULO = 'plan:modulo';
 
 /**
- * La ruta (o el controller) necesita que el plan del centro incluya este módulo.
- * Lo controla el AuthGuard después del rol; sin el módulo responde 403.
+ * La ruta (o el controller) necesita que el plan del centro incluya estos módulos
+ * (todos). Lo controla el AuthGuard después del rol; si falta uno responde 403.
  */
-export const RequiereModulo = (modulo: Modulo) =>
-  SetMetadata(CLAVE_MODULO, modulo);
+export const RequiereModulo = (...modulos: [Modulo, ...Modulo[]]) =>
+  SetMetadata(CLAVE_MODULO, modulos);
 
 export const NOMBRE_MODULO: Record<Modulo, string> = {
   agenda: 'Agenda',

@@ -2,7 +2,17 @@
 <section class="pan" aria-labelledby="exp-nueva">
   <div class="pan__cabecera">
     <h2 id="exp-nueva">
-      {{ modo() === 'escribir' ? 'Escribir la evolución' : 'Nueva evolución' }}
+      @switch (modo()) {
+        @case ('escribir') {
+          Escribir la evolución
+        }
+        @case ('dictar') {
+          Dictar la evolución
+        }
+        @default {
+          Nueva evolución
+        }
+      }
     </h2>
     @if (modo() !== 'inicio') {
       <button
@@ -28,27 +38,52 @@
   </div>
 
   @if (modo() === 'inicio') {
-    <button type="button" class="pan__camino" (click)="escribir()">
-      <span class="pan__camino-icono" aria-hidden="true">
-        <svg
-          width="22"
-          height="22"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.7"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <path d="M4 20h4L19 9l-4-4L4 16z" />
-          <path d="m13.5 6.5 4 4" />
-        </svg>
-      </span>
-      <span>
-        <span class="pan__titulo">{{ borrador() ? 'Seguir el borrador' : 'Escribir' }}</span>
-        <span class="pan__sub">Con el teclado, a tu ritmo</span>
-      </span>
-    </button>
+    <div class="pan__caminos">
+      @if (puedeDictar()) {
+        <button type="button" class="pan__camino" (click)="dictar()">
+          <span class="pan__camino-icono" aria-hidden="true">
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.7"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="9" y="3" width="6" height="11" rx="3" />
+              <path d="M5 11a7 7 0 0 0 14 0M12 18v3M8.5 21h7" />
+            </svg>
+          </span>
+          <span>
+            <span class="pan__titulo">Dictar</span>
+            <span class="pan__sub">Hablás y queda en texto</span>
+          </span>
+        </button>
+      }
+      <button type="button" class="pan__camino" (click)="escribir()">
+        <span class="pan__camino-icono" aria-hidden="true">
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.7"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M4 20h4L19 9l-4-4L4 16z" />
+            <path d="m13.5 6.5 4 4" />
+          </svg>
+        </span>
+        <span>
+          <span class="pan__titulo">{{ borrador() ? 'Seguir el borrador' : 'Escribir' }}</span>
+          <span class="pan__sub">Con el teclado, a tu ritmo</span>
+        </span>
+      </button>
+    </div>
 
     <div class="pan__guia">
       <button
@@ -112,11 +147,23 @@
         <rect x="5" y="11" width="14" height="9" rx="2" />
         <path d="M8 11V8a4 4 0 0 1 8 0v3" />
       </svg>
-      <span
-        >Se guarda cifrada. Mientras escribís, el borrador queda en el servidor, no en este
-        dispositivo.</span
-      >
+      <span>
+        @if (puedeDictar()) {
+          Si dictás, el audio no se guarda: se convierte en texto en forma privada y se borra.
+        }
+        Se guarda cifrada, y el borrador queda en el servidor, no en este dispositivo.
+      </span>
     </p>
+  } @else if (modo() === 'dictar') {
+    @if (avisoDictado(); as mensaje) {
+      <p class="oc-alerta oc-alerta--aviso" role="status">{{ mensaje }}</p>
+    }
+    <app-dictado-panel
+      [zona]="zona()"
+      (escribir)="escribir()"
+      (volver)="volverAlExpediente()"
+      (descartar)="pedirDescarteGrabacion()"
+    />
   } @else {
     <label class="oc-campo">
       Sesión
@@ -147,6 +194,39 @@
     >
       {{ estadoTexto() }}
     </p>
+
+    @if (origen() === 'dictada') {
+      <p class="oc-alerta oc-alerta--aviso pan__nota">
+        Revisá los términos clínicos: la transcripción puede confundirlos. El audio ya se borró.
+      </p>
+    }
+    @if (dudosas().length) {
+      <div class="pan__dudosas">
+        <span class="pan__nota">Para revisar:</span>
+        @for (p of dudosas(); track p) {
+          <button type="button" class="pan__dudosa" (click)="irA(p)">{{ p }}</button>
+        }
+      </div>
+    }
+    @if (puedeDictar()) {
+      <button type="button" class="oc-btn oc-btn--fantasma" (click)="dictar()">
+        <svg
+          aria-hidden="true"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.7"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <rect x="9" y="3" width="6" height="11" rx="3" />
+          <path d="M5 11a7 7 0 0 0 14 0M12 18v3" />
+        </svg>
+        Dictar otro tramo · se suma al final
+      </button>
+    }
 
     <fieldset class="pan__quien">
       <legend class="oc-suave">¿Quién la ve?</legend>
@@ -233,14 +313,31 @@
         aria-describedby="exp-conf-texto"
       >
         <h3 id="exp-conf-titulo">
-          {{ c === 'salir' ? '¿Salir sin guardar?' : '¿Descartar el borrador?' }}
+          @switch (c) {
+            @case ('salir') {
+              ¿Salir sin guardar?
+            }
+            @case ('grabacion') {
+              ¿Descartar esta grabación?
+            }
+            @default {
+              ¿Descartar el borrador?
+            }
+          }
         </h3>
         <p id="exp-conf-texto">
-          @if (c === 'salir') {
-            Todavía no se pudo guardar el borrador de esta evolución. Si salís ahora, se pierde lo
-            último que escribiste.
-          } @else {
-            Se borra el texto de esta evolución. No se puede recuperar.
+          @switch (c) {
+            @case ('salir') {
+              Todavía no se pudo guardar el borrador de esta evolución. Si salís ahora, se pierde lo
+              último que escribiste.
+            }
+            @case ('grabacion') {
+              Se borra el audio de este tramo y no se transcribe. Lo que ya está en el borrador no
+              se toca.
+            }
+            @default {
+              Se borra el texto de esta evolución. No se puede recuperar.
+            }
           }
         </p>
         <button
@@ -249,10 +346,10 @@
           class="oc-btn oc-btn--primario"
           (click)="seguirEditando()"
         >
-          Seguir editando
+          {{ c === 'grabacion' ? 'Seguir grabando' : 'Seguir editando' }}
         </button>
         <button type="button" class="oc-btn oc-btn--peligro" (click)="descartar()">
-          Descartar el borrador
+          {{ c === 'grabacion' ? 'Descartar la grabación' : 'Descartar el borrador' }}
         </button>
       </div>
     </div>

@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { mensajeDeError, NotasApi } from '../../core/api/api';
 import type { BorradorNota, Nota, SesionesNota } from '../../core/api/modelos';
 import { AuthService } from '../../core/auth/auth.service';
+import { DictadoService } from '../../core/dictado/dictado.service';
 import {
   AUTORES,
   agruparPorMes,
@@ -38,6 +39,12 @@ export class ExpedientePaciente implements OnInit {
 
   private readonly api = inject(NotasApi);
   private readonly auth = inject(AuthService);
+  private readonly dictado = inject(DictadoService);
+
+  /** Dictar y Escribir con el mismo peso, si el plan y el servidor permiten dictar. */
+  protected readonly puedeDictar = computed(
+    () => this.dictado.puedeDictar() && this.dictado.disponible() !== false,
+  );
 
   protected readonly periodos = PERIODOS;
   protected readonly autores = AUTORES;

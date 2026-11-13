@@ -169,8 +169,16 @@ h2 {
     gap: 0.75rem;
   }
 
+  &__botones {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.625rem;
+  }
+
   &__barra-celular {
     display: none;
+    gap: 0.5rem;
   }
 }
 

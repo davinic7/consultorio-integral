@@ -26,6 +26,17 @@ export const envSchema = z.object({
    * Si se define, la API también sirve la web. En desarrollo no hace falta.
    */
   FRONTEND_DIR: z.string().optional(),
+  /**
+   * Motor del dictado: `whisper` (servicio propio de transcripción), `simulado`
+   * (texto fijo, solo desarrollo y tests) o `apagado`. Sin definir: simulado fuera
+   * de producción y apagado en producción.
+   */
+  DICTADO_MOTOR: z.enum(['whisper', 'simulado', 'apagado']).optional(),
+  /**
+   * Dirección del servicio de transcripción propio (whisper.cpp server) en la red
+   * privada, por ejemplo http://whisper:8080. Obligatoria con DICTADO_MOTOR=whisper.
+   */
+  WHISPER_URL: z.string().url().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

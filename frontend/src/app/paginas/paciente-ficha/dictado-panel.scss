@@ -1,0 +1,342 @@
+// Estados del dictado (docs/diseno/referencia/expediente/DictadoA.dc.html y DictadoB.dc.html).
+// Grabando = cian + punto que titila + "GRABANDO" + tiempo; nunca solo el color.
+
+@keyframes titila {
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.dic {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  &--centrado {
+    align-items: center;
+    text-align: center;
+  }
+
+  &__icono {
+    width: 4rem;
+    height: 4rem;
+    border: 1px solid var(--oc-borde);
+    border-radius: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &--error {
+      border-color: var(--oc-error-borde);
+      background: var(--oc-error-fondo);
+      color: var(--oc-error-texto);
+    }
+  }
+
+  &__titulo {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+
+  &__texto {
+    margin: 0;
+    max-width: 24rem;
+    font-size: 0.9375rem;
+    line-height: 1.55;
+    color: var(--oc-texto-medio);
+  }
+
+  &__nota {
+    margin: 0;
+    font-size: 0.78125rem;
+  }
+
+  &__lista,
+  &__pasos {
+    margin: 0;
+    padding-left: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+    text-align: left;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    color: var(--oc-texto-medio);
+  }
+
+  &__pasos--estado {
+    font-size: 0.84375rem;
+  }
+
+  &__paso--ahora {
+    color: var(--oc-texto);
+    font-weight: 600;
+  }
+
+  &__acciones {
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__peligro {
+    color: var(--oc-error-texto);
+  }
+
+  &__etiqueta {
+    margin: 0;
+    font-size: 0.6875rem;
+    letter-spacing: 0.12em;
+    color: var(--oc-texto-suave);
+  }
+
+  // ───────── Grabando ─────────
+
+  &__franja {
+    margin: -0.25rem 0 0;
+    min-height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.625rem;
+    border: 1px solid var(--oc-borde);
+    border-radius: var(--oc-radio);
+    font: 600 0.875rem var(--oc-fuente-mono);
+    letter-spacing: 0.12em;
+  }
+
+  &--vivo &__franja {
+    border-color: var(--oc-acento);
+    background: var(--oc-acento);
+    color: var(--oc-sobre-acento);
+    box-shadow: 0 0 22px var(--oc-brillo-acento, rgba(34, 211, 238, 0.4));
+  }
+
+  &__punto {
+    width: 0.625rem;
+    height: 0.625rem;
+    border-radius: 999px;
+    background: currentColor;
+    animation: titila 1.4s ease-in-out infinite;
+  }
+
+  &__anillo {
+    position: relative;
+    align-self: center;
+    width: 13.75rem;
+    height: 13.75rem;
+  }
+
+  &__tiempo-anillo {
+    position: absolute;
+    inset: 0;
+  }
+
+  &__pista,
+  &__avance {
+    fill: none;
+    stroke-width: 4;
+  }
+
+  &__pista {
+    stroke: var(--oc-pista);
+  }
+
+  &__avance {
+    stroke: var(--oc-acento);
+    stroke-linecap: round;
+
+    &--casi {
+      stroke: var(--oc-aviso);
+    }
+  }
+
+  &__mic {
+    position: absolute;
+    inset: 2.875rem;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--oc-borde);
+    color: var(--oc-texto-medio);
+    transition: transform 90ms linear;
+  }
+
+  &--vivo &__mic {
+    border-color: transparent;
+    background: var(--oc-acento);
+    color: var(--oc-sobre-acento);
+    box-shadow: 0 0 44px var(--oc-brillo-acento, rgba(34, 211, 238, 0.5));
+  }
+
+  &__reloj {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  &__tiempo {
+    font-size: 3.5rem;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+
+  &__resta {
+    font-size: 0.78125rem;
+    color: var(--oc-texto-suave);
+
+    &--casi {
+      color: var(--oc-aviso-texto);
+    }
+  }
+
+  &__barras {
+    align-self: center;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+
+    span {
+      width: 0.4375rem;
+      border-radius: 2px;
+      background: var(--oc-pista);
+      transition: height 90ms linear;
+    }
+  }
+
+  &--vivo &__barras span {
+    background: var(--oc-acento);
+  }
+
+  &__controles {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: end;
+    gap: 0.375rem;
+  }
+
+  &__control,
+  &__empezar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    border: 0;
+    background: none;
+    color: var(--oc-texto-medio);
+    font: 500 0.8125rem var(--oc-fuente);
+    cursor: pointer;
+  }
+
+  &__control--principal,
+  &__empezar {
+    color: var(--oc-texto);
+    font-weight: 600;
+  }
+
+  &__circulo {
+    width: 3.875rem;
+    height: 3.875rem;
+    border: 1px solid var(--oc-borde);
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--oc-panel);
+    color: var(--oc-texto);
+
+    &--peligro {
+      color: var(--oc-error-texto);
+    }
+
+    &--activo {
+      border: 2px solid var(--oc-acento-borde);
+      background: var(--oc-acento-fondo);
+      color: var(--oc-acento-fuerte);
+    }
+
+    &--principal,
+    &--grande {
+      border: 0;
+      background: var(--oc-acento);
+      color: var(--oc-sobre-acento);
+    }
+
+    &--principal {
+      width: 5.5rem;
+      height: 5.5rem;
+    }
+
+    &--grande {
+      width: 10.5rem;
+      height: 10.5rem;
+      box-shadow: 0 0 0 12px var(--oc-acento-fondo);
+    }
+  }
+
+  // ───────── Progreso y cola ─────────
+
+  &__progreso {
+    align-self: stretch;
+    height: 0.5rem;
+    border-radius: 999px;
+    background: var(--oc-pista);
+    overflow: hidden;
+
+    span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--oc-acento);
+      transition: width 600ms ease;
+    }
+  }
+
+  &__cola {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    li {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 0.125rem 0.75rem;
+      padding: 0.75rem;
+      border: 1px solid var(--oc-borde);
+      border-radius: var(--oc-radio);
+      font-size: 0.8125rem;
+    }
+  }
+
+  &__cola-quien {
+    font-weight: 500;
+  }
+
+  &__cola-estado {
+    grid-row: 1 / span 2;
+    grid-column: 2;
+    align-self: center;
+    font-size: 0.6875rem;
+    color: var(--oc-aviso-texto);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dic__punto {
+    animation: none;
+  }
+
+  .dic__mic,
+  .dic__barras span {
+    transition: none;
+  }
+}

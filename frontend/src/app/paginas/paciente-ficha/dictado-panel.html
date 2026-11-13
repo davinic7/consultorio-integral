@@ -1,0 +1,376 @@
+<!-- Dictado. Referencia: docs/diseno/referencia/expediente/DictadoA.dc.html, DictadoB.dc.html y DictadoEscritorio.dc.html -->
+@let fase = d.fase();
+
+@if (fase === 'permiso') {
+  <div class="dic dic--centrado">
+    <span class="dic__icono" aria-hidden="true">
+      <svg
+        width="30"
+        height="30"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.6"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <rect x="9" y="3" width="6" height="11" rx="3" />
+        <path d="M5 11a7 7 0 0 0 14 0M12 18v3M8.5 21h7" />
+      </svg>
+    </span>
+    <h3 class="dic__titulo">Antes de dictar</h3>
+    <ul class="dic__lista">
+      <li>Tu voz se convierte en texto en forma privada.</li>
+      <li>El audio no se guarda: se borra apenas está el texto.</li>
+      <li>Te queda un borrador para revisar y corregir antes de guardar.</li>
+    </ul>
+    <p class="oc-suave dic__nota">
+      El navegador te va a pedir permiso para usar el micrófono. Se pide una sola vez.
+    </p>
+    <div class="dic__acciones">
+      <button type="button" class="oc-btn oc-btn--primario" (click)="d.pedirPermiso()">
+        Permitir el micrófono
+      </button>
+      <button type="button" class="oc-btn oc-btn--fantasma" (click)="escribir.emit()">
+        Prefiero escribir
+      </button>
+    </div>
+  </div>
+} @else if (fase === 'negado') {
+  <div class="dic dic--centrado">
+    <span class="dic__icono dic__icono--error" aria-hidden="true">
+      <svg
+        width="30"
+        height="30"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.6"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path
+          d="M15 10V6a3 3 0 0 0-5.7-1.3M9 9v2a3 3 0 0 0 4.6 2.5M5 11a7 7 0 0 0 11.3 5.5M19 11a7 7 0 0 1-.6 2.8M12 18v3M8.5 21h7M3 3l18 18"
+        />
+      </svg>
+    </span>
+    <h3 class="dic__titulo">El micrófono está bloqueado</h3>
+    <p class="dic__texto">
+      Sin permiso no se puede dictar. Se habilita en dos pasos, o podés escribir la evolución.
+    </p>
+    <ol class="dic__pasos">
+      <li>Tocá el ícono a la izquierda de la dirección de la página.</li>
+      <li>En <strong>Micrófono</strong>, elegí <strong>Permitir</strong>.</li>
+    </ol>
+    <p class="oc-suave dic__nota">
+      Si usás Centro Integral como app instalada: Ajustes del teléfono › Apps › Centro Integral ›
+      Permisos.
+    </p>
+    <div class="dic__acciones">
+      <button type="button" class="oc-btn oc-btn--primario" (click)="d.pedirPermiso()">
+        Probar de nuevo
+      </button>
+      <button type="button" class="oc-btn oc-btn--fantasma" (click)="escribir.emit()">
+        Escribir la evolución
+      </button>
+    </div>
+  </div>
+} @else if (fase === 'no_disponible') {
+  <div class="dic dic--centrado">
+    <h3 class="dic__titulo">El dictado todavía no está disponible</h3>
+    <p class="dic__texto">
+      Podés escribir la evolución. Cuando el dictado esté habilitado en este centro, aparece acá.
+    </p>
+    <div class="dic__acciones">
+      <button type="button" class="oc-btn oc-btn--primario" (click)="escribir.emit()">
+        Escribir la evolución
+      </button>
+    </div>
+  </div>
+} @else if (enGrabacion()) {
+  <div class="dic dic--grabando" [class.dic--vivo]="grabando()">
+    <p class="dic__franja" role="status">
+      @if (grabando()) {
+        <span class="dic__punto" aria-hidden="true"></span>GRABANDO
+      } @else {
+        <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <rect x="6" y="5" width="4" height="14" rx="1" />
+          <rect x="14" y="5" width="4" height="14" rx="1" />
+        </svg>
+        EN PAUSA
+      }
+    </p>
+    @if (d.pausaPorBloqueo()) {
+      <p class="oc-alerta oc-alerta--aviso" role="status">
+        Se pausó al bloquear la pantalla. Lo grabado está guardado: reanudá o terminá.
+      </p>
+    }
+    <div class="dic__anillo" aria-hidden="true">
+      <svg class="dic__tiempo-anillo" viewBox="0 0 220 220">
+        <circle cx="110" cy="110" r="104" class="dic__pista" />
+        <circle
+          cx="110"
+          cy="110"
+          r="104"
+          class="dic__avance"
+          [class.dic__avance--casi]="casi()"
+          [attr.stroke-dasharray]="trazo()"
+          transform="rotate(-90 110 110)"
+        />
+      </svg>
+      <span class="dic__mic" [style.transform]="'scale(' + escalaVoz() + ')'">
+        @if (grabando()) {
+          <svg
+            width="48"
+            height="48"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.7"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <rect x="9" y="3" width="6" height="11" rx="3" />
+            <path d="M5 11a7 7 0 0 0 14 0M12 18v3M8.5 21h7" />
+          </svg>
+        } @else {
+          <svg width="42" height="42" viewBox="0 0 24 24" fill="currentColor">
+            <rect x="6" y="5" width="4" height="14" rx="1" />
+            <rect x="14" y="5" width="4" height="14" rx="1" />
+          </svg>
+        }
+      </span>
+    </div>
+    <div class="dic__reloj">
+      <span role="timer" aria-label="Tiempo grabado" class="dic__tiempo oc-mono">{{
+        tiempo()
+      }}</span>
+      <span class="oc-mono dic__resta" [class.dic__resta--casi]="casi()"
+        >de {{ maximo }} · {{ resta() }}</span
+      >
+    </div>
+    <div class="dic__barras" aria-hidden="true">
+      @for (h of barras(); track $index) {
+        <span [style.height.px]="h"></span>
+      }
+    </div>
+    @if (casi()) {
+      <p class="oc-alerta oc-alerta--aviso" role="status">
+        Queda menos de un minuto. A los {{ maximo }} el tramo termina solo; después podés dictar
+        otro.
+      </p>
+    }
+    <div class="dic__controles">
+      <button type="button" class="dic__control" (click)="descartar.emit()">
+        <span class="dic__circulo dic__circulo--peligro" aria-hidden="true">
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" />
+          </svg>
+        </span>
+        Descartar
+      </button>
+      <button type="button" class="dic__control dic__control--principal" (click)="d.terminar()">
+        <span class="dic__circulo dic__circulo--principal" aria-hidden="true">
+          <svg
+            width="34"
+            height="34"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.4"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="m5 12 5 5 9-10" />
+          </svg>
+        </span>
+        Terminar
+      </button>
+      @if (grabando()) {
+        <button type="button" class="dic__control" (click)="d.pausar()">
+          <span class="dic__circulo" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="6" y="5" width="4" height="14" rx="1" />
+              <rect x="14" y="5" width="4" height="14" rx="1" />
+            </svg>
+          </span>
+          Pausar
+        </button>
+      } @else {
+        <button type="button" class="dic__control" (click)="d.reanudar()">
+          <span class="dic__circulo dic__circulo--activo" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M7 5v14l12-7z" />
+            </svg>
+          </span>
+          Reanudar
+        </button>
+      }
+    </div>
+  </div>
+} @else if (fase === 'enviando' || fase === 'transcribiendo') {
+  <div class="dic dic--centrado">
+    <h3 class="dic__titulo">Pasando tu voz a texto</h3>
+    @if (fase === 'enviando') {
+      <p class="dic__texto">Preparando y mandando la grabación, cifrada.</p>
+      <div
+        class="dic__progreso"
+        role="progressbar"
+        aria-label="Subida de la grabación"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        [attr.aria-valuenow]="subida()"
+      >
+        <span [style.width.%]="subida()"></span>
+      </div>
+      <p class="oc-mono oc-suave dic__nota">{{ subida() }} % subido</p>
+    } @else {
+      <p class="dic__texto">
+        @if (progreso().antes) {
+          Hay {{ progreso().antes }} {{ progreso().antes === 1 ? 'dictado' : 'dictados' }} antes que
+          el tuyo.
+        } @else {
+          Puede tardar de unos segundos a un minuto. No hace falta que esperes acá.
+        }
+      </p>
+      <div
+        class="dic__progreso"
+        role="progressbar"
+        aria-label="Progreso de la transcripción"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        [attr.aria-valuenow]="progreso().porcentaje"
+      >
+        <span [style.width.%]="progreso().porcentaje"></span>
+      </div>
+      <p class="oc-mono oc-suave dic__nota">
+        {{ progreso().texto || duracion() + ' de audio' }} · {{ progreso().porcentaje }} %
+      </p>
+    }
+    <ol class="dic__pasos dic__pasos--estado">
+      <li>Grabación guardada, cifrada, en este dispositivo</li>
+      <li [class.dic__paso--ahora]="fase === 'transcribiendo'">Convirtiendo la voz en texto</li>
+      <li>Borrador listo; el audio se borra</li>
+    </ol>
+    <div class="dic__acciones">
+      <button type="button" class="oc-btn oc-btn--fantasma" (click)="volver.emit()">
+        Seguir en el expediente
+      </button>
+    </div>
+  </div>
+} @else if (fase === 'sin_conexion') {
+  <div class="dic">
+    <div class="oc-alerta oc-alerta--aviso" role="status">
+      <span
+        ><strong>No hay señal.</strong> Tu grabación quedó guardada en este dispositivo, cifrada. Se
+        transcribe sola cuando vuelva la conexión.</span
+      >
+    </div>
+    <h3 class="dic__etiqueta oc-mono">EN ESPERA · {{ pendientes().length }}</h3>
+    <ul class="dic__cola">
+      @for (p of pendientes(); track p.id) {
+        <li>
+          <span class="dic__cola-quien">{{ p.quien }}</span>
+          <span class="oc-suave">{{ p.detalle }}</span>
+          <span class="oc-mono dic__cola-estado">{{ p.error ? 'ERROR' : 'ESPERA' }}</span>
+        </li>
+      }
+    </ul>
+    <p class="oc-suave dic__nota">
+      Solo se abren en el servidor, con tu sesión. Si cerrás la sesión, se borran de este
+      dispositivo.
+    </p>
+    <div class="dic__acciones">
+      <button type="button" class="oc-btn oc-btn--primario" (click)="volver.emit()">
+        Volver al expediente
+      </button>
+      <button type="button" class="oc-btn oc-btn--fantasma" (click)="escribir.emit()">
+        Escribir mientras tanto
+      </button>
+    </div>
+  </div>
+} @else if (fase === 'error') {
+  <div class="dic dic--centrado">
+    <span class="dic__icono dic__icono--error" aria-hidden="true">
+      <svg
+        width="30"
+        height="30"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.6"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M12 3 2 20h20z" />
+        <path d="M12 10v4M12 17h.01" />
+      </svg>
+    </span>
+    <h3 class="dic__titulo">No se pudo transcribir</h3>
+    <p class="dic__texto" role="alert">
+      {{
+        d.mensajeError() ?? 'La grabación sigue guardada en este dispositivo: no se perdió nada.'
+      }}
+    </p>
+    @if (d.codigoError(); as codigo) {
+      <p class="oc-mono oc-suave dic__nota">Código {{ codigo }}</p>
+    }
+    <div class="dic__acciones">
+      <button type="button" class="oc-btn oc-btn--primario" (click)="d.reintentar()">
+        Reintentar
+      </button>
+      <button type="button" class="oc-btn oc-btn--fantasma" (click)="escribir.emit()">
+        Escribir en su lugar
+      </button>
+      <button
+        type="button"
+        class="oc-btn oc-btn--fantasma dic__peligro"
+        (click)="d.descartarPendiente()"
+      >
+        Descartar la grabación
+      </button>
+    </div>
+  </div>
+} @else {
+  <div class="dic dic--centrado">
+    <p class="dic__texto">
+      Contá la sesión como se la contarías a un colega. Después revisás el texto con calma.
+    </p>
+    <button type="button" class="dic__empezar" (click)="d.empezar()">
+      <span class="dic__circulo dic__circulo--grande" aria-hidden="true">
+        <svg
+          width="58"
+          height="58"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.7"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <rect x="9" y="3" width="6" height="11" rx="3" />
+          <path d="M5 11a7 7 0 0 0 14 0M12 18v3M8.5 21h7" />
+        </svg>
+      </span>
+      Tocá para empezar a dictar
+    </button>
+    <p class="oc-mono oc-suave dic__nota">Hasta {{ maximo }} por tramo · podés sumar más</p>
+    @if (d.mensajeError(); as mensaje) {
+      <p class="oc-alerta oc-alerta--aviso" role="status">{{ mensaje }}</p>
+    }
+    <div class="dic__acciones">
+      <button type="button" class="oc-btn oc-btn--fantasma" (click)="escribir.emit()">
+        Mejor la escribo
+      </button>
+    </div>
+  </div>
+}

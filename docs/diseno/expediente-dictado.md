@@ -82,14 +82,25 @@ Mientras graba o transcribe, en escritorio la barra superior muestra una píldor
 - **Quién:** solo quien escribe notas (profesional, o admin que también atiende) y atiende al paciente, con los módulos `notas` y `dictado` del plan. Recepción y administración nunca reciben audio ni texto clínico. La API es la que bloquea (`@Roles` y `@RequiereModulo`).
 - **Notas:** cada evolución guarda si fue escrita o dictada y cuándo se editó su texto. Una migración nueva lo agrega; las notas que ya existen quedan como escritas.
 - **Audio:** el navegador lo manda como WAV PCM de 16 bits, mono, a 16 kHz. El servidor lo procesa en memoria, nunca en disco, y lo descarta al terminar. Ni el audio ni el texto van a los registros: solo ids, duraciones y códigos.
-- **Límites:** 10 minutos por tramo, tamaño máximo de subida acorde y un límite de dictados por minuto por usuario.
-- **Sin señal:** la grabación espera cifrada en el dispositivo y se borra apenas se transcribe bien. Dónde queda la clave se decide aparte (ver [decisiones.md](../decisiones.md)).
+- **Límites:** 10 minutos por tramo, tamaño máximo de subida acorde y un límite de dictados por minuto por usuario. Los valores están en [decisiones.md](../decisiones.md) §20.
+- **Sin señal:** la grabación espera en el dispositivo cifrada con la clave pública de la persona, que solo el servidor puede abrir, y se borra apenas se transcribe bien ([decisiones.md](../decisiones.md) §20).
+
+## Cómo quedó hecho (paso 3)
+
+- **Frontend:** `core/dictado/` (grabación, WAV de 16 kHz, cifrado con WebCrypto, cola en IndexedDB y el servicio global `DictadoService`), `paginas/paciente-ficha/dictado-panel.*` (los estados del dictado) y `paginas/shell/pildora-dictado.ts` (la píldora de la barra superior, también en el celular). El dictado sigue aunque se cambie de pantalla; la píldora lleva de vuelta a `/pacientes/:id?pestana=expediente`.
+- **Backend:** `src/dictado/` (claves, paquete cifrado, WAV, cola de trabajos y motores) y `NotasService.sumarAlBorrador`. El texto va directo al borrador del servidor: la consulta del trabajo nunca devuelve texto.
+- **Para desarrollar:** sin `DICTADO_MOTOR`, el motor simulado devuelve «Texto de prueba del dictado: N segundos de audio.» después de 0,7 s. Hoy solo el plan Individual Full trae el módulo `dictado`; para probarlo en Centro Demo hay que sumárselo al plan desde la pantalla de planes del superadmin.
+- **Diferencias con el lienzo, para más adelante:**
+  - No hay botón «Achicar» al grabar: se puede ir a otra pantalla y la grabación sigue, con la píldora para volver.
+  - Mientras transcribe no está la tarjeta punteada «Borrador en camino» en la línea de tiempo ni la barra flotante del celular: el avance se ve en la píldora.
+  - Faltan los atajos de teclado del panel (Espacio, Enter, Esc) y la disposición horizontal del teléfono girado (la grabación no se corta, pero se ve en columna).
+  - En la lista «En espera», una grabación que falló 3 veces en el servidor queda con «ERROR» y no se puede reintentar ni descartar desde ahí: solo se borra al cerrar sesión.
 
 ## Orden de implementación
 
 Cada paso en su propio commit, con `npm test` y `npm run test:e2e` en `backend`, y `npx ng test --watch=false` y `npx ng build` en `frontend`.
 
-1. Esta guía y los tableros de referencia.
-2. **Expediente sin dictado:** migración (origen y fecha de edición), sesiones para vincular, y la pestaña nueva en lugar de `notas-paciente.ts`.
-3. **Grabación en el navegador y API del dictado** con un motor simulado para desarrollar: todos los estados, la cola sin señal y los límites. Suma su caso a `aislamiento-centros.e2e-spec.ts`.
-4. **Whisper de verdad:** el servicio propio, la medición de memoria y tiempo para elegir el plan de Render, y la decisión del modelo en `decisiones.md`.
+1. Esta guía y los tableros de referencia (hecho).
+2. **Expediente sin dictado:** migración (origen y fecha de edición), sesiones para vincular, y la pestaña nueva en lugar de `notas-paciente.ts` (hecho).
+3. **Grabación en el navegador y API del dictado** con un motor simulado para desarrollar: todos los estados, la cola sin señal y los límites. Suma su caso a `aislamiento-centros.e2e-spec.ts` (hecho).
+4. **Whisper de verdad** (falta): el servicio propio, la medición de memoria y tiempo para elegir el plan de Render, y la decisión del modelo en `decisiones.md`.

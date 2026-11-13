@@ -8,6 +8,7 @@ import { AvisosModule } from './avisos/avisos.js';
 import { CentrosModule } from './centros/centros.module.js';
 import { CobrosModule } from './cobros/cobros.module.js';
 import { validateEnv } from './config/env.js';
+import { DictadoModule } from './dictado/dictado.js';
 import { FacturacionModule } from './facturacion/facturacion.js';
 import { ReportesModule } from './reportes/reportes.js';
 import { FinanciadoresModule } from './financiadores/financiadores.js';
@@ -40,6 +41,7 @@ import { UsuariosModule } from './usuarios/usuarios.module.js';
     TurnosModule,
     AsistenciaModule,
     NotasModule,
+    DictadoModule,
     CobrosModule,
     FacturacionModule,
     ReportesModule,

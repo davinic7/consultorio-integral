@@ -202,6 +202,7 @@ model Centro {
   configsFiscales   ConfigFiscal[]
   notasSesion       NotaSesion[]
   borradoresNota    BorradorNota[]
+  clavesDictado     ClaveDictado[]
   cambiosAsistencia CambioAsistencia[]
   sesiones          Sesion[]
   avisos            Aviso[]
@@ -230,6 +231,7 @@ model Usuario {
   avisosRecibidos      Aviso[]            @relation("AvisosRecibidos")
   avisosEnviados       Aviso[]            @relation("AvisosEnviados")
   cambiosAsistencia    CambioAsistencia[]
+  clavesDictado        ClaveDictado[]
 
   @@map("usuarios")
 }
@@ -861,4 +863,30 @@ model BorradorNota {
   @@unique([centroId, id])
   @@unique([centroId, pacienteId, profesionalId])
   @@map("borradores_nota")
+}
+
+/// Par de claves del dictado de un usuario en un centro (decisiones.md §20). El
+/// teléfono cifra cada grabación con la pública, y ni el teléfono ni quien lo tenga
+/// puede abrirla; la privada no sale del servidor. Tiene versión: al renovar el par,
+/// los anteriores quedan para abrir las grabaciones que estaban pendientes.
+model ClaveDictado {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  centroId  String   @map("centro_id") @db.Uuid
+  usuarioId String   @map("usuario_id") @db.Uuid
+  version   Int
+  /// Pública (ECDH P-256, JWK). No es secreta.
+  publica   String
+  /// Privada (PKCS#8), cifrada con la clave de datos del centro.
+  privada   String
+  /// La que se entrega para cifrar lo nuevo. Hay una sola vigente por usuario y
+  /// centro: la migración asegura un índice parcial.
+  vigente   Boolean  @default(true)
+  creadaEn  DateTime @default(now()) @map("creada_en") @db.Timestamptz(3)
+
+  centro  Centro  @relation(fields: [centroId], references: [id], onDelete: Cascade)
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@unique([centroId, id])
+  @@unique([centroId, usuarioId, version])
+  @@map("claves_dictado")
 }

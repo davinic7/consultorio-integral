@@ -1,6 +1,6 @@
-import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpEventType, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
+import { filter, firstValueFrom, map, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import type { Modulo } from '../auth/auth.models';
 import type {
@@ -32,6 +32,9 @@ import type {
   EstadoMarcable,
   HistorialAsistencia,
   BorradorNota,
+  ClaveDictado,
+  EstadoDictado,
+  TrabajoDictado,
   Nota,
   OrigenNota,
   SesionesNota,
@@ -225,6 +228,55 @@ export class AsistenciaApi {
         params: params({ mes, profesionalId }),
       }),
     );
+  }
+}
+
+/**
+ * Dictado (solo quien escribe notas, con los módulos notas y dictado). La grabación
+ * viaja cifrada con la clave pública de la persona; el texto queda en el borrador.
+ */
+@Injectable({ providedIn: 'root' })
+export class DictadoApi {
+  private readonly http = inject(HttpClient);
+
+  estado() {
+    return firstValueFrom(this.http.get<EstadoDictado>(`${API}/dictados/estado`));
+  }
+  clave() {
+    return firstValueFrom(this.http.get<ClaveDictado>(`${API}/dictados/clave`));
+  }
+  /**
+   * Sube la grabación cifrada; `alAvanzar` recibe de 0 a 1 lo subido. Va por
+   * XMLHttpRequest (ver `BackendConAvance`), porque fetch no informa el avance.
+   */
+  subir(
+    pacienteId: string,
+    paquete: Uint8Array<ArrayBuffer>,
+    turnoId: string | null,
+    alAvanzar: (fraccion: number) => void = () => undefined,
+  ) {
+    return firstValueFrom(
+      this.http
+        .post<TrabajoDictado>(`${API}/pacientes/${pacienteId}/dictados`, paquete.buffer, {
+          params: params({ turnoId: turnoId ?? undefined }),
+          headers: { 'Content-Type': 'application/octet-stream' },
+          reportUploadProgress: true,
+          observe: 'events',
+        })
+        .pipe(
+          tap((e) => {
+            if (e.type === HttpEventType.UploadProgress && e.total) alAvanzar(e.loaded / e.total);
+          }),
+          filter((e) => e.type === HttpEventType.Response),
+          map((e) => e.body as TrabajoDictado),
+        ),
+    );
+  }
+  consultar(id: string) {
+    return firstValueFrom(this.http.get<TrabajoDictado>(`${API}/dictados/${id}`));
+  }
+  descartar(id: string) {
+    return firstValueFrom(this.http.delete<void>(`${API}/dictados/${id}`));
   }
 }
 

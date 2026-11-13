@@ -126,6 +126,31 @@ describe.skipIf(!url)('Aislamiento entre centros (PostgreSQL)', () => {
     ).rejects.toMatchObject({ code: 'P2003' });
   });
 
+  it('claves del dictado: cada centro ve las suyas y hay una sola vigente por persona', async () => {
+    const usuario = await prisma.usuario.create({
+      data: { email: 'dicta@x.com', nombre: 'Dicta', passwordHash: 'x' },
+    });
+    const clave = (version: number) =>
+      ({
+        usuarioId: usuario.id,
+        version,
+        publica: '{}',
+        privada: 'v1:x',
+      }) as any;
+    await a.db.claveDictado.create({ data: clave(1) });
+    await b.db.claveDictado.create({ data: clave(1) });
+    expect(await a.db.claveDictado.count()).toBe(1);
+    expect(
+      await b.db.claveDictado.findMany({ where: { usuarioId: usuario.id } }),
+    ).toHaveLength(1);
+    // La misma persona no puede tener dos vigentes en el mismo centro.
+    await expect(
+      a.db.claveDictado.create({ data: clave(2) }),
+    ).rejects.toMatchObject({
+      code: 'P2002',
+    });
+  });
+
   it('rechaza pedir datos de otro centro de forma explícita', async () => {
     await expect(
       a.db.paciente.findMany({ where: { centroId: b.centro.id } }),

@@ -64,6 +64,8 @@ const vacioANull = (s: string) => (s.trim() === '' ? null : s.trim());
 export class PacienteFicha implements OnInit {
   /** Id de la ruta (/pacientes/:id); sin id es un alta. */
   readonly id = input<string>();
+  /** ?pestana=expediente abre directo el Expediente (por ejemplo, desde la píldora del dictado). */
+  readonly pestanaPedida = input<string | undefined>(undefined, { alias: 'pestana' });
 
   private readonly api = inject(PacientesApi);
   private readonly profesionalesApi = inject(ProfesionalesApi);
@@ -255,6 +257,9 @@ export class PacienteFicha implements OnInit {
         this.mostrar(paciente);
         void this.cargarHistorial(paciente.id);
         void this.cargarCobros();
+        if (this.pestanaPedida() === 'expediente' && this.escribeNotas()) {
+          this.pestana.set('expediente');
+        }
       }
     } catch (e) {
       this.error.set(mensajeDeError(e, 'No se pudo cargar el paciente.'));

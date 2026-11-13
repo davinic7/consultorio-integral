@@ -105,8 +105,16 @@ export async function profesionalAsignado(
   return yo.id;
 }
 
+/** Suma un tramo al final del borrador, separado por un renglón libre. */
+export function sumarAlFinal(borrador: string, nuevo: string): string {
+  const a = borrador.trimEnd();
+  const b = nuevo.trim();
+  if (!b) return borrador;
+  return a ? `${a}\n\n${b}` : b;
+}
+
 /** El turno tiene que ser mío y con este paciente. */
-async function validarTurno(
+export async function validarTurno(
   db: ClienteDeCentro,
   turnoId: string | null | undefined,
   pacienteId: string,
@@ -363,6 +371,56 @@ export class NotasService {
     };
   }
 
+  /**
+   * Suma texto dictado al final del borrador del profesional para este paciente
+   * (lo crea si no hay) y lo marca como dictado. Lo usa el dictado al terminar de
+   * transcribir: el texto va directo al servidor, nunca queda en el teléfono.
+   */
+  async sumarAlBorrador(
+    centroId: string,
+    profesionalId: string,
+    pacienteId: string,
+    texto: string,
+    turnoId: string | null,
+  ): Promise<void> {
+    const db = this.prisma.paraCentro(centroId);
+    const contexto = contextoBorrador(pacienteId, profesionalId);
+    const actual = await db.borradorNota.findUnique({
+      where: {
+        centroId_pacienteId_profesionalId: {
+          centroId,
+          pacienteId,
+          profesionalId,
+        },
+      },
+    });
+    const previo = actual
+      ? ((await this.cifrado.descifrarDato(centroId, actual.texto, contexto)) ??
+        '')
+      : '';
+    const cifrado = await this.cifrado.cifrarDato(
+      centroId,
+      sumarAlFinal(previo, texto),
+      contexto,
+    );
+    if (actual) {
+      await db.borradorNota.update({
+        where: { id: actual.id },
+        data: { texto: cifrado, origen: OrigenNota.dictada },
+      });
+    } else {
+      await db.borradorNota.create({
+        data: sinCentro<Prisma.BorradorNotaUncheckedCreateInput>({
+          pacienteId,
+          profesionalId,
+          turnoId,
+          texto: cifrado,
+          origen: OrigenNota.dictada,
+        }),
+      });
+    }
+  }
+
   async descartarBorrador(
     centroId: string,
     quien: UsuarioAutenticado,
@@ -503,6 +561,6 @@ export class NotasController {
 @Module({
   controllers: [NotasDePacienteController, NotasController],
   providers: [NotasService, CifradoService, BorradoresVencidos],
-  exports: [CifradoService],
+  exports: [CifradoService, NotasService],
 })
 export class NotasModule {}
