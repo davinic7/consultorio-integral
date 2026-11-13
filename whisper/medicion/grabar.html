@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grabación de prueba para medir el dictado</title>
+<style>
+  body { font: 16px/1.5 system-ui, sans-serif; max-width: 46rem; margin: 2rem auto; padding: 0 1rem; color: #12202b; background: #f6f9fb; }
+  h1 { font-size: 1.4rem; }
+  ol { padding-left: 1.2rem; }
+  button { font: inherit; padding: .6rem 1.2rem; border-radius: .5rem; border: 1px solid #0b7285; background: #0b7285; color: #fff; cursor: pointer; }
+  button[disabled] { opacity: .5; cursor: default; }
+  button.parar { background: #c92a2a; border-color: #c92a2a; }
+  #tiempo { font-variant-numeric: tabular-nums; font-size: 1.6rem; margin: 0 1rem; }
+  #estado { margin-top: 1rem; min-height: 1.5rem; }
+  .fila { display: flex; align-items: center; margin-top: 1rem; flex-wrap: wrap; gap: .5rem; }
+  a.descarga { display: inline-block; margin-top: .5rem; font-weight: 600; }
+  @media (prefers-color-scheme: dark) { body { background: #0e1a22; color: #e3eef4; } a { color: #66d9e8; } }
+</style>
+</head>
+<body>
+<h1>Grabación de prueba para medir el dictado</h1>
+<p>Esta página graba tu voz igual que la app (mismo micrófono del navegador y misma conversión a WAV de 16 kHz) y te deja el archivo para descargar. No envía nada a ningún lado: funciona sin conexión.</p>
+<ol>
+  <li>Abrí <code>texto-para-leer.txt</code> (está en esta misma carpeta) y dejalo a la vista.</li>
+  <li>Tocá <strong>Grabar</strong>, permití el micrófono y leé el texto completo, a tu ritmo normal de dictado.</li>
+  <li>Tocá <strong>Terminar</strong> y descargá <code>mi-voz.wav</code>.</li>
+</ol>
+<p><strong>Solo el texto de prueba:</strong> no grabes nada de una sesión real.</p>
+
+<div class="fila">
+  <button id="grabar">Grabar</button>
+  <button id="parar" class="parar" disabled>Terminar</button>
+  <span id="tiempo">0:00</span>
+</div>
+<div id="estado" role="status"></div>
+<div id="resultado"></div>
+
+<script>
+// Los mismos tipos y la misma conversión que frontend/src/app/core/dictado.
+const FRECUENCIA = 16000;
+const TIPOS = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'];
+const $ = (id) => document.getElementById(id);
+let flujo = null, grabador = null, partes = [], reloj = null, inicio = 0;
+
+function decir(texto) { $('estado').textContent = texto; }
+
+function codificarWav(muestras) {
+  const bytes = new Uint8Array(44 + muestras.length * 2);
+  const v = new DataView(bytes.buffer);
+  const texto = (desde, s) => { for (let i = 0; i < s.length; i++) v.setUint8(desde + i, s.charCodeAt(i)); };
+  texto(0, 'RIFF'); v.setUint32(4, 36 + muestras.length * 2, true); texto(8, 'WAVE');
+  texto(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, FRECUENCIA, true); v.setUint32(28, FRECUENCIA * 2, true);
+  v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+  texto(36, 'data'); v.setUint32(40, muestras.length * 2, true);
+  for (let i = 0; i < muestras.length; i++) {
+    const m = Math.max(-1, Math.min(1, muestras[i]));
+    v.setInt16(44 + i * 2, m < 0 ? m * 0x8000 : m * 0x7fff, true);
+  }
+  return bytes;
+}
+
+async function aWav16k(grabacion) {
+  const contexto = new AudioContext();
+  try {
+    const original = await contexto.decodeAudioData(await grabacion.arrayBuffer());
+    const largo = Math.max(1, Math.ceil(original.duration * FRECUENCIA));
+    const offline = new OfflineAudioContext(1, largo, FRECUENCIA);
+    const fuente = offline.createBufferSource();
+    fuente.buffer = original;
+    fuente.connect(offline.destination);
+    fuente.start();
+    const remuestreado = await offline.startRendering();
+    return { wav: codificarWav(remuestreado.getChannelData(0)), segundos: original.duration };
+  } finally {
+    void contexto.close();
+  }
+}
+
+$('grabar').addEventListener('click', async () => {
+  $('resultado').replaceChildren();
+  try {
+    flujo = await navigator.mediaDevices.getUserMedia({
+      audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true },
+    });
+  } catch {
+    decir('No se pudo usar el micrófono. Revisá el permiso del navegador y probá de nuevo.');
+    return;
+  }
+  partes = [];
+  const tipo = TIPOS.find((t) => MediaRecorder.isTypeSupported?.(t));
+  grabador = new MediaRecorder(flujo, tipo ? { mimeType: tipo } : undefined);
+  grabador.addEventListener('dataavailable', (e) => { if (e.data.size) partes.push(e.data); });
+  grabador.addEventListener('stop', terminar);
+  grabador.start(1000);
+  inicio = Date.now();
+  reloj = setInterval(() => {
+    const s = Math.floor((Date.now() - inicio) / 1000);
+    $('tiempo').textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+    if (s >= 600) grabador.stop(); // el máximo de un dictado: 10 minutos
+  }, 250);
+  $('grabar').disabled = true;
+  $('parar').disabled = false;
+  decir('Grabando… leé el texto completo.');
+});
+
+$('parar').addEventListener('click', () => grabador?.state === 'recording' && grabador.stop());
+
+async function terminar() {
+  clearInterval(reloj);
+  flujo.getTracks().forEach((t) => t.stop());
+  $('parar').disabled = true;
+  decir('Convirtiendo…');
+  try {
+    const { wav, segundos } = await aWav16k(new Blob(partes, { type: grabador.mimeType }));
+    const enlace = document.createElement('a');
+    enlace.href = URL.createObjectURL(new Blob([wav], { type: 'audio/wav' }));
+    enlace.download = 'mi-voz.wav';
+    enlace.className = 'descarga';
+    enlace.textContent = 'Descargar mi-voz.wav';
+    const escuchar = document.createElement('audio');
+    escuchar.controls = true;
+    escuchar.src = enlace.href;
+    $('resultado').replaceChildren(escuchar, document.createElement('br'), enlace);
+    decir(`Listo: ${Math.round(segundos)} segundos. Escuchala y, si quedó bien, descargala. Si no, grabá de nuevo.`);
+  } catch {
+    decir('No se pudo convertir la grabación. Probá de nuevo o con otro navegador (Chrome o Edge).');
+  }
+  $('grabar').disabled = false;
+}
+</script>
+</body>
+</html>

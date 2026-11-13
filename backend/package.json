@@ -27,6 +27,7 @@
     "db:seed": "prisma db seed",
     "db:reset": "prisma migrate reset && prisma generate && prisma db seed",
     "crear-superadmin": "tsx scripts/crear-superadmin.ts",
+    "medir-whisper": "tsx scripts/medir-whisper.ts",
     "db:demo": "tsx prisma/demo.ts"
   },
   "dependencies": {

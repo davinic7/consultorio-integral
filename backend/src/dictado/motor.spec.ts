@@ -56,6 +56,19 @@ describe('motores de transcripción', () => {
     expect(pedidos[0].form.get('language')).toBe('es');
     expect(pedidos[0].form.get('prompt')).toBe('antes');
 
+    // Con prefijo en la dirección (el --request-path del servidor), se respeta.
+    for (const base of [
+      'http://whisper:8080/abc123',
+      'http://whisper:8080/abc123/',
+    ]) {
+      const conPrefijo = new MotorWhisperServidor(base, async (url) => {
+        pedidos.push({ url: url.toString(), form: new FormData() });
+        return new Response(JSON.stringify({ text: 'Listo' }), { status: 200 });
+      });
+      await conPrefijo.transcribir(armarWav(new Int16Array(16)));
+      expect(pedidos.at(-1)?.url).toBe('http://whisper:8080/abc123/inference');
+    }
+
     const caido = new MotorWhisperServidor('http://whisper:8080', async () => {
       throw new Error('ECONNREFUSED');
     });

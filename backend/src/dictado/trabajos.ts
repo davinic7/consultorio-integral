@@ -71,7 +71,7 @@ export interface OpcionesTrabajos {
 }
 
 /** Texto final de lo dicho antes: le da contexto al motor en la parte siguiente. */
-function contexto(texto: string): string | undefined {
+export function contexto(texto: string): string | undefined {
   return texto ? texto.slice(-200) : undefined;
 }
 

@@ -9,6 +9,7 @@
 !**/.env.example
 backend/src/generated
 referencia-php
+whisper
 docs
 .git
 .claude

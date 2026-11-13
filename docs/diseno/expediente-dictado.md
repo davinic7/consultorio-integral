@@ -103,4 +103,4 @@ Cada paso en su propio commit, con `npm test` y `npm run test:e2e` en `backend`,
 1. Esta guía y los tableros de referencia (hecho).
 2. **Expediente sin dictado:** migración (origen y fecha de edición), sesiones para vincular, y la pestaña nueva en lugar de `notas-paciente.ts` (hecho).
 3. **Grabación en el navegador y API del dictado** con un motor simulado para desarrollar: todos los estados, la cola sin señal y los límites. Suma su caso a `aislamiento-centros.e2e-spec.ts` (hecho).
-4. **Whisper de verdad** (falta): el servicio propio, la medición de memoria y tiempo para elegir el plan de Render, y la decisión del modelo en `decisiones.md`.
+4. **Whisper de verdad** (falta): el servicio propio, la medición de memoria y tiempo para elegir el plan de Render, y la decisión del modelo en `decisiones.md`. Preparado: la imagen del servicio y la medición, en [whisper/README.md](../../whisper/README.md).

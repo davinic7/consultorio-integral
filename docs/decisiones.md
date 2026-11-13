@@ -207,6 +207,8 @@ Limitaciones conocidas:
 - No se usa el reconocimiento de voz del navegador (Chrome y Safari mandan el audio a Google o Apple).
 - Más adelante, en la app móvil nativa, se puede sumar el reconocimiento del propio teléfono **sin conexión** (solo si el equipo garantiza que es en el dispositivo).
 - Costo: el servicio de Render necesita más memoria que el plan gratis (a confirmar con una prueba).
+- El servicio es whisper.cpp en una versión fija (`whisper/Dockerfile`). Los pesos del modelo se bajan de Hugging Face al construir la imagen y se verifican con su suma; en ese paso no se manda ningún dato, y en marcha el servicio no se conecta a nada.
+- La dirección del servicio puede llevar un prefijo (`WHISPER_URL=http://…/prefijo`). Se usa solo en la medición, donde el servicio de prueba tiene dirección pública: sin el prefijo secreto no atiende. En producción va en la red privada.
 
 ## 20. Expediente: nada clínico legible en el dispositivo
 

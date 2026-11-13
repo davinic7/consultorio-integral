@@ -62,14 +62,20 @@ export class MotorSimulado implements MotorTranscripcion {
 
 type Fetch = (url: URL, init: RequestInit) => Promise<Response>;
 
-/** Whisper (whisper.cpp server) en nuestra red privada. */
+/**
+ * Whisper (whisper.cpp server) en nuestra red privada. La dirección puede traer un
+ * prefijo (`http://whisper:8080/abc123`, el `--request-path` del servidor): se respeta.
+ */
 export class MotorWhisperServidor implements MotorTranscripcion {
   readonly disponible = true;
+  private readonly destino: URL;
   constructor(
-    private readonly url: string,
+    url: string,
     private readonly pedir: Fetch = (u, i) => fetch(u, i),
     private readonly esperaMs = 180_000,
-  ) {}
+  ) {
+    this.destino = new URL('inference', url.endsWith('/') ? url : `${url}/`);
+  }
 
   async transcribir(
     wav: Uint8Array<ArrayBuffer>,
@@ -83,7 +89,7 @@ export class MotorWhisperServidor implements MotorTranscripcion {
     if (opciones.prompt) form.append('prompt', opciones.prompt);
     let res: Response;
     try {
-      res = await this.pedir(new URL('/inference', this.url), {
+      res = await this.pedir(this.destino, {
         method: 'POST',
         body: form,
         signal: AbortSignal.timeout(this.esperaMs),
