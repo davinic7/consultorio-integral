@@ -194,11 +194,11 @@ Limitaciones conocidas:
 - **Presentada:** la misma marca `facturada` de la sesión, que ya usaban Cobros y la conciliación.
 
 
-## 18. Tipografías desde Google Fonts (excepción autorizada)
+## 18. Tipografías desde el propio servidor
 
-- La web carga sus tipografías desde Google Fonts (guía Órbita Cian). Google recibe la IP y el navegador de quien abre la app y el dominio de la app; no recibe datos de pacientes ni lo que se ve o se escribe.
-- Es una excepción a la regla de no usar servicios externos (AGENTS.md), decidida por el responsable del proyecto el 12/11/2026 porque todavía no hay clientes.
-- **Antes de salir al mercado** (y antes de la app móvil, que necesita las tipografías dentro del paquete para funcionar sin conexión) se pasan a servirse desde el propio servidor (`frontend/public/fuentes/`). Ver pendientes en [estado.md](estado.md).
+- Sora y JetBrains Mono (guía Órbita Cian) se sirven desde el propio servidor desde el 13/11/2026: los archivos están en `frontend/public/fuentes/` y se declaran en `frontend/src/styles/_fuentes.scss`. Abrir la app ya no le avisa nada a Google, y la app móvil las va a llevar dentro del paquete para funcionar sin conexión.
+- Son las fuentes variables (un archivo trae todos los pesos), en latín y latín extendido, tomadas de los paquetes `@fontsource-variable/sora` y `@fontsource-variable/jetbrains-mono` 5.3.0. No son dependencias del proyecto: se copiaron los cuatro `.woff2`, con su licencia (SIL Open Font License 1.1) al lado.
+- Antes: el 12/11/2026 se habían cargado desde Google Fonts como excepción a la regla de no usar servicios externos (AGENTS.md), porque todavía no había clientes. Esa excepción ya no existe.
 
 ## 19. Dictado: transcripción en el propio servidor
 

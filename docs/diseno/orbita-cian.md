@@ -23,18 +23,17 @@ El tema oscuro es el principal. El claro tiene la misma estructura: fondo hielo,
 
 ## Cómo conectarlo (una vez)
 
-1. **Fuentes** en `frontend/src/index.html`, dentro de `<head>`:
+1. **Fuentes:** Sora y JetBrains Mono se sirven desde el propio servidor, sin Google Fonts
+   (`docs/decisiones.md` §18). Los archivos están en `frontend/public/fuentes/` y se declaran en
+   `frontend/src/styles/_fuentes.scss`. En `frontend/src/index.html`, dentro de `<head>`, solo va
+   la precarga de la principal y el ícono:
    ```html
-   <link rel="preconnect" href="https://fonts.googleapis.com" />
-   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-   <link
-     href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
-     rel="stylesheet"
-   />
+   <link rel="preload" href="fuentes/sora-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
    <link rel="icon" type="image/svg+xml" href="marca/favicon.svg" />
    ```
-2. **Estilos:** primera línea de `frontend/src/styles.scss`:
+2. **Estilos:** primeras líneas de `frontend/src/styles.scss`:
    ```scss
+   @use "styles/fuentes";
    @use "styles/orbita";
    ```
    Las clases `oc-*` conviven con las actuales (`.boton`, `.tarjeta`…). Migrar pantalla por pantalla y borrar las clases viejas cuando ya nadie las use.

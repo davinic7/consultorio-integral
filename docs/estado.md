@@ -62,8 +62,6 @@ Los 10 pasos de [prototipo.md](prototipo.md) están hechos (versión 1.0).
 
 - **Base de Render: vence alrededor del 9/12/2026** (más 14 días de gracia). Respaldar y pasar a plan pago o a una base nueva: [respaldo-base.md](respaldo-base.md), con `scripts/respaldar-base.sh` y `scripts/restaurar-base.sh`.
 
-- Tipografías: servirlas desde el propio servidor en vez de Google Fonts antes de salir al mercado o de la app móvil (hoy es una excepción autorizada, ver [decisiones.md](decisiones.md) §18).
-
 - ARCA: probar en homologación con un certificado real (seguir [arca-paso-a-paso.md](arca-paso-a-paso.md)) antes de pasar a producción.
 - **Expediente con dictado** (etapa 4): transcripción en el propio servidor ([decisiones.md](decisiones.md) §19 y §20). Diseño en [diseno/expediente-dictado.md](diseno/expediente-dictado.md). Hecho el paso 2: la pestaña Expediente (línea de tiempo por mes, búsqueda y filtros, leer y editar, privada o compartida, sesión vinculada, guía de estructura) con borradores en el servidor que vencen a los 30 días (migración `expediente`). Falta el paso 3 (grabación en el navegador, cola sin señal y API del dictado) y el 4 (Whisper, medición en Render y plan).
 - Precios de los planes: hoy en 0, falta la política comercial.

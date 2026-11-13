@@ -21,7 +21,7 @@ Para personas y asistentes de IA que trabajen en este repositorio. Son obligator
    telemetría, rastreo de errores en la nube, CDN de terceros ni APIs que reciban datos del centro sin
    una decisión explícita del responsable del proyecto, anotada en `docs/decisiones.md`. Hoy los únicos
    externos son ARCA (facturación, solo con el certificado del emisor) y WhatsApp por enlace (lo abre
-   el usuario), y por ahora Google Fonts para las tipografías (excepción autorizada, `docs/decisiones.md` §18). La telemetría de las herramientas está apagada (`CHECKPOINT_DISABLE`,
+   el usuario). Las tipografías se sirven desde el propio servidor (`docs/decisiones.md` §18). La telemetría de las herramientas está apagada (`CHECKPOINT_DISABLE`,
    `NG_CLI_ANALYTICS`, `analytics: false` en `angular.json`, `@scarf/scarf` sin scripts de instalación).
 
 ## Cambios en el código
